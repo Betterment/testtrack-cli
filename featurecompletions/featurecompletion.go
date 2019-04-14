@@ -1,4 +1,4 @@
-package migrations
+package featurecompletions
 
 import (
 	"fmt"
@@ -15,8 +15,9 @@ import (
 
 // FeatureCompletion represents a feature we're marking completed
 type FeatureCompletion struct {
-	FeatureGate *string
-	Version     *string
+	MigrationTimestamp *string
+	FeatureGate        *string
+	Version            *string
 }
 
 var featureGateRegex = regexp.MustCompile(`^[a-z_\d]+_enabled$`)
@@ -31,6 +32,16 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 }, ""))
 
 var appVersionMaxLength = 18 // This conforms to iOS version numering rules
+
+// New returns a FeatureCompletion migration object
+func New(featureGate *string, version *string) FeatureCompletion {
+	migrationTimestamp := GenerateMigrationTimestamp()
+	return FeatureCompletion{
+		MigrationTimestamp: &migrationTimestamp,
+		FeatureGate:        featureGate,
+		Version:            version,
+	}
+}
 
 // Validate validates that a feature completion may be persisted
 func (f *FeatureCompletion) Validate() error {
@@ -81,7 +92,7 @@ func (f *FeatureCompletion) PersistMigration() error {
 		action = "uncomplete"
 	}
 
-	err = ioutil.WriteFile(fmt.Sprintf("testtrack/migrate/%s_%s_feature_%s.yml", MigrationTimestamp(), action, *f.FeatureGate), out, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("testtrack/migrate/%s_%s_feature_%s.yml", *f.MigrationTimestamp, action, *f.FeatureGate), out, 0644)
 	if err != nil {
 		return err
 	}
@@ -89,8 +100,8 @@ func (f *FeatureCompletion) PersistMigration() error {
 	return nil
 }
 
-// MigrationTimestamp returns a rails-style string-collatable timestamp identifier for prefixing migration filenames
-func MigrationTimestamp() string {
+// GenerateMigrationTimestamp returns a rails-style string-collatable timestamp identifier for prefixing migration filenames
+func GenerateMigrationTimestamp() string {
 	t := time.Now().UTC()
 	epochSeconds := t.Unix()
 	todayEpochSeconds := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
@@ -109,6 +120,8 @@ func (f *FeatureCompletion) Save() error {
 	if err != nil {
 		return err
 	}
+
+	// err = f.SyncMigration()
 
 	return nil
 }
