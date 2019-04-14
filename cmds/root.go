@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
 var version string
 var build string
+
+func init() {
+	if _, ok := os.LookupEnv("TESTTRACK_CLI_URL"); !ok {
+		godotenv.Load()
+	}
+}
 
 var rootCmd = &cobra.Command{
 	Use:     "testtrack",
