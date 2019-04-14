@@ -39,7 +39,7 @@ var appVersionMaxLength = 18 // This conforms to iOS version numering rules
 
 // NewFeatureCompletion returns a FeatureCompletion migration object
 func NewFeatureCompletion(featureGate *string, version *string) FeatureCompletion {
-	migrationTimestamp := generateMigrationTimestamp()
+	migrationTimestamp := generateMigrationVersion()
 	return FeatureCompletion{
 		MigrationVersion: &migrationTimestamp,
 		FeatureGate:      featureGate,
@@ -123,7 +123,7 @@ func (f *FeatureCompletion) SerializableMigrationVersion() serializers.Migration
 	return serializers.MigrationVersion{Version: *f.MigrationVersion}
 }
 
-func generateMigrationTimestamp() string {
+func generateMigrationVersion() string {
 	t := time.Now().UTC()
 	generateMigrationTimestamp := t.Unix()
 	todayEpochSeconds := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
@@ -149,7 +149,12 @@ func (f *FeatureCompletion) Sync() (bool, error) {
 }
 
 func postToTestTrack(path string, body interface{}) (*http.Response, error) {
-	ttURL, err := url.ParseRequestURI(os.Getenv("TESTTRACK_CLI_URL"))
+	ttURLString, ok := os.LookupEnv("TESTTRACK_CLI_URL")
+	if !ok {
+		return nil, errors.New("TESTTRACK_CLI_URL must be set")
+	}
+
+	ttURL, err := url.ParseRequestURI(ttURLString)
 	ttURL.Path = strings.TrimRight(ttURL.Path, "/")
 
 	url := strings.Join([]string{
