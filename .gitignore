@@ -1,0 +1,8 @@
+*.swo
+*.swp
+/.idea/**/workspace.xml
+/.idea/**/tasks.xml
+/.idea/dictionaries
+/cover.out
+/dist
+/vendor
