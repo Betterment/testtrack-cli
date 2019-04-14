@@ -1,8 +1,12 @@
 package featurecompletions
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -35,7 +39,7 @@ var appVersionMaxLength = 18 // This conforms to iOS version numering rules
 
 // New returns a FeatureCompletion migration object
 func New(featureGate *string, version *string) FeatureCompletion {
-	migrationTimestamp := GenerateMigrationTimestamp()
+	migrationTimestamp := generateMigrationTimestamp()
 	return FeatureCompletion{
 		MigrationTimestamp: &migrationTimestamp,
 		FeatureGate:        featureGate,
@@ -66,8 +70,8 @@ func (f *FeatureCompletion) Validate() error {
 	return nil
 }
 
-// PersistMigration writes a migration to disk
-func (f *FeatureCompletion) PersistMigration() error {
+// PersistMigrationFile writes a migration to disk
+func (f *FeatureCompletion) PersistMigrationFile() error {
 	stat, err := os.Stat("testtrack/migrate")
 	if err != nil {
 		return errors.Wrap(err, "migration directory not found - run `testtrack init_project` to resolve")
@@ -77,22 +81,14 @@ func (f *FeatureCompletion) PersistMigration() error {
 		return errors.New("testtrack/migrate is not a directory")
 	}
 
-	serialized := serializers.FeatureCompletion{
-		FeatureGate: *f.FeatureGate,
-		Version:     f.Version,
-	}
+	serializable := f.Serializable()
 
-	out, err := yaml.Marshal(serializers.Migration{
+	out, err := yaml.Marshal(serializers.MigrationFile{
 		SerializerVersion: serializers.SerializerVersion,
-		FeatureCompletion: &serialized,
+		FeatureCompletion: &serializable,
 	})
 
-	var action = "complete"
-	if f.Version == nil {
-		action = "uncomplete"
-	}
-
-	err = ioutil.WriteFile(fmt.Sprintf("testtrack/migrate/%s_%s_feature_%s.yml", *f.MigrationTimestamp, action, *f.FeatureGate), out, 0644)
+	err = ioutil.WriteFile(f.migrationFilename(), out, 0644)
 	if err != nil {
 		return err
 	}
@@ -100,13 +96,87 @@ func (f *FeatureCompletion) PersistMigration() error {
 	return nil
 }
 
-// GenerateMigrationTimestamp returns a rails-style string-collatable timestamp identifier for prefixing migration filenames
-func GenerateMigrationTimestamp() string {
+// DeleteMigrationFile deletes a migration file from disk
+func (f *FeatureCompletion) DeleteMigrationFile() error {
+	return os.Remove(f.migrationFilename())
+}
+
+func (f *FeatureCompletion) migrationFilename() string {
+	var action = "complete"
+	if f.Version == nil {
+		action = "uncomplete"
+	}
+
+	return fmt.Sprintf("testtrack/migrate/%s_%s_feature_%s.yml", *f.MigrationTimestamp, action, *f.FeatureGate)
+}
+
+// Serializable returns a JSON/YAML serializable representation of a feature completion
+func (f *FeatureCompletion) Serializable() serializers.FeatureCompletion {
+	return serializers.FeatureCompletion{
+		FeatureGate: *f.FeatureGate,
+		Version:     f.Version,
+	}
+}
+
+// SerializableMigrationVersion returns a serializable representation of the migration version
+func (f *FeatureCompletion) SerializableMigrationVersion() serializers.MigrationVersion {
+	return serializers.MigrationVersion{Version: *f.MigrationTimestamp}
+}
+
+func generateMigrationTimestamp() string {
 	t := time.Now().UTC()
-	epochSeconds := t.Unix()
+	generateMigrationTimestamp := t.Unix()
 	todayEpochSeconds := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
-	secondsIntoToday := epochSeconds - todayEpochSeconds
+	secondsIntoToday := generateMigrationTimestamp - todayEpochSeconds
 	return fmt.Sprintf("%04d%02d%02d%05d", t.Year(), t.Month(), t.Day(), secondsIntoToday)
+}
+
+// Sync sends a config change to the TestTrack server
+func (f *FeatureCompletion) Sync() (bool, error) {
+	resp, err := postToTestTrack("api/v2/migrations/app_feature_completion", f.Serializable())
+	if err != nil {
+		return false, err
+	}
+
+	switch resp.StatusCode {
+	case 204:
+		return true, nil
+	case 422:
+		return false, nil
+	default:
+		return false, fmt.Errorf("got %d status code", resp.StatusCode)
+	}
+}
+
+func postToTestTrack(path string, body interface{}) (*http.Response, error) {
+	ttURL, err := url.ParseRequestURI(os.Getenv("TESTTRACK_CLI_URL"))
+	ttURL.Path = strings.TrimRight(ttURL.Path, "/")
+
+	url := strings.Join([]string{
+		ttURL.String(),
+		path,
+	}, "/")
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return http.Post(url, "application/json", bytes.NewReader(bodyBytes))
+}
+
+// SyncMigrationVersion marks a migration version as run on TestTrack server
+func (f *FeatureCompletion) SyncMigrationVersion() error {
+	resp, err := postToTestTrack("api/v2/migrations", f.SerializableMigrationVersion())
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 204 {
+		return fmt.Errorf("got %d status code", resp.StatusCode)
+	}
+
+	return nil
 }
 
 // Save does the whole operation of validating, persisting, and sending a split config change to the local TT server
@@ -116,12 +186,22 @@ func (f *FeatureCompletion) Save() error {
 		return err
 	}
 
-	err = f.PersistMigration()
+	err = f.PersistMigrationFile()
 	if err != nil {
 		return err
 	}
 
-	// err = f.SyncMigration()
+	valid, err := f.Sync()
+	if err != nil {
+		return err
+	}
+
+	if !valid {
+		f.DeleteMigrationFile()
+		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
+	}
+
+	f.SyncMigrationVersion()
 
 	return nil
 }

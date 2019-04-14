@@ -2,7 +2,6 @@ package cmds
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/spf13/cobra"
@@ -42,6 +41,5 @@ func completeFeature(featureGate, version string) error {
 		return err
 	}
 
-	fmt.Println("Great success!")
 	return nil
 }

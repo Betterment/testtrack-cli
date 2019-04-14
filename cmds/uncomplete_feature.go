@@ -1,8 +1,6 @@
 package cmds
 
 import (
-	"fmt"
-
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/spf13/cobra"
 )
@@ -36,6 +34,5 @@ func uncompleteFeature(featureGate string) error {
 		return err
 	}
 
-	fmt.Println("Great success!")
 	return nil
 }
