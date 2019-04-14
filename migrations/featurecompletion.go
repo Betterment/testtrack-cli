@@ -39,9 +39,9 @@ var appVersionMaxLength = 18 // This conforms to iOS version numering rules
 
 // NewFeatureCompletion returns a FeatureCompletion migration object
 func NewFeatureCompletion(featureGate *string, version *string) FeatureCompletion {
-	migrationTimestamp := generateMigrationVersion()
+	migrationVersion := generateMigrationVersion()
 	return FeatureCompletion{
-		MigrationVersion: &migrationTimestamp,
+		MigrationVersion: &migrationVersion,
 		FeatureGate:      featureGate,
 		Version:          version,
 	}
@@ -125,9 +125,9 @@ func (f *FeatureCompletion) SerializableMigrationVersion() serializers.Migration
 
 func generateMigrationVersion() string {
 	t := time.Now().UTC()
-	generateMigrationTimestamp := t.Unix()
+	nowEpochSeconds := t.Unix()
 	todayEpochSeconds := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
-	secondsIntoToday := generateMigrationTimestamp - todayEpochSeconds
+	secondsIntoToday := nowEpochSeconds - todayEpochSeconds
 	return fmt.Sprintf("%04d%02d%02d%05d", t.Year(), t.Month(), t.Day(), secondsIntoToday)
 }
 
