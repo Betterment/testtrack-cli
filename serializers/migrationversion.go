@@ -3,7 +3,7 @@ package serializers
 // SerializerVersion is the current version of the migration file format so we can evolve over time
 const SerializerVersion = 1
 
-// MigrationVersion is a serializable representation of migration timestamp
+// MigrationVersion is a serializable representation of migration version (timestamp)
 type MigrationVersion struct {
 	Version string `json:"version"`
 }

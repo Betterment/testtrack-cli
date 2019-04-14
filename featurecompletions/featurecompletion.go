@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// FeatureCompletion represents a feature we're marking completed
+// FeatureCompletion represents a feature we're marking (un)completed
 type FeatureCompletion struct {
 	MigrationTimestamp *string
 	FeatureGate        *string
