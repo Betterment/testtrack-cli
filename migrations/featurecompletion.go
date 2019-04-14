@@ -1,4 +1,4 @@
-package featurecompletions
+package migrations
 
 import (
 	"bytes"
@@ -19,9 +19,9 @@ import (
 
 // FeatureCompletion represents a feature we're marking (un)completed
 type FeatureCompletion struct {
-	MigrationTimestamp *string
-	FeatureGate        *string
-	Version            *string
+	MigrationVersion *string
+	FeatureGate      *string
+	Version          *string
 }
 
 var featureGateRegex = regexp.MustCompile(`^[a-z_\d]+_enabled$`)
@@ -37,13 +37,13 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 
 var appVersionMaxLength = 18 // This conforms to iOS version numering rules
 
-// New returns a FeatureCompletion migration object
-func New(featureGate *string, version *string) FeatureCompletion {
+// NewFeatureCompletion returns a FeatureCompletion migration object
+func NewFeatureCompletion(featureGate *string, version *string) FeatureCompletion {
 	migrationTimestamp := generateMigrationTimestamp()
 	return FeatureCompletion{
-		MigrationTimestamp: &migrationTimestamp,
-		FeatureGate:        featureGate,
-		Version:            version,
+		MigrationVersion: &migrationTimestamp,
+		FeatureGate:      featureGate,
+		Version:          version,
 	}
 }
 
@@ -107,7 +107,7 @@ func (f *FeatureCompletion) migrationFilename() string {
 		action = "uncomplete"
 	}
 
-	return fmt.Sprintf("testtrack/migrate/%s_%s_feature_%s.yml", *f.MigrationTimestamp, action, *f.FeatureGate)
+	return fmt.Sprintf("testtrack/migrate/%s_%s_feature_%s.yml", *f.MigrationVersion, action, *f.FeatureGate)
 }
 
 // Serializable returns a JSON/YAML serializable representation of a feature completion
@@ -120,7 +120,7 @@ func (f *FeatureCompletion) Serializable() serializers.FeatureCompletion {
 
 // SerializableMigrationVersion returns a serializable representation of the migration version
 func (f *FeatureCompletion) SerializableMigrationVersion() serializers.MigrationVersion {
-	return serializers.MigrationVersion{Version: *f.MigrationTimestamp}
+	return serializers.MigrationVersion{Version: *f.MigrationVersion}
 }
 
 func generateMigrationTimestamp() string {

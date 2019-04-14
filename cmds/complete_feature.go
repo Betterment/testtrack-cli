@@ -3,7 +3,7 @@ package cmds
 import (
 	"errors"
 
-	"github.com/Betterment/testtrack-cli/featurecompletions"
+	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ func completeFeature(featureGate, version string) error {
 		return errors.New("Version must be present")
 	}
 
-	featureCompletion := featurecompletions.New(&featureGate, &version)
+	featureCompletion := migrations.NewFeatureCompletion(&featureGate, &version)
 
 	err := featureCompletion.Save()
 	if err != nil {
