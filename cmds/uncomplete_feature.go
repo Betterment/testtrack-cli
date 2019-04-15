@@ -27,9 +27,12 @@ var uncompleteFeatureCmd = &cobra.Command{
 }
 
 func uncompleteFeature(featureGate string) error {
-	featureCompletion := migrations.NewFeatureCompletion(&featureGate, nil)
+	featureCompletion, err := migrations.NewFeatureCompletion(&featureGate, nil)
+	if err != nil {
+		return err
+	}
 
-	err := featureCompletion.Save()
+	err = featureCompletion.Create()
 	if err != nil {
 		return err
 	}

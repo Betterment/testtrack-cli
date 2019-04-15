@@ -1,18 +1,14 @@
 package migrations
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/Betterment/testtrack-cli/serializers"
+	"github.com/Betterment/testtrack-cli/server"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -22,6 +18,7 @@ type FeatureCompletion struct {
 	MigrationVersion *string
 	FeatureGate      *string
 	Version          *string
+	Server           server.IServer
 }
 
 var featureGateRegex = regexp.MustCompile(`^[a-z_\d]+_enabled$`)
@@ -38,12 +35,29 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 var appVersionMaxLength = 18 // This conforms to iOS version numering rules
 
 // NewFeatureCompletion returns a FeatureCompletion migration object
-func NewFeatureCompletion(featureGate *string, version *string) FeatureCompletion {
+func NewFeatureCompletion(featureGate *string, version *string) (IMigration, error) {
+	server, err := server.New()
+	if err != nil {
+		return nil, err
+	}
+
 	migrationVersion := generateMigrationVersion()
-	return FeatureCompletion{
+
+	return &FeatureCompletion{
 		MigrationVersion: &migrationVersion,
 		FeatureGate:      featureGate,
 		Version:          version,
+		Server:           server,
+	}, nil
+}
+
+// FeatureCompletionFromFile reifies a migration from the yaml serializable representation
+func FeatureCompletionFromFile(migrationVersion *string, serializable serializers.FeatureCompletion, server server.IServer) IMigration {
+	return &FeatureCompletion{
+		MigrationVersion: migrationVersion,
+		FeatureGate:      &serializable.FeatureGate,
+		Version:          serializable.Version,
+		Server:           server,
 	}
 }
 
@@ -123,17 +137,9 @@ func (f *FeatureCompletion) SerializableMigrationVersion() serializers.Migration
 	return serializers.MigrationVersion{Version: *f.MigrationVersion}
 }
 
-func generateMigrationVersion() string {
-	t := time.Now().UTC()
-	nowEpochSeconds := t.Unix()
-	todayEpochSeconds := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
-	secondsIntoToday := nowEpochSeconds - todayEpochSeconds
-	return fmt.Sprintf("%04d%02d%02d%05d", t.Year(), t.Month(), t.Day(), secondsIntoToday)
-}
-
 // Sync sends a config change to the TestTrack server
 func (f *FeatureCompletion) Sync() (bool, error) {
-	resp, err := postToTestTrack("api/v2/migrations/app_feature_completion", f.Serializable())
+	resp, err := f.Server.Post("api/v2/migrations/app_feature_completion", f.Serializable())
 	if err != nil {
 		return false, err
 	}
@@ -148,31 +154,9 @@ func (f *FeatureCompletion) Sync() (bool, error) {
 	}
 }
 
-func postToTestTrack(path string, body interface{}) (*http.Response, error) {
-	ttURLString, ok := os.LookupEnv("TESTTRACK_CLI_URL")
-	if !ok {
-		return nil, errors.New("TESTTRACK_CLI_URL must be set")
-	}
-
-	ttURL, err := url.ParseRequestURI(ttURLString)
-	ttURL.Path = strings.TrimRight(ttURL.Path, "/")
-
-	url := strings.Join([]string{
-		ttURL.String(),
-		path,
-	}, "/")
-
-	bodyBytes, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-
-	return http.Post(url, "application/json", bytes.NewReader(bodyBytes))
-}
-
 // SyncMigrationVersion marks a migration version as run on TestTrack server
 func (f *FeatureCompletion) SyncMigrationVersion() error {
-	resp, err := postToTestTrack("api/v2/migrations", f.SerializableMigrationVersion())
+	resp, err := f.Server.Post("api/v2/migrations", f.SerializableMigrationVersion())
 	if err != nil {
 		return err
 	}
@@ -184,8 +168,24 @@ func (f *FeatureCompletion) SyncMigrationVersion() error {
 	return nil
 }
 
-// Save does the whole operation of validating, persisting, and sending a split config change to the local TT server
-func (f *FeatureCompletion) Save() error {
+// Run applies a migration to the TestTrack server
+func (f *FeatureCompletion) Run() error {
+	valid, err := f.Sync()
+	if err != nil {
+		return err
+	}
+
+	if !valid {
+		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
+	}
+
+	f.SyncMigrationVersion()
+
+	return nil
+}
+
+// Create does the whole operation of validating, persisting, and sending a split config change to the local TT server
+func (f *FeatureCompletion) Create() error {
 	err := f.Validate()
 	if err != nil {
 		return err
