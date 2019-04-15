@@ -8,7 +8,7 @@ import (
 )
 
 var completeFeatureDoc = `
-Marks a verson of this app as feature-complete, allowing end-users with app
+Marks a version of this app as feature-complete, allowing end-users with app
 versions greater than or equal to the specified version to see the feature
 according to their weights.
 
@@ -26,7 +26,7 @@ func init() {
 
 var completeFeatureCmd = &cobra.Command{
 	Use:   "complete_feature [feature_gate] [app_version]",
-	Short: "Mark an app version feature-complete",
+	Short: "Mark an app version feature-complete for a feature gate",
 	Long:  completeFeatureDoc,
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
