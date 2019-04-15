@@ -170,6 +170,11 @@ func (f *FeatureCompletion) SyncMigrationVersion() error {
 
 // Run applies a migration to the TestTrack server
 func (f *FeatureCompletion) Run() error {
+	err := f.Validate()
+	if err != nil {
+		return err
+	}
+
 	valid, err := f.Sync()
 	if err != nil {
 		return err
