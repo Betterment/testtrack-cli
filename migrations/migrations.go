@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/server"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -35,7 +38,7 @@ func NewRunner() (*Runner, error) {
 	return &Runner{Server: testTrack}, nil
 }
 
-var migrationFilenameRegex = regexp.MustCompile(`^(\d{13})_[a-z\d_]+.yml$`)
+var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_]+.yml$`)
 
 // RunOutstanding runs all outstanding migrations
 func (r *Runner) RunOutstanding() error {
@@ -108,10 +111,44 @@ func (r *Runner) getMigrationVersions() (*[]serializers.MigrationVersion, error)
 	return &migrationVersions, nil
 }
 
-func generateMigrationVersion() string {
+func generateMigrationVersion() (*string, error) {
 	t := time.Now().UTC()
 	nowEpochSeconds := t.Unix()
 	todayEpochSeconds := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
 	secondsIntoToday := nowEpochSeconds - todayEpochSeconds
-	return fmt.Sprintf("%04d%02d%02d%05d", t.Year(), t.Month(), t.Day(), secondsIntoToday)
+
+	baseVersion := fmt.Sprintf("%04d%02d%02d%05d", t.Year(), t.Month(), t.Day(), secondsIntoToday)
+
+	matches, err := filepath.Glob(fmt.Sprintf("testtrack/migrate/%s*", baseVersion))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(matches) == 0 {
+		return &baseVersion, nil
+	}
+
+	sort.Strings(matches)
+
+	lastMatch := matches[len(matches)-1]
+	matches = migrationFilenameRegex.FindStringSubmatch(filepath.Base(lastMatch))
+	if matches == nil {
+		return nil, fmt.Errorf("Failed to parse migration filename %s", lastMatch)
+	}
+
+	var i int
+	if len(matches[1]) == 13 {
+		i = 1
+	} else if len(matches[1]) == 17 {
+		i, err = strconv.Atoi(matches[1][14:17])
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't parse file version")
+		}
+		i++
+	} else {
+		return nil, errors.New("unexpected file version length")
+	}
+
+	longVersion := fmt.Sprintf("%sv%03d", baseVersion, i)
+	return &longVersion, nil
 }

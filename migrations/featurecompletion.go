@@ -41,10 +41,13 @@ func NewFeatureCompletion(featureGate *string, version *string) (IMigration, err
 		return nil, err
 	}
 
-	migrationVersion := generateMigrationVersion()
+	migrationVersion, err := generateMigrationVersion()
+	if err != nil {
+		return nil, err
+	}
 
 	return &FeatureCompletion{
-		MigrationVersion: &migrationVersion,
+		MigrationVersion: migrationVersion,
 		FeatureGate:      featureGate,
 		Version:          version,
 		Server:           server,
