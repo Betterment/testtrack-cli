@@ -13,7 +13,7 @@ versions greater than or equal to the specified version to see the feature
 according to their weights.
 
 Apps with clients in the field (e.g. mobile) will only see false for feature
-gates until they are marked feature complete.
+gates until they are marked feature-complete.
 
 Server-side apps will typically ignore this setting and show features
 regardless of feature-completeness because there is no legacy code in the
