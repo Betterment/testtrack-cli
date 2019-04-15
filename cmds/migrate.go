@@ -6,7 +6,7 @@ import (
 )
 
 var migrateDoc = `
-Runs all migrations that haven't been applied yet in this ecosystem.
+Runs all migrations that haven't been applied to the TestTrack server yet.
 `
 
 func init() {
@@ -15,7 +15,7 @@ func init() {
 
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
-	Short: "run outstanding migrations",
+	Short: "Run outstanding migrations",
 	Long:  migrateDoc,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
