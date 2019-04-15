@@ -44,7 +44,7 @@ func completeFeature(featureGate, version string) error {
 		return err
 	}
 
-	err = featureCompletion.Create()
+	err = featureCompletion.Save()
 	if err != nil {
 		return err
 	}

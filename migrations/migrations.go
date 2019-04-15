@@ -19,7 +19,7 @@ import (
 
 // IMigration represents a migration
 type IMigration interface {
-	Create() error
+	Save() error
 	Run() error
 }
 

@@ -192,8 +192,8 @@ func (f *FeatureCompletion) Run() error {
 	return nil
 }
 
-// Create does the whole operation of validating, persisting, and sending a split config change to the local TT server
-func (f *FeatureCompletion) Create() error {
+// Save does the whole operation of validating, persisting, and sending a split config change to the local TT server
+func (f *FeatureCompletion) Save() error {
 	err := f.Validate()
 	if err != nil {
 		return err
