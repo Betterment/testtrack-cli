@@ -39,12 +39,17 @@ func completeFeature(featureGate, version string) error {
 		return errors.New("Version must be present")
 	}
 
-	featureCompletion, err := migrations.NewFeatureCompletion(&featureGate, &version)
+	featureCompletion, err := featurecompletions.New(&featureGate, &version)
 	if err != nil {
 		return err
 	}
 
-	err = featureCompletion.Save()
+	mgr, err := migrationmanagers.New(featureCompletion)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.Save()
 	if err != nil {
 		return err
 	}

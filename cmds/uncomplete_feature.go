@@ -1,7 +1,8 @@
 package cmds
 
 import (
-	"github.com/Betterment/testtrack-cli/migrations"
+	"github.com/Betterment/testtrack-cli/featurecompletions"
+	"github.com/Betterment/testtrack-cli/migrationmanagers"
 	"github.com/spf13/cobra"
 )
 
@@ -31,12 +32,17 @@ var uncompleteFeatureCmd = &cobra.Command{
 }
 
 func uncompleteFeature(featureGate string) error {
-	featureCompletion, err := migrations.NewFeatureCompletion(&featureGate, nil)
+	featureCompletion, err := featurecompletions.New(&featureGate, nil)
 	if err != nil {
 		return err
 	}
 
-	err = featureCompletion.Save()
+	mgr, err := migrationmanagers.New(featureCompletion)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.Save()
 	if err != nil {
 		return err
 	}
