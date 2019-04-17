@@ -73,8 +73,8 @@ func (f *FeatureCompletion) File() *serializers.MigrationFile {
 	}
 }
 
-// ServerPath returns the path to post the migration to
-func (f *FeatureCompletion) ServerPath() string {
+// SyncPath returns the server path to post the migration to
+func (f *FeatureCompletion) SyncPath() string {
 	return "api/v2/migrations/app_feature_completion"
 }
 

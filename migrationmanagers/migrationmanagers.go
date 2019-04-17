@@ -112,7 +112,7 @@ func (m *MigrationManager) deleteFile() error {
 }
 
 func (m *MigrationManager) sync() (bool, error) {
-	resp, err := m.server.Post(m.migration.ServerPath(), m.migration.Serializable())
+	resp, err := m.server.Post(m.migration.SyncPath(), m.migration.Serializable())
 	if err != nil {
 		return false, err
 	}

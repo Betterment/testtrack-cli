@@ -17,7 +17,7 @@ type IMigration interface {
 	Validate() error
 	File() *serializers.MigrationFile
 	Filename() *string
-	ServerPath() string
+	SyncPath() string
 	Serializable() interface{}
 	MigrationVersion() *string
 }
