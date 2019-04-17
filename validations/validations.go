@@ -47,6 +47,14 @@ func Presence(value, paramName *string) error {
 	return nil
 }
 
+// OptionalSnakeCaseParam validates that a param is snake case alphanumeric if present
+func OptionalSnakeCaseParam(name, paramName *string) error {
+	if name != nil {
+		return SnakeCaseParam(name, paramName)
+	}
+	return nil
+}
+
 // SnakeCaseParam validates that a param is snake case alphanumeric
 func SnakeCaseParam(name, paramName *string) error {
 	err := Presence(name, paramName)

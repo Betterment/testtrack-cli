@@ -41,7 +41,7 @@ func FromFile(migrationVersion *string, serializable *serializers.RemoteKill) mi
 		migrationVersion: migrationVersion,
 		split:            &serializable.Split,
 		reason:           &serializable.Reason,
-		overrideTo:       &serializable.OverrideTo,
+		overrideTo:       serializable.OverrideTo,
 		firstBadVersion:  serializable.FirstBadVersion,
 		fixedVersion:     serializable.FixedVersion,
 	}
@@ -61,7 +61,7 @@ func (r *RemoteKill) Validate() error {
 	}
 
 	overrideToParam := "override_to"
-	err = validations.SnakeCaseParam(r.split, &overrideToParam)
+	err = validations.OptionalSnakeCaseParam(r.split, &overrideToParam)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (r *RemoteKill) serializable() *serializers.RemoteKill {
 	return &serializers.RemoteKill{
 		Split:           *r.split,
 		Reason:          *r.reason,
-		OverrideTo:      *r.overrideTo,
+		OverrideTo:      r.overrideTo,
 		FirstBadVersion: r.firstBadVersion,
 		FixedVersion:    r.fixedVersion,
 	}

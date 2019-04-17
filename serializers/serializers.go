@@ -25,7 +25,7 @@ type FeatureCompletion struct {
 type RemoteKill struct {
 	Split           string  `yaml:"split" json:"split"`
 	Reason          string  `yaml:"reason" json:"reason"`
-	OverrideTo      string  `yaml:"override_to" json:"override_to"`
+	OverrideTo      *string `yaml:"override_to" json:"override_to"`
 	FirstBadVersion *string `yaml:"first_bad_version" json:"first_bad_version"`
 	FixedVersion    *string `yaml:"fixed_version" json:"fixed_version"`
 }
