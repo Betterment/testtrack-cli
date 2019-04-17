@@ -10,6 +10,7 @@ import (
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
 	"github.com/Betterment/testtrack-cli/migrations"
+	"github.com/Betterment/testtrack-cli/remotekills"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
 	"gopkg.in/yaml.v2"
@@ -66,6 +67,8 @@ func (r *Runner) RunOutstanding() error {
 
 		if migrationFile.FeatureCompletion != nil {
 			migrationsByVersion[migrationVersion] = featurecompletions.FromFile(&migrationVersion, migrationFile.FeatureCompletion)
+		} else if migrationFile.RemoteKill != nil {
+			migrationsByVersion[migrationVersion] = remotekills.FromFile(&migrationVersion, migrationFile.RemoteKill)
 		} else {
 			return fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
 		}

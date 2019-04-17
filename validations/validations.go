@@ -21,20 +21,20 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 
 // Split validates that a `split` param is valid
 func Split(splitName *string) error {
-	splitParam := "split"
+	splitParam := "split_name"
 	return SnakeCaseParam(splitName, &splitParam)
 }
 
 // FeatureGate validates that a `feature_gate` param is valid
 func FeatureGate(featureGateName *string) error {
-	featureGateParam := "feature_gate"
+	featureGateParam := "feature_gate_name"
 	err := SnakeCaseParam(featureGateName, &featureGateParam)
 	if err != nil {
 		return err
 	}
 
 	if !strings.HasSuffix(*featureGateName, "_enabled") {
-		return fmt.Errorf("feature_gate '%s' must end in _enabled", *featureGateName)
+		return fmt.Errorf("feature_gate_name '%s' must end in _enabled", *featureGateName)
 	}
 	return nil
 }

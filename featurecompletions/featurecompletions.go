@@ -15,7 +15,7 @@ type FeatureCompletion struct {
 	version          *string
 }
 
-// New returns a FeatureCompletion migration object
+// New returns a migration object
 func New(featureGate *string, version *string) (migrations.IMigration, error) {
 	migrationVersion, err := migrations.GenerateMigrationVersion()
 	if err != nil {
