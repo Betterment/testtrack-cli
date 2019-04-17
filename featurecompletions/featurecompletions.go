@@ -2,11 +2,10 @@ package featurecompletions
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/serializers"
+	"github.com/Betterment/testtrack-cli/validations"
 )
 
 // FeatureCompletion represents a feature we're marking (un)completed
@@ -15,19 +14,6 @@ type FeatureCompletion struct {
 	featureGate      *string
 	version          *string
 }
-
-var featureGateRegex = regexp.MustCompile(`^[a-z_\d]+_enabled$`)
-var featureGateMaxLength = 128 // This is arbitrary but way bigger than you need and smaller than the column will fit
-var decimalIntegerRegexPart = `(?:0|[1-9]\d*)`
-var appVersionRegex = regexp.MustCompile(strings.Join([]string{
-	`^(?:`,
-	decimalIntegerRegexPart,
-	`\.){0,2}`,
-	decimalIntegerRegexPart,
-	`$`,
-}, ""))
-
-var appVersionMaxLength = 18 // This conforms to iOS version numering rules
 
 // New returns a FeatureCompletion migration object
 func New(featureGate *string, version *string) (migrations.IMigration, error) {
@@ -54,22 +40,15 @@ func FromFile(migrationVersion *string, serializable *serializers.FeatureComplet
 
 // Validate validates that a feature completion may be persisted
 func (f *FeatureCompletion) Validate() error {
-	if !featureGateRegex.MatchString(*f.featureGate) {
-		return fmt.Errorf("feature_gate '%s' must be snake_case alphanumeric and end in _enabled", *f.featureGate)
+	err := validations.FeatureGate(f.featureGate)
+	if err != nil {
+		return err
 	}
 
-	if len(*f.featureGate) > featureGateMaxLength {
-		return fmt.Errorf("feature_gate '%s' must be %d characters or less", *f.featureGate, featureGateMaxLength)
-	}
-
-	if f.version != nil {
-		if !appVersionRegex.MatchString(*f.version) {
-			return fmt.Errorf("version '%s' must be made up of no more than three integers with dots in between", *f.version)
-		}
-
-		if len(*f.version) > appVersionMaxLength {
-			return fmt.Errorf("version '%s' must be %d characters or less", *f.version, appVersionMaxLength)
-		}
+	versionParam := "version"
+	err = validations.OptionalAppVersion(f.version, &versionParam)
+	if err != nil {
+		return err
 	}
 
 	return nil
