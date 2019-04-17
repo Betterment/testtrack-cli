@@ -11,18 +11,18 @@ import (
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/serializers"
-	"github.com/Betterment/testtrack-cli/server"
+	"github.com/Betterment/testtrack-cli/servers"
 	"gopkg.in/yaml.v2"
 )
 
 // Runner runs sets of migrations
 type Runner struct {
-	server server.IServer
+	server servers.IServer
 }
 
 // New returns a Runner ready to use
 func New() (*Runner, error) {
-	server, err := server.New()
+	server, err := servers.New()
 	if err != nil {
 		return nil, err
 	}

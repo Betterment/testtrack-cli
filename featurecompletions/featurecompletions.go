@@ -94,9 +94,9 @@ func (f *FeatureCompletion) File() *serializers.MigrationFile {
 	}
 }
 
-// MigrationVersion returns the migration version
-func (f *FeatureCompletion) MigrationVersion() *string {
-	return f.migrationVersion
+// ServerPath returns the path to post the migration to
+func (f *FeatureCompletion) ServerPath() string {
+	return "api/v2/migrations/app_feature_completion"
 }
 
 // Serializable returns a JSON/YAML serializable representation
@@ -111,8 +111,7 @@ func (f *FeatureCompletion) serializable() *serializers.FeatureCompletion {
 	}
 }
 
-// ServerPath returns the path to post the migration to
-func (f *FeatureCompletion) ServerPath() *string {
-	serverPath := "api/v2/migrations/app_feature_completion"
-	return &serverPath
+// MigrationVersion returns the migration version
+func (f *FeatureCompletion) MigrationVersion() *string {
+	return f.migrationVersion
 }

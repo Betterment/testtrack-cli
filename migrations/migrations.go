@@ -17,12 +17,10 @@ type IMigration interface {
 	Validate() error
 	File() *serializers.MigrationFile
 	Filename() *string
-	ServerPath() *string
+	ServerPath() string
 	Serializable() interface{}
 	MigrationVersion() *string
 }
-
-// Runner runs outstanding migrations
 
 var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_]+.yml$`)
 

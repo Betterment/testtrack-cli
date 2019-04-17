@@ -7,7 +7,7 @@ import (
 
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/serializers"
-	"github.com/Betterment/testtrack-cli/server"
+	"github.com/Betterment/testtrack-cli/servers"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -15,12 +15,12 @@ import (
 // MigrationManager manages the lifecycle of a migration
 type MigrationManager struct {
 	migration migrations.IMigration
-	server    server.IServer
+	server    servers.IServer
 }
 
-// New returns a MigrationManager
+// New returns a fully-loaded MigrationManager
 func New(migration migrations.IMigration) (*MigrationManager, error) {
-	server, err := server.New()
+	server, err := servers.New()
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 }
 
 // NewWithServer returns a MigrationManager using a provided Server
-func NewWithServer(migration migrations.IMigration, server server.IServer) *MigrationManager {
+func NewWithServer(migration migrations.IMigration, server servers.IServer) *MigrationManager {
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
@@ -112,7 +112,7 @@ func (m *MigrationManager) deleteFile() error {
 }
 
 func (m *MigrationManager) sync() (bool, error) {
-	resp, err := m.server.Post(*m.migration.ServerPath(), m.migration.Serializable())
+	resp, err := m.server.Post(m.migration.ServerPath(), m.migration.Serializable())
 	if err != nil {
 		return false, err
 	}
