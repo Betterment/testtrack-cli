@@ -22,7 +22,7 @@ func init() {
 }
 
 var uncompleteFeatureCmd = &cobra.Command{
-	Use:   "uncomplete_feature [feature_gate]",
+	Use:   "uncomplete_feature feature_gate_name",
 	Short: "Mark all versions of this app feature-incomplete",
 	Long:  uncompleteFeatureDoc,
 	Args:  cobra.ExactArgs(1),
