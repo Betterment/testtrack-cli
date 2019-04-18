@@ -38,7 +38,7 @@ var completeFeatureCmd = &cobra.Command{
 
 func completeFeature(featureGate, version string) error {
 	// This validation is the difference between complete_feature and uncomplete_feature which is why it's inline
-	err := validations.Presence(&version, "app_version")
+	err := validations.Presence("app_version", &version)
 	if err != nil {
 		return err
 	}
