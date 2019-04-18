@@ -79,12 +79,12 @@ func (r *RemoteKill) Validate() error {
 
 // Filename generates a filename for this migration
 func (r *RemoteKill) Filename() *string {
-	var action = "set"
+	var action = "create"
 	if r.firstBadVersion == nil {
-		action = "unset"
+		action = "destroy"
 	}
 
-	filename := fmt.Sprintf("%s_%s_split_%s_remote_kill.yml", *r.migrationVersion, action, *r.split)
+	filename := fmt.Sprintf("%s_%s_remote_kill_%s_%s.yml", *r.migrationVersion, action, *r.split, *r.reason)
 	return &filename
 }
 

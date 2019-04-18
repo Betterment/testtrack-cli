@@ -47,7 +47,7 @@ func Presence(paramName string, value *string) error {
 
 // OptionalSnakeCaseParam validates that a param is snake case alphanumeric if present
 func OptionalSnakeCaseParam(paramName string, value *string) error {
-	if value != nil {
+	if value != nil && len(*value) > 0 {
 		return SnakeCaseParam(paramName, value)
 	}
 	return nil
@@ -68,7 +68,7 @@ func SnakeCaseParam(paramName string, value *string) error {
 
 // OptionalAppVersion validates that a param, if non-null, matches required format
 func OptionalAppVersion(paramName string, value *string) error {
-	if value != nil {
+	if value != nil && len(*value) > 0 {
 		if !appVersionRegex.MatchString(*value) {
 			return fmt.Errorf("%s '%s' must be made up of no more than three integers with dots in between", paramName, *value)
 		}
