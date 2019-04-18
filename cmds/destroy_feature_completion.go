@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var uncompleteFeatureDoc = `
+var destroyFeatureCompletionDoc = `
 Marks all versions of this app as feature-incomplete for a feature gate.
 
 Apps with clients in the field (e.g. mobile) will only see false for feature
@@ -18,20 +18,20 @@ field for customers to use.
 `
 
 func init() {
-	destroyCmd.AddCommand(uncompleteFeatureCmd)
+	destroyCmd.AddCommand(destroyFeatureCompletionCmd)
 }
 
-var uncompleteFeatureCmd = &cobra.Command{
+var destroyFeatureCompletionCmd = &cobra.Command{
 	Use:   "feature_completion feature_gate_name",
 	Short: "Mark all versions of this app feature-incomplete",
-	Long:  uncompleteFeatureDoc,
+	Long:  destroyFeatureCompletionDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return uncompleteFeature(args[0])
+		return destroyFeatureCompletion(args[0])
 	},
 }
 
-func uncompleteFeature(featureGate string) error {
+func destroyFeatureCompletion(featureGate string) error {
 	featureCompletion, err := featurecompletions.New(&featureGate, nil)
 	if err != nil {
 		return err
