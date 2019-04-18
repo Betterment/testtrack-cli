@@ -18,7 +18,7 @@ func init() {
 
 var initProjectCmd = &cobra.Command{
 	Use:   "init_project",
-	Short: "Set up a project for testtrack",
+	Short: "Set up a project for testtrack CLI",
 	Long:  initProjectDoc,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
