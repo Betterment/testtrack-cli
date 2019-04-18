@@ -1,4 +1,4 @@
-package server
+package servers
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type IServer interface {
 
 // Server is the live implementation of the TestTrack API client
 type Server struct {
-	URL *url.URL
+	url *url.URL
 }
 
 // New returns a live TestTrack for use in API calls
@@ -35,12 +35,12 @@ func New() (IServer, error) {
 		return nil, err
 	}
 
-	return &Server{URL: url}, nil
+	return &Server{url: url}, nil
 }
 
 // Get makes an authenticated GET to the TestTrack API
-func (t *Server) Get(path string, v interface{}) error {
-	url, err := t.urlFor(path)
+func (s *Server) Get(path string, v interface{}) error {
+	url, err := s.urlFor(path)
 	if err != nil {
 		return err
 	}
@@ -70,8 +70,8 @@ func (t *Server) Get(path string, v interface{}) error {
 }
 
 // Post makes an authenticated POST to the TestTrack API
-func (t *Server) Post(path string, body interface{}) (*http.Response, error) {
-	url, err := t.urlFor(path)
+func (s *Server) Post(path string, body interface{}) (*http.Response, error) {
+	url, err := s.urlFor(path)
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +84,12 @@ func (t *Server) Post(path string, body interface{}) (*http.Response, error) {
 	return http.Post(url, "application/json", bytes.NewReader(bodyBytes))
 }
 
-// Note that this operates on a copy to avoid mutating *t.URL
-func (t Server) urlFor(path string) (string, error) {
-	t.URL.Path = strings.TrimRight(t.URL.Path, "/")
+// Note that this operates on a copy to avoid mutating *s.url
+func (s Server) urlFor(path string) (string, error) {
+	s.url.Path = strings.TrimRight(s.url.Path, "/")
 
 	return strings.Join([]string{
-		t.URL.String(),
+		s.url.String(),
 		path,
 	}, "/"), nil
 }

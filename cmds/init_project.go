@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -30,5 +31,12 @@ func initProject() error {
 	if err != nil {
 		return err
 	}
+
+	keepfile, err := os.Create("testtrack/migrate/.keep")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	keepfile.Close()
 	return nil
 }

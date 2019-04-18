@@ -3,14 +3,15 @@ package cmds
 import (
 	"errors"
 
-	"github.com/Betterment/testtrack-cli/migrations"
+	"github.com/Betterment/testtrack-cli/featurecompletions"
+	"github.com/Betterment/testtrack-cli/migrationmanagers"
 	"github.com/spf13/cobra"
 )
 
 var completeFeatureDoc = `
-Marks a version of this app as feature-complete, allowing end-users with app
-versions greater than or equal to the specified version to see the feature
-according to their weights.
+Marks a version of this app as feature-complete for a feature gate, allowing
+end-users with app versions greater than or equal to the specified version to
+see the feature according to their weights.
 
 Apps with clients in the field (e.g. mobile) will only see false for feature
 gates until they are marked feature-complete.
@@ -18,6 +19,8 @@ gates until they are marked feature-complete.
 Server-side apps will typically ignore this setting and show features
 regardless of feature-completeness because there is no legacy code in the
 field for customers to use.
+
+You can reverse complete_feature with the uncomplete_feature command.
 `
 
 func init() {
@@ -25,7 +28,7 @@ func init() {
 }
 
 var completeFeatureCmd = &cobra.Command{
-	Use:   "complete_feature [feature_gate] [app_version]",
+	Use:   "complete_feature feature_gate_name app_version",
 	Short: "Mark an app version feature-complete for a feature gate",
 	Long:  completeFeatureDoc,
 	Args:  cobra.ExactArgs(2),
@@ -39,12 +42,17 @@ func completeFeature(featureGate, version string) error {
 		return errors.New("Version must be present")
 	}
 
-	featureCompletion, err := migrations.NewFeatureCompletion(&featureGate, &version)
+	featureCompletion, err := featurecompletions.New(&featureGate, &version)
 	if err != nil {
 		return err
 	}
 
-	err = featureCompletion.Save()
+	mgr, err := migrationmanagers.New(featureCompletion)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.Save()
 	if err != nil {
 		return err
 	}
