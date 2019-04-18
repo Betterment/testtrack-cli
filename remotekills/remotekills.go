@@ -49,31 +49,27 @@ func FromFile(migrationVersion *string, serializable *serializers.RemoteKill) mi
 
 // Validate validates that a feature completion may be persisted
 func (r *RemoteKill) Validate() error {
-	err := validations.Split(r.split)
+	err := validations.SplitName(r.split)
 	if err != nil {
 		return err
 	}
 
-	reasonParam := "reason"
-	err = validations.SnakeCaseParam(r.split, &reasonParam)
+	err = validations.SnakeCaseParam(r.split, "reason")
 	if err != nil {
 		return err
 	}
 
-	overrideToParam := "override_to"
-	err = validations.OptionalSnakeCaseParam(r.split, &overrideToParam)
+	err = validations.OptionalSnakeCaseParam(r.split, "override_to")
 	if err != nil {
 		return err
 	}
 
-	firstBadVersionParam := "first_bad_version"
-	err = validations.OptionalAppVersion(r.firstBadVersion, &firstBadVersionParam)
+	err = validations.OptionalAppVersion(r.firstBadVersion, "first_bad_version")
 	if err != nil {
 		return err
 	}
 
-	fixedVersionParam := "fixed_version"
-	err = validations.OptionalAppVersion(r.fixedVersion, &fixedVersionParam)
+	err = validations.OptionalAppVersion(r.fixedVersion, "fixed_version")
 	if err != nil {
 		return err
 	}

@@ -48,9 +48,8 @@ var remoteKillCmd = &cobra.Command{
 }
 
 func remoteKill(split, reason, overrideTo, firstBadVersion, fixedVersion *string) error {
-	param := "first_bad_version"
 	// This validation is the difference between remote_kill and unset_remote_kill which is why it's inline
-	err := validations.Presence(firstBadVersion, &param)
+	err := validations.Presence(firstBadVersion, "first_bad_version")
 	if err != nil {
 		return err
 	}

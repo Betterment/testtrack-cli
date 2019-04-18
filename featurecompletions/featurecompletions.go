@@ -40,13 +40,12 @@ func FromFile(migrationVersion *string, serializable *serializers.FeatureComplet
 
 // Validate validates that a feature completion may be persisted
 func (f *FeatureCompletion) Validate() error {
-	err := validations.FeatureGate(f.featureGate)
+	err := validations.FeatureGateName(f.featureGate)
 	if err != nil {
 		return err
 	}
 
-	versionParam := "version"
-	err = validations.OptionalAppVersion(f.version, &versionParam)
+	err = validations.OptionalAppVersion(f.version, "version")
 	if err != nil {
 		return err
 	}
