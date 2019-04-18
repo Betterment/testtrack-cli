@@ -39,7 +39,7 @@ func FeatureGate(featureGateName *string) error {
 	return nil
 }
 
-// Presence validates that a a param is present
+// Presence validates that a param is present
 func Presence(value, paramName *string) error {
 	if value == nil || len(*value) == 0 {
 		return fmt.Errorf("%s must be present", *paramName)
