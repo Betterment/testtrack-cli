@@ -18,11 +18,11 @@ field for customers to use.
 `
 
 func init() {
-	rootCmd.AddCommand(uncompleteFeatureCmd)
+	destroyCmd.AddCommand(uncompleteFeatureCmd)
 }
 
 var uncompleteFeatureCmd = &cobra.Command{
-	Use:   "uncomplete_feature feature_gate_name",
+	Use:   "feature_completion feature_gate_name",
 	Short: "Mark all versions of this app feature-incomplete",
 	Long:  uncompleteFeatureDoc,
 	Args:  cobra.ExactArgs(1),

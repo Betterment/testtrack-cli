@@ -55,12 +55,12 @@ func (f *FeatureCompletion) Validate() error {
 
 // Filename generates a filename for this migration
 func (f *FeatureCompletion) Filename() *string {
-	var action = "complete"
+	var action = "create"
 	if f.version == nil {
-		action = "uncomplete"
+		action = "destroy"
 	}
 
-	filename := fmt.Sprintf("%s_%s_feature_%s.yml", *f.migrationVersion, action, *f.featureGate)
+	filename := fmt.Sprintf("%s_%s_feature_completion_%s.yml", *f.migrationVersion, action, *f.featureGate)
 	return &filename
 }
 
