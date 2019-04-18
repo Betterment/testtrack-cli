@@ -1,10 +1,9 @@
 package cmds
 
 import (
-	"errors"
-
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
 )
 
@@ -38,8 +37,10 @@ var completeFeatureCmd = &cobra.Command{
 }
 
 func completeFeature(featureGate, version string) error {
-	if len(version) == 0 {
-		return errors.New("Version must be present")
+	// This validation is the difference between complete_feature and uncomplete_feature which is why it's inline
+	err := validations.Presence("app_version", &version)
+	if err != nil {
+		return err
 	}
 
 	featureCompletion, err := featurecompletions.New(&featureGate, &version)

@@ -19,56 +19,62 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 	`$`,
 }, ""))
 
-// Split validates that a `split` param is valid
-func Split(splitName *string) error {
-	splitParam := "split"
-	return SnakeCaseParam(splitName, &splitParam)
+// Split validates that a `split_name` param is valid
+func Split(paramName string, value *string) error {
+	return SnakeCaseParam(paramName, value)
 }
 
-// FeatureGate validates that a `feature_gate` param is valid
-func FeatureGate(featureGateName *string) error {
-	featureGateParam := "feature_gate"
-	err := SnakeCaseParam(featureGateName, &featureGateParam)
+// FeatureGate validates that a `feature_gate_name` param is valid
+func FeatureGate(paramName string, value *string) error {
+	err := SnakeCaseParam(paramName, value)
 	if err != nil {
 		return err
 	}
 
-	if !strings.HasSuffix(*featureGateName, "_enabled") {
-		return fmt.Errorf("feature_gate '%s' must end in _enabled", *featureGateName)
+	if !strings.HasSuffix(*value, "_enabled") {
+		return fmt.Errorf("%s '%s' must end in _enabled", paramName, *value)
 	}
 	return nil
 }
 
 // Presence validates that a param is present
-func Presence(value, paramName *string) error {
+func Presence(paramName string, value *string) error {
 	if value == nil || len(*value) == 0 {
-		return fmt.Errorf("%s must be present", *paramName)
+		return fmt.Errorf("%s must be present", paramName)
+	}
+	return nil
+}
+
+// OptionalSnakeCaseParam validates that a param is snake case alphanumeric if present
+func OptionalSnakeCaseParam(paramName string, value *string) error {
+	if value != nil {
+		return SnakeCaseParam(paramName, value)
 	}
 	return nil
 }
 
 // SnakeCaseParam validates that a param is snake case alphanumeric
-func SnakeCaseParam(name, paramName *string) error {
-	err := Presence(name, paramName)
+func SnakeCaseParam(paramName string, value *string) error {
+	err := Presence(paramName, value)
 	if err != nil {
 		return err
 	}
 
-	if !snakeCaseRegex.MatchString(*name) {
-		return fmt.Errorf("%s '%s' must be snake_case alphanumeric", *paramName, *name)
+	if !snakeCaseRegex.MatchString(*value) {
+		return fmt.Errorf("%s '%s' must be snake_case alphanumeric", paramName, *value)
 	}
 	return nil
 }
 
 // OptionalAppVersion validates that a param, if non-null, matches required format
-func OptionalAppVersion(version, paramName *string) error {
-	if version != nil {
-		if !appVersionRegex.MatchString(*version) {
-			return fmt.Errorf("%s '%s' must be made up of no more than three integers with dots in between", *paramName, *version)
+func OptionalAppVersion(paramName string, value *string) error {
+	if value != nil {
+		if !appVersionRegex.MatchString(*value) {
+			return fmt.Errorf("%s '%s' must be made up of no more than three integers with dots in between", paramName, *value)
 		}
 
-		if len(*version) > appVersionMaxLength {
-			return fmt.Errorf("%s '%s' must be %d characters or less", *paramName, *version, appVersionMaxLength)
+		if len(*value) > appVersionMaxLength {
+			return fmt.Errorf("%s '%s' must be %d characters or less", paramName, *value, appVersionMaxLength)
 		}
 	}
 	return nil

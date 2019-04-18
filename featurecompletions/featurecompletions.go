@@ -15,7 +15,7 @@ type FeatureCompletion struct {
 	version          *string
 }
 
-// New returns a FeatureCompletion migration object
+// New returns a migration object
 func New(featureGate *string, version *string) (migrations.IMigration, error) {
 	migrationVersion, err := migrations.GenerateMigrationVersion()
 	if err != nil {
@@ -40,13 +40,12 @@ func FromFile(migrationVersion *string, serializable *serializers.FeatureComplet
 
 // Validate validates that a feature completion may be persisted
 func (f *FeatureCompletion) Validate() error {
-	err := validations.FeatureGate(f.featureGate)
+	err := validations.FeatureGate("feature_gate_name", f.featureGate)
 	if err != nil {
 		return err
 	}
 
-	versionParam := "version"
-	err = validations.OptionalAppVersion(f.version, &versionParam)
+	err = validations.OptionalAppVersion("version", f.version)
 	if err != nil {
 		return err
 	}
