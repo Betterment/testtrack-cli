@@ -61,13 +61,20 @@ func (m *MigrationManager) Save() error {
 		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
 	}
 
-	m.syncVersion()
-
-	return nil
+	return m.syncVersion()
 }
 
 // Run applies a migration to the TestTrack server
 func (m *MigrationManager) Run() error {
+	err := m.Apply()
+	if err != nil {
+		return err
+	}
+	return m.syncVersion()
+}
+
+// Apply applies a migration to the TestTrack server without recording the version
+func (m *MigrationManager) Apply() error {
 	err := m.migration.Validate()
 	if err != nil {
 		return err
@@ -81,9 +88,6 @@ func (m *MigrationManager) Run() error {
 	if !valid {
 		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
 	}
-
-	m.syncVersion()
-
 	return nil
 }
 

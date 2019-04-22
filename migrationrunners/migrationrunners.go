@@ -119,7 +119,7 @@ func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
 	}
 
 	mgr := migrationmanagers.NewWithServer(previousMigration, r.server)
-	err = mgr.Run()
+	err = mgr.Apply()
 	if err != nil {
 		return nil, err
 	}
