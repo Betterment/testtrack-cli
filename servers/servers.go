@@ -16,6 +16,7 @@ import (
 type IServer interface {
 	Get(path string, v interface{}) error
 	Post(path string, body interface{}) (*http.Response, error)
+	Delete(path string) error
 }
 
 // Server is the live implementation of the TestTrack API client
@@ -82,6 +83,30 @@ func (s *Server) Post(path string, body interface{}) (*http.Response, error) {
 	}
 
 	return http.Post(url, "application/json", bytes.NewReader(bodyBytes))
+}
+
+// Delete makes an authenticated DELETE to the TestTrack API
+func (s *Server) Delete(path string) error {
+	url, err := s.urlFor(path)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 204 {
+		return fmt.Errorf("got %d status code", resp.StatusCode)
+	}
+
+	return nil
 }
 
 // Note that this operates on a copy to avoid mutating *s.url

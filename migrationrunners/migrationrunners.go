@@ -3,7 +3,9 @@ package migrationrunners
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/Betterment/testtrack-cli/remotekills"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -33,59 +36,21 @@ func New() (*Runner, error) {
 
 // RunOutstanding runs all outstanding migrations
 func (r *Runner) RunOutstanding() error {
+	migrationsByVersion, err := loadMigrations()
+	if err != nil {
+		return err
+	}
+
 	migrationVersions, err := r.getMigrationVersions()
 	if err != nil {
 		return err
-	}
-
-	files, err := ioutil.ReadDir("testtrack/migrate")
-	if err != nil {
-		return err
-	}
-
-	migrationsByVersion := map[string]migrations.IMigration{}
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), ".") {
-			continue // Skip hidden files
-		}
-
-		migrationVersion, err := migrations.ExtractVersionFromFilename(file.Name())
-		if err != nil {
-			return err
-		}
-
-		fileBytes, err := ioutil.ReadFile(path.Join("testtrack/migrate", file.Name()))
-		if err != nil {
-			return err
-		}
-
-		var migrationFile serializers.MigrationFile
-		err = yaml.Unmarshal(fileBytes, &migrationFile)
-		if err != nil {
-			return err
-		}
-
-		if migrationFile.FeatureCompletion != nil {
-			migrationsByVersion[migrationVersion] = featurecompletions.FromFile(&migrationVersion, migrationFile.FeatureCompletion)
-		} else if migrationFile.RemoteKill != nil {
-			migrationsByVersion[migrationVersion] = remotekills.FromFile(&migrationVersion, migrationFile.RemoteKill)
-		} else {
-			return fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
-		}
 	}
 
 	for _, version := range *migrationVersions {
 		delete(migrationsByVersion, version.Version)
 	}
 
-	versions := make([]string, len(migrationsByVersion))
-	i := 0
-	for version := range migrationsByVersion {
-		versions[i] = version
-		i++
-	}
-
-	sort.Strings(versions)
+	versions := getSortedVersions(migrationsByVersion)
 
 	for _, version := range versions {
 		mgr := migrationmanagers.NewWithServer(migrationsByVersion[version], r.server)
@@ -98,6 +63,69 @@ func (r *Runner) RunOutstanding() error {
 	return nil
 }
 
+// Undo unapplies the latest migration if possible, removes it from local
+// TestTrack server, and deletes the migration file
+func (r *Runner) Undo() error {
+	migration, err := r.unapplyLatest()
+	if err != nil {
+		return err
+	}
+
+	migrationVersion := *migration.MigrationVersion()
+	filepaths, err := filepath.Glob(fmt.Sprintf("testtrack/migrate/%s_*.yml", migrationVersion))
+	if err != nil {
+		return err
+	}
+	if len(filepaths) != 1 {
+		return fmt.Errorf("Couldn't find exactly one migration %s to delete", migrationVersion)
+	}
+
+	err = r.server.Delete(fmt.Sprintf("api/v2/migrations/%s", migrationVersion))
+	if err != nil {
+		return err
+	}
+
+	return os.Remove(filepaths[0])
+}
+
+func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
+	migrationsByVersion, err := loadMigrations()
+	if err != nil {
+		return nil, err
+	}
+
+	versions := getSortedVersions(migrationsByVersion)
+
+	if len(versions) == 0 {
+		return nil, errors.New("no migration to undo")
+	}
+
+	latestMigration := migrationsByVersion[versions[len(versions)-1]]
+
+	var previousMigration migrations.IMigration
+	for i := len(versions) - 2; i >= 0; i-- {
+		m := migrationsByVersion[versions[i]]
+		if m.SameResourceAs(latestMigration) {
+			previousMigration = m
+			break
+		}
+	}
+
+	if previousMigration == nil {
+		previousMigration, err = latestMigration.Inverse()
+		if err != nil {
+			return nil, errors.Wrap(err, "can't undo - you may want to `testtrack create` a new migration for this resource and then delete this migration file")
+		}
+	}
+
+	mgr := migrationmanagers.NewWithServer(previousMigration, r.server)
+	err = mgr.Run()
+	if err != nil {
+		return nil, err
+	}
+	return latestMigration, nil
+}
+
 func (r *Runner) getMigrationVersions() (*[]serializers.MigrationVersion, error) {
 	migrationVersions := make([]serializers.MigrationVersion, 0)
 
@@ -107,4 +135,57 @@ func (r *Runner) getMigrationVersions() (*[]serializers.MigrationVersion, error)
 	}
 
 	return &migrationVersions, nil
+}
+
+func loadMigrations() (map[string]migrations.IMigration, error) {
+	files, err := ioutil.ReadDir("testtrack/migrate")
+	if err != nil {
+		return nil, err
+	}
+
+	migrationsByVersion := make(map[string]migrations.IMigration)
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), ".") {
+			continue // Skip hidden files
+		}
+
+		migrationVersion, err := migrations.ExtractVersionFromFilename(file.Name())
+		if err != nil {
+			return nil, err
+		}
+
+		fileBytes, err := ioutil.ReadFile(path.Join("testtrack/migrate", file.Name()))
+		if err != nil {
+			return nil, err
+		}
+
+		var migrationFile serializers.MigrationFile
+		err = yaml.Unmarshal(fileBytes, &migrationFile)
+		if err != nil {
+			return nil, err
+		}
+
+		if migrationFile.FeatureCompletion != nil {
+			migrationsByVersion[migrationVersion] = featurecompletions.FromFile(&migrationVersion, migrationFile.FeatureCompletion)
+		} else if migrationFile.RemoteKill != nil {
+			migrationsByVersion[migrationVersion] = remotekills.FromFile(&migrationVersion, migrationFile.RemoteKill)
+		} else {
+			return nil, fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
+		}
+	}
+	return migrationsByVersion, nil
+}
+
+func getSortedVersions(migrationsByVersion map[string]migrations.IMigration) []string {
+	versions := make([]string, len(migrationsByVersion))
+	i := 0
+
+	for version := range migrationsByVersion {
+		versions[i] = version
+		i++
+	}
+
+	sort.Strings(versions)
+
+	return versions
 }

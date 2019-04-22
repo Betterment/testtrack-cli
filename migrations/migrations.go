@@ -20,6 +20,8 @@ type IMigration interface {
 	SyncPath() string
 	Serializable() interface{}
 	MigrationVersion() *string
+	SameResourceAs(other IMigration) bool
+	Inverse() (IMigration, error)
 }
 
 var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_]+.yml$`)

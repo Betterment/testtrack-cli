@@ -93,3 +93,27 @@ func (f *FeatureCompletion) serializable() *serializers.FeatureCompletion {
 func (f *FeatureCompletion) MigrationVersion() *string {
 	return f.migrationVersion
 }
+
+// SameResourceAs returns whether the migrations refer to the same TestTrack resource
+func (f *FeatureCompletion) SameResourceAs(other migrations.IMigration) bool {
+	if otherF, ok := other.(*FeatureCompletion); ok {
+		return *otherF.featureGate == *f.featureGate
+	}
+	return false
+}
+
+// Inverse returns a logical inverse operation if possible
+func (f *FeatureCompletion) Inverse() (migrations.IMigration, error) {
+	if f.version == nil {
+		return nil, fmt.Errorf("can't invert FeatureCompletion destroy %s for %s", *f.migrationVersion, *f.featureGate)
+	}
+	migrationVersion, err := migrations.GenerateMigrationVersion()
+	if err != nil {
+		return nil, err
+	}
+	return &FeatureCompletion{
+		migrationVersion: migrationVersion,
+		featureGate:      f.featureGate,
+		version:          nil,
+	}, nil
+}

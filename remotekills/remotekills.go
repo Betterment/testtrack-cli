@@ -120,3 +120,31 @@ func (r *RemoteKill) serializable() *serializers.RemoteKill {
 func (r *RemoteKill) MigrationVersion() *string {
 	return r.migrationVersion
 }
+
+// SameResourceAs returns whether the migrations refer to the same TestTrack resource
+func (r *RemoteKill) SameResourceAs(other migrations.IMigration) bool {
+	if otherR, ok := other.(*RemoteKill); ok {
+		return *otherR.split == *r.split &&
+			*otherR.reason == *r.reason
+	}
+	return false
+}
+
+// Inverse returns a logical inverse operation if possible
+func (r *RemoteKill) Inverse() (migrations.IMigration, error) {
+	if r.firstBadVersion == nil {
+		return nil, fmt.Errorf("can't invert RemoteKill destroy %s for %s %s", *r.migrationVersion, *r.split, *r.reason)
+	}
+	migrationVersion, err := migrations.GenerateMigrationVersion()
+	if err != nil {
+		return nil, err
+	}
+	return &RemoteKill{
+		migrationVersion: migrationVersion,
+		split:            r.split,
+		reason:           r.reason,
+		overrideTo:       nil,
+		firstBadVersion:  nil,
+		fixedVersion:     nil,
+	}, nil
+}
