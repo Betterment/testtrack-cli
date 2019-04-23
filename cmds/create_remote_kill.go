@@ -14,7 +14,7 @@ between first_bad_version and an optional fixed_version.
 
 Example:
 
-testtrack remote_kill my_fancy_experiment catastrophic_bug_jan_2019 --override_to control --first_bad_version 1.0 --fixed_version 1.1
+testtrack create remote_kill my_fancy_experiment catastrophic_bug_jan_2019 --override_to control --first_bad_version 1.0 --fixed_version 1.1
 
 Reason should be a camel_case slug.
 
@@ -27,7 +27,7 @@ Server-side apps will typically ignore this setting and show features
 regardless of remote kill state because they can simply decide the split until
 the bug can be fixed and then undecide it afterward.
 
-You can reverse remote_kills with the delete_remote_kill command.
+You can reverse remote_kills with the destroy remote_kill command.
 `
 
 var overrideTo, firstBadVersion, fixedVersion string
