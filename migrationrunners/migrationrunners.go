@@ -41,12 +41,12 @@ func (r *Runner) RunOutstanding() error {
 		return err
 	}
 
-	migrationVersions, err := r.getMigrationVersions()
+	appliedMigrationVersions, err := r.getAppliedMigrationVersions()
 	if err != nil {
 		return err
 	}
 
-	for _, version := range *migrationVersions {
+	for _, version := range appliedMigrationVersions {
 		delete(migrationsByVersion, version.Version)
 	}
 
@@ -126,15 +126,15 @@ func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
 	return latestMigration, nil
 }
 
-func (r *Runner) getMigrationVersions() (*[]serializers.MigrationVersion, error) {
-	migrationVersions := make([]serializers.MigrationVersion, 0)
+func (r *Runner) getAppliedMigrationVersions() ([]serializers.MigrationVersion, error) {
+	appliedMigrationVersions := make([]serializers.MigrationVersion, 0)
 
-	err := r.server.Get("api/v2/migrations", &migrationVersions)
+	err := r.server.Get("api/v2/migrations", &appliedMigrationVersions)
 	if err != nil {
 		return nil, err
 	}
 
-	return &migrationVersions, nil
+	return appliedMigrationVersions, nil
 }
 
 func loadMigrations() (map[string]migrations.IMigration, error) {
