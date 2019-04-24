@@ -15,6 +15,7 @@ import (
 	"github.com/Betterment/testtrack-cli/remotekills"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
+	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -169,6 +170,11 @@ func loadMigrations() (map[string]migrations.IMigration, error) {
 			migrationsByVersion[migrationVersion] = featurecompletions.FromFile(&migrationVersion, migrationFile.FeatureCompletion)
 		} else if migrationFile.RemoteKill != nil {
 			migrationsByVersion[migrationVersion] = remotekills.FromFile(&migrationVersion, migrationFile.RemoteKill)
+		} else if migrationFile.Split != nil {
+			migrationsByVersion[migrationVersion], err = splits.FromFile(&migrationVersion, migrationFile.Split)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			return nil, fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
 		}
@@ -177,12 +183,10 @@ func loadMigrations() (map[string]migrations.IMigration, error) {
 }
 
 func getSortedVersions(migrationsByVersion map[string]migrations.IMigration) []string {
-	versions := make([]string, len(migrationsByVersion))
-	i := 0
+	versions := make([]string, 0, len(migrationsByVersion))
 
 	for version := range migrationsByVersion {
-		versions[i] = version
-		i++
+		versions = append(versions, version)
 	}
 
 	sort.Strings(versions)

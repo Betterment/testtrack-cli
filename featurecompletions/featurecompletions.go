@@ -77,7 +77,7 @@ func (f *FeatureCompletion) SyncPath() string {
 	return "api/v2/migrations/app_feature_completion"
 }
 
-// Serializable returns a JSON/YAML serializable representation
+// Serializable returns a JSON serializable representation
 func (f *FeatureCompletion) Serializable() interface{} {
 	return f.serializable()
 }
@@ -105,7 +105,7 @@ func (f *FeatureCompletion) SameResourceAs(other migrations.IMigration) bool {
 // Inverse returns a logical inverse operation if possible
 func (f *FeatureCompletion) Inverse() (migrations.IMigration, error) {
 	if f.version == nil {
-		return nil, fmt.Errorf("can't invert FeatureCompletion destroy %s for %s", *f.migrationVersion, *f.featureGate)
+		return nil, fmt.Errorf("can't invert feature_completion destroy %s for %s", *f.migrationVersion, *f.featureGate)
 	}
 	migrationVersion, err := migrations.GenerateMigrationVersion()
 	if err != nil {

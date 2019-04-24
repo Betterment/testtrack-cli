@@ -24,7 +24,7 @@ type IMigration interface {
 	Inverse() (IMigration, error)
 }
 
-var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_]+.yml$`)
+var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_\-\.]+.yml$`)
 
 // GenerateMigrationVersion returns a new timestamp-derived migration version
 func GenerateMigrationVersion() (*string, error) {
