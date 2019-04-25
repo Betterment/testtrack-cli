@@ -18,6 +18,7 @@ type MigrationFile struct {
 	Split             *SplitYAML         `yaml:"split,omitempty"`
 	SplitRetirement   *SplitRetirement   `yaml:"split_retirement,omitempty"`
 	SplitDecision     *SplitDecision     `yaml:"split_decision,omitempty"`
+	IdentifierType    *IdentifierType    `yaml:"identifier_type,omitempty"`
 }
 
 // FeatureCompletion is the marshalable representation of a FeatureCompletion
@@ -57,4 +58,9 @@ type SplitRetirement struct {
 type SplitDecision struct {
 	Split   string `json:"split"`
 	Variant string `json:"variant"`
+}
+
+// IdentifierType is the JSON and YAML-marshalable representation of an IdentifierType
+type IdentifierType struct {
+	Name string `json:"name"`
 }
