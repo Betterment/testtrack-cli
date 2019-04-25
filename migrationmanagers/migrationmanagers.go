@@ -16,6 +16,7 @@ import (
 type MigrationManager struct {
 	migration migrations.IMigration
 	server    servers.IServer
+	schema    *serializers.Schema
 }
 
 // New returns a fully-loaded MigrationManager
@@ -25,17 +26,24 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 		return nil, err
 	}
 
+	schema, err := serializers.LoadSchema()
+	if err != nil {
+		return nil, err
+	}
+
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
+		schema:    schema,
 	}, nil
 }
 
-// NewWithServer returns a MigrationManager using a provided Server
-func NewWithServer(migration migrations.IMigration, server servers.IServer) *MigrationManager {
+// NewWithDependencies returns a MigrationManager using a provided Server
+func NewWithDependencies(migration migrations.IMigration, server servers.IServer, schema *serializers.Schema) *MigrationManager {
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
+		schema:    schema,
 	}
 }
 
@@ -73,7 +81,7 @@ func (m *MigrationManager) Run() error {
 	return m.syncVersion()
 }
 
-// Apply applies a migration to the TestTrack server without recording the version
+// Apply applies a migration to the TestTrack server without recording the version to TestTrack server
 func (m *MigrationManager) Apply() error {
 	err := m.migration.Validate()
 	if err != nil {
@@ -141,5 +149,10 @@ func (m *MigrationManager) syncVersion() error {
 		return fmt.Errorf("got %d status code", resp.StatusCode)
 	}
 
-	return nil
+	appliedVersion := m.migration.MigrationVersion()
+	if m.schema.SchemaVersion < *appliedVersion {
+		m.schema.SchemaVersion = *appliedVersion
+	}
+
+	return serializers.DumpSchema(m.schema)
 }

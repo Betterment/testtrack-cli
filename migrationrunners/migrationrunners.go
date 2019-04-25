@@ -26,6 +26,7 @@ import (
 // Runner runs sets of migrations
 type Runner struct {
 	server servers.IServer
+	schema *serializers.Schema
 }
 
 // New returns a Runner ready to use
@@ -35,7 +36,12 @@ func New() (*Runner, error) {
 		return nil, err
 	}
 
-	return &Runner{server: server}, nil
+	schema, err := serializers.LoadSchema()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Runner{server: server, schema: schema}, nil
 }
 
 // RunOutstanding runs all outstanding migrations
@@ -57,7 +63,7 @@ func (r *Runner) RunOutstanding() error {
 	versions := getSortedVersions(migrationsByVersion)
 
 	for _, version := range versions {
-		mgr := migrationmanagers.NewWithServer(migrationsByVersion[version], r.server)
+		mgr := migrationmanagers.NewWithDependencies(migrationsByVersion[version], r.server, r.schema)
 		err := mgr.Run()
 		if err != nil {
 			return err
@@ -85,6 +91,11 @@ func (r *Runner) Undo() error {
 	}
 
 	err = r.server.Delete(fmt.Sprintf("api/v2/migrations/%s", migrationVersion))
+	if err != nil {
+		return err
+	}
+
+	err = serializers.DumpSchema(r.schema)
 	if err != nil {
 		return err
 	}
@@ -121,8 +132,9 @@ func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
 			return nil, errors.Wrap(err, "can't undo - you may want to `testtrack create` a new migration for this resource and then delete this migration file")
 		}
 	}
+	r.schema.SchemaVersion = versions[len(versions)-2]
 
-	mgr := migrationmanagers.NewWithServer(previousMigration, r.server)
+	mgr := migrationmanagers.NewWithDependencies(previousMigration, r.server, r.schema)
 	err = mgr.Apply()
 	if err != nil {
 		return nil, err
