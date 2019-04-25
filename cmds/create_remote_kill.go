@@ -30,14 +30,14 @@ the bug can be fixed and then undecide it afterward.
 You can reverse remote_kills with the destroy remote_kill command.
 `
 
-var overrideTo, firstBadVersion, fixedVersion string
+var createRemoteKillOverrideTo, createRemoteKillFirstBadVersion, createRemoteKillFixedVersion string
 
 func init() {
-	createRemoteKillCmd.Flags().StringVar(&overrideTo, "override_to", "", "Override-to variant (required)")
+	createRemoteKillCmd.Flags().StringVar(&createRemoteKillOverrideTo, "override_to", "", "Override-to variant (required)")
 	createRemoteKillCmd.MarkFlagRequired("override_to")
-	createRemoteKillCmd.Flags().StringVar(&firstBadVersion, "first_bad_version", "", "First bad app version (required)")
+	createRemoteKillCmd.Flags().StringVar(&createRemoteKillFirstBadVersion, "first_bad_version", "", "First bad app version (required)")
 	createRemoteKillCmd.MarkFlagRequired("first_bad_version")
-	createRemoteKillCmd.Flags().StringVar(&firstBadVersion, "fixed_version", "", "Fixed app version")
+	createRemoteKillCmd.Flags().StringVar(&createRemoteKillFixedVersion, "fixed_version", "", "Fixed app version")
 	createCmd.AddCommand(createRemoteKillCmd)
 }
 
@@ -47,7 +47,7 @@ var createRemoteKillCmd = &cobra.Command{
 	Long:  createRemoteKillDoc,
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return createRemoteKill(&args[0], &args[1], &overrideTo, &firstBadVersion, &fixedVersion)
+		return createRemoteKill(&args[0], &args[1], &createRemoteKillOverrideTo, &createRemoteKillFirstBadVersion, &createRemoteKillFixedVersion)
 	},
 }
 

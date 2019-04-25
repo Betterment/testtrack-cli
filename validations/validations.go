@@ -61,6 +61,20 @@ func Split(paramName string, value *string) error {
 	return nil
 }
 
+// NonPrefixedExperiment validates that an experiment name param is valid with
+// no app prefix
+func NonPrefixedExperiment(paramName string, value *string) error {
+	err := NonPrefixedSplit(paramName, value)
+	if err != nil {
+		return err
+	}
+
+	if !strings.HasSuffix(*value, "_experiment") {
+		return fmt.Errorf("%s '%s' must end in _experiment", paramName, *value)
+	}
+	return nil
+}
+
 // NonPrefixedFeatureGate validates that a `feature_gate_name` param is valid
 func NonPrefixedFeatureGate(paramName string, value *string) error {
 	err := NonPrefixedSplit(paramName, value)
