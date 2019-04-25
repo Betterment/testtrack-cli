@@ -13,8 +13,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// SplitKey is the resource key for migrations impacting split state
+type SplitKey string
+
+// ISplitMigration defines the interface that allows split-impacting migration
+// types to determine whether they operate on the same split
+type ISplitMigration interface {
+	ResourceKey() SplitKey
+}
+
 // Weights represents the weightings of a split
-type Weights = map[string]int
+type Weights map[string]int
 
 // Split represents a feature we're marking (un)completed
 type Split struct {
@@ -140,10 +149,15 @@ func (s *Split) MigrationVersion() *string {
 	return s.migrationVersion
 }
 
+// ResourceKey returns the natural key of the resource under migration
+func (s *Split) ResourceKey() SplitKey {
+	return SplitKey(*s.name)
+}
+
 // SameResourceAs returns whether the migrations refer to the same TestTrack resource
 func (s *Split) SameResourceAs(other migrations.IMigration) bool {
-	if otherS, ok := other.(*Split); ok {
-		return *otherS.name == *s.name
+	if otherS, ok := other.(ISplitMigration); ok {
+		return otherS.ResourceKey() == s.ResourceKey()
 	}
 	return false
 }

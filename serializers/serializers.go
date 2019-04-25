@@ -16,6 +16,7 @@ type MigrationFile struct {
 	FeatureCompletion *FeatureCompletion `yaml:"feature_completion,omitempty"`
 	RemoteKill        *RemoteKill        `yaml:"remote_kill,omitempty"`
 	Split             *SplitYAML         `yaml:"split,omitempty"`
+	SplitRetirement   *SplitRetirement   `yaml:"split_retirement,omitempty"`
 }
 
 // FeatureCompletion is the marshalable representation of a FeatureCompletion
@@ -43,4 +44,10 @@ type SplitYAML struct {
 type SplitJSON struct {
 	Name              string         `json:"name"`
 	WeightingRegistry map[string]int `json:"weighting_registry"`
+}
+
+// SplitRetirement is the JSON and YAML-marshalable representation of a SplitRetirement
+type SplitRetirement struct {
+	Split    string `json:"split"`
+	Decision string `json:"decision"`
 }
