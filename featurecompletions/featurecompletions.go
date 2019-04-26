@@ -107,14 +107,9 @@ func (f *FeatureCompletion) Inverse() (migrations.IMigration, error) {
 	if f.version == nil {
 		return nil, fmt.Errorf("can't invert feature_completion destroy %s for %s", *f.migrationVersion, *f.featureGate)
 	}
-	migrationVersion, err := migrations.GenerateMigrationVersion()
-	if err != nil {
-		return nil, err
-	}
 	return &FeatureCompletion{
-		migrationVersion: migrationVersion,
-		featureGate:      f.featureGate,
-		version:          nil,
+		featureGate: f.featureGate,
+		version:     nil,
 	}, nil
 }
 

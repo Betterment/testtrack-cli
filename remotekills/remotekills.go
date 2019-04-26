@@ -135,17 +135,12 @@ func (r *RemoteKill) Inverse() (migrations.IMigration, error) {
 	if r.firstBadVersion == nil {
 		return nil, fmt.Errorf("can't invert remote_kill destroy %s for %s %s", *r.migrationVersion, *r.split, *r.reason)
 	}
-	migrationVersion, err := migrations.GenerateMigrationVersion()
-	if err != nil {
-		return nil, err
-	}
 	return &RemoteKill{
-		migrationVersion: migrationVersion,
-		split:            r.split,
-		reason:           r.reason,
-		overrideTo:       nil,
-		firstBadVersion:  nil,
-		fixedVersion:     nil,
+		split:           r.split,
+		reason:          r.reason,
+		overrideTo:      nil,
+		firstBadVersion: nil,
+		fixedVersion:    nil,
 	}, nil
 }
 

@@ -123,13 +123,13 @@ func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
 			return nil, errors.Wrap(err, "can't undo - you may want to `testtrack create` a new migration for this resource and then delete this migration file")
 		}
 	}
-	r.schema.SchemaVersion = versions[len(versions)-2]
 
 	mgr := migrationmanagers.NewWithDependencies(previousMigration, r.server, r.schema)
 	err = mgr.Apply()
 	if err != nil {
 		return nil, err
 	}
+	r.schema.SchemaVersion = versions[len(versions)-2]
 	return latestMigration, nil
 }
 
