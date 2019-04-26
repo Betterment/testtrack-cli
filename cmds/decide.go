@@ -15,6 +15,10 @@ decision, automatically reviving it if it was previously destroyed. Decided
 splits will continue to be returned to all clients, so it's appropriate to
 decide a split before you remove all references to the split from code.
 
+Feature-completion and remote-kill both take precedence over decisions, though,
+so clients with incomplete or broken versions of a feature will not be enabled
+for the split even if the decision was to enable the feature.
+
 Example:
 
 testtrack decide my_fancy_experiment --variant treatment
@@ -34,7 +38,7 @@ func init() {
 
 var decideCmd = &cobra.Command{
 	Use:   "decide split_name",
-	Short: "Decide a split,  or modify a retired split's decision",
+	Short: "Decide a split, or modify a split's decision",
 	Long:  decideDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
