@@ -39,7 +39,7 @@ type SplitYAML struct {
 	Weights yaml.MapSlice `yaml:"weights"`
 }
 
-// SplitJSON is is the JSON-marshalabe representation fo a Split
+// SplitJSON is is the JSON-marshalabe representation of a Split
 type SplitJSON struct {
 	Name              string         `json:"name"`
 	WeightingRegistry map[string]int `json:"weighting_registry"`
