@@ -97,7 +97,7 @@ func (i *IdentifierType) Inverse() (migrations.IMigration, error) {
 func (i *IdentifierType) ApplyToSchema(schema *serializers.Schema) error {
 	for _, candidate := range schema.IdentifierTypes {
 		if candidate.Name == *i.name {
-			return nil // If it exists, there's nothing else to do.
+			return fmt.Errorf("identifier_type %s already exists", *i.name)
 		}
 	}
 	schema.IdentifierTypes = append(schema.IdentifierTypes, *i.serializable())
