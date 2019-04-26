@@ -10,9 +10,17 @@ import (
 )
 
 var destroySplitDoc = `
-Retires a split (a feature gate or experiment) in TestTrack or updates a
-retired split's decision. The split will continue to be returned to clients in
-the field built before it was retired.
+Destroy soft-deletes a split (i.e. a feature gate or experiment) in TestTrack
+or updates an already-destroyed split's decision. The split will continue to be returned
+to clients in the field built before it was destroyed.
+
+Destroying a split is also known as retirement. Retired splits have a decision
+so old clients know which variant to choose.
+
+Feature-completion and remote-kill both take precedence over the decision of a
+retired split, though, so clients with incomplete or broken versions of a
+feature will not be enabled for the split even if a retired split's decision
+was to enable the feature.
 
 Example:
 
@@ -35,7 +43,7 @@ func init() {
 
 var destroySplitCmd = &cobra.Command{
 	Use:   "split name",
-	Short: "Retire a split or modify a retired split's decision",
+	Short: "Destroy (retire) a split or modify a retired split's decision",
 	Long:  destroySplitDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
