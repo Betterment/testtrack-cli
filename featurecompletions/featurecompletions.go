@@ -117,3 +117,24 @@ func (f *FeatureCompletion) Inverse() (migrations.IMigration, error) {
 		version:          nil,
 	}, nil
 }
+
+// ApplyToSchema applies a migrations changes to in-memory schema representation
+func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema) error {
+	if f.version == nil { // Delete
+		for i, candidate := range schema.FeatureCompletions {
+			if candidate.FeatureGate == *f.featureGate {
+				schema.FeatureCompletions = append(schema.FeatureCompletions[:i], schema.FeatureCompletions[i+1:]...)
+				return nil
+			}
+		}
+		return fmt.Errorf("Couldn't locate feature_completion of %s in schema", *f.featureGate)
+	}
+	for i, candidate := range schema.FeatureCompletions { // Replace
+		if candidate.FeatureGate == *f.featureGate {
+			schema.FeatureCompletions[i] = *f.serializable()
+		}
+		return nil
+	}
+	schema.FeatureCompletions = append(schema.FeatureCompletions, *f.serializable()) // Add
+	return nil
+}

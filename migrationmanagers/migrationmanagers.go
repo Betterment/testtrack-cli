@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Betterment/testtrack-cli/migrations"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
 	"github.com/pkg/errors"
@@ -26,7 +27,7 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 		return nil, err
 	}
 
-	schema, err := serializers.LoadSchema()
+	schema, err := schema.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +62,7 @@ func (m *MigrationManager) Save() error {
 
 	valid, err := m.sync()
 	if err != nil {
+		m.deleteFile()
 		return err
 	}
 
@@ -124,6 +126,10 @@ func (m *MigrationManager) deleteFile() error {
 }
 
 func (m *MigrationManager) sync() (bool, error) {
+	err := m.migration.ApplyToSchema(m.schema)
+	if err != nil {
+		return false, err
+	}
 	resp, err := m.server.Post(m.migration.SyncPath(), m.migration.Serializable())
 	if err != nil {
 		return false, err
@@ -154,5 +160,5 @@ func (m *MigrationManager) syncVersion() error {
 		m.schema.SchemaVersion = *appliedVersion
 	}
 
-	return serializers.DumpSchema(m.schema)
+	return schema.Dump(m.schema)
 }

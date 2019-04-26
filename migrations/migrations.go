@@ -22,6 +22,7 @@ type IMigration interface {
 	MigrationVersion() *string
 	SameResourceAs(other IMigration) bool
 	Inverse() (IMigration, error)
+	ApplyToSchema(*serializers.Schema) error
 }
 
 var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_\-\.]+.yml$`)

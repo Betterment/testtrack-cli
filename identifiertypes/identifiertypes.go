@@ -92,3 +92,14 @@ func (i *IdentifierType) SameResourceAs(other migrations.IMigration) bool {
 func (i *IdentifierType) Inverse() (migrations.IMigration, error) {
 	return nil, fmt.Errorf("can't invert identifier_type creation %s %s", *i.migrationVersion, *i.name)
 }
+
+// ApplyToSchema applies a migrations changes to in-memory schema representation
+func (i *IdentifierType) ApplyToSchema(schema *serializers.Schema) error {
+	for _, candidate := range schema.IdentifierTypes {
+		if candidate.Name == *i.name {
+			return nil // If it exists, there's nothing else to do.
+		}
+	}
+	schema.IdentifierTypes = append(schema.IdentifierTypes, *i.serializable())
+	return nil
+}

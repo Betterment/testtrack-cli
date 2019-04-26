@@ -148,3 +148,24 @@ func (r *RemoteKill) Inverse() (migrations.IMigration, error) {
 		fixedVersion:     nil,
 	}, nil
 }
+
+// ApplyToSchema applies a migrations changes to in-memory schema representation
+func (r *RemoteKill) ApplyToSchema(schema *serializers.Schema) error {
+	if r.firstBadVersion == nil { // Delete
+		for i, candidate := range schema.RemoteKills {
+			if candidate.Split == *r.split && candidate.Reason == *r.reason {
+				schema.RemoteKills = append(schema.RemoteKills[:i], schema.RemoteKills[i+1:]...)
+				return nil
+			}
+		}
+		return fmt.Errorf("Couldn't locate remote_kill %s of %s in schema", *r.reason, *r.split)
+	}
+	for i, candidate := range schema.RemoteKills { // Replace
+		if candidate.Split == *r.split && candidate.Reason == *r.reason {
+			schema.RemoteKills[i] = *r.serializable()
+			return nil
+		}
+	}
+	schema.RemoteKills = append(schema.RemoteKills, *r.serializable()) // Add
+	return nil
+}

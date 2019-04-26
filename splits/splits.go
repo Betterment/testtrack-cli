@@ -81,9 +81,22 @@ func WeightsFromString(weights string) (*Weights, error) {
 
 // FromFile reifies a migration from the yaml serializable representation
 func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (migrations.IMigration, error) {
+	weights, err := WeightsYAMLToMap(serializable.Weights)
+	if err != nil {
+		return nil, err
+	}
+	return &Split{
+		migrationVersion: migrationVersion,
+		name:             &serializable.Name,
+		weights:          weights,
+	}, nil
+}
+
+// WeightsYAMLToMap converts YAML-serializable weights to a weights map
+func WeightsYAMLToMap(yamlWeights yaml.MapSlice) (*Weights, error) {
 	weights := make(Weights)
 	cumulativeWeight := 0
-	for _, item := range serializable.Weights {
+	for _, item := range yamlWeights {
 		variant, ok := item.Key.(string)
 		if !ok {
 			return nil, fmt.Errorf("variant %v is not a string", item.Key)
@@ -101,11 +114,7 @@ func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (mi
 	if cumulativeWeight != 100 {
 		return nil, fmt.Errorf("weights must sum to 100, got %d", cumulativeWeight)
 	}
-	return &Split{
-		migrationVersion: migrationVersion,
-		name:             &serializable.Name,
-		weights:          &weights,
-	}, nil
+	return &weights, nil
 }
 
 // Validate validates that a feature completion may be persisted
@@ -121,22 +130,27 @@ func (s *Split) Filename() *string {
 
 // File returns a serializable MigrationFile for this migration
 func (s *Split) File() *serializers.MigrationFile {
-	var variants = make([]string, 0, len(*s.weights))
-	for variant := range *s.weights {
+	return &serializers.MigrationFile{
+		SerializerVersion: serializers.SerializerVersion,
+		Split: &serializers.SplitYAML{
+			Name:    *s.name,
+			Weights: WeightsMapToYAML(s.weights),
+		},
+	}
+}
+
+// WeightsMapToYAML converts weights to a YAML-serializable representation
+func WeightsMapToYAML(weights *Weights) yaml.MapSlice {
+	var variants = make([]string, 0, len(*weights))
+	for variant := range *weights {
 		variants = append(variants, variant)
 	}
 	sort.Strings(variants)
 	weightsYaml := make(yaml.MapSlice, 0, len(variants))
 	for _, variant := range variants {
-		weightsYaml = append(weightsYaml, yaml.MapItem{Key: variant, Value: (*s.weights)[variant]})
+		weightsYaml = append(weightsYaml, yaml.MapItem{Key: variant, Value: (*weights)[variant]})
 	}
-	return &serializers.MigrationFile{
-		SerializerVersion: serializers.SerializerVersion,
-		Split: &serializers.SplitYAML{
-			Name:    *s.name,
-			Weights: weightsYaml,
-		},
-	}
+	return weightsYaml
 }
 
 // SyncPath returns the server path to post the migration to
@@ -173,4 +187,32 @@ func (s *Split) SameResourceAs(other migrations.IMigration) bool {
 // Inverse returns a logical inverse operation if possible
 func (s *Split) Inverse() (migrations.IMigration, error) {
 	return nil, fmt.Errorf("can't invert split creation %s", *s.name)
+}
+
+// ApplyToSchema applies a migrations changes to in-memory schema representation
+func (s *Split) ApplyToSchema(schema *serializers.Schema) error {
+	for i, candidate := range schema.Splits {
+		if candidate.Name == *s.name {
+			schema.Splits[i].Decided = false
+			schemaWeights, err := WeightsYAMLToMap(candidate.Weights)
+			if err != nil {
+				return err
+			}
+			for variant := range *schemaWeights {
+				(*schemaWeights)[variant] = 0
+			}
+			for variant, weight := range *s.weights {
+				(*schemaWeights)[variant] = weight
+			}
+			schema.Splits[i].Weights = WeightsMapToYAML(schemaWeights)
+			return nil
+		}
+	}
+	schemaSplit := serializers.SchemaSplit{
+		Name:    *s.name,
+		Weights: WeightsMapToYAML(s.weights),
+		Decided: false,
+	}
+	schema.Splits = append(schema.Splits, schemaSplit)
+	return nil
 }
