@@ -35,7 +35,7 @@ func FromFile(migrationVersion *string, serializable *serializers.IdentifierType
 	}
 }
 
-// Validate validates that a feature completion may be persisted
+// Validate that the migration may be persisted
 func (i *IdentifierType) Validate() error {
 	err := validations.SnakeCaseParam("name", i.name)
 	if err != nil {
