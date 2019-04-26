@@ -122,5 +122,5 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Couldn't locate split %s in schema", *s.split)
+	return fmt.Errorf("Couldn't locate split %s in schema to decide", *s.split)
 }

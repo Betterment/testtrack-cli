@@ -3,25 +3,17 @@ package schema
 import (
 	"io/ioutil"
 	"os"
+	"sort"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"gopkg.in/yaml.v2"
 )
 
-// Load loads from disk or instantiates an empty Schema struct
+// Load a schema from disk or generate one
 func Load() (*serializers.Schema, error) {
 	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
-		schema := &serializers.Schema{SerializerVersion: serializers.SerializerVersion}
-		err := applyAllMigrationsToSchema(schema)
-		if err != nil {
-			return nil, err
-		}
-		err = Dump(schema)
-		if err != nil {
-			return nil, err
-		}
-		return schema, nil
+		return Generate()
 	}
 	schemaBytes, err := ioutil.ReadFile("testtrack/schema.yml")
 	if err != nil {
@@ -35,8 +27,23 @@ func Load() (*serializers.Schema, error) {
 	return &schema, nil
 }
 
-// Dump dumps a schema to disk
+// Generate a schema from migrations on the filesystem and dump it to disk
+func Generate() (*serializers.Schema, error) {
+	schema := &serializers.Schema{SerializerVersion: serializers.SerializerVersion}
+	err := applyAllMigrationsToSchema(schema)
+	if err != nil {
+		return nil, err
+	}
+	err = Dump(schema)
+	if err != nil {
+		return nil, err
+	}
+	return schema, nil
+}
+
+// Dump a schema to disk after alpha-sorting its resources
 func Dump(schema *serializers.Schema) error {
+	sortAlphabetically(schema)
 	out, err := yaml.Marshal(schema)
 
 	err = ioutil.WriteFile("testtrack/schema.yml", out, 0644)
@@ -62,4 +69,20 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 		}
 	}
 	return nil
+}
+
+func sortAlphabetically(schema *serializers.Schema) {
+	sort.Slice(schema.RemoteKills, func(i, j int) bool {
+		return schema.RemoteKills[i].Split < schema.RemoteKills[j].Split &&
+			schema.RemoteKills[i].Reason < schema.RemoteKills[j].Reason
+	})
+	sort.Slice(schema.FeatureCompletions, func(i, j int) bool {
+		return schema.FeatureCompletions[i].FeatureGate < schema.FeatureCompletions[j].FeatureGate
+	})
+	sort.Slice(schema.Splits, func(i, j int) bool {
+		return schema.Splits[i].Name < schema.Splits[j].Name
+	})
+	sort.Slice(schema.IdentifierTypes, func(i, j int) bool {
+		return schema.IdentifierTypes[i].Name < schema.IdentifierTypes[j].Name
+	})
 }
