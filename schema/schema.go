@@ -5,7 +5,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/Betterment/testtrack-cli/migrationloaders"
+	"github.com/Betterment/testtrack-cli/migrationrepositories"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"gopkg.in/yaml.v2"
 )
@@ -55,15 +55,13 @@ func Dump(schema *serializers.Schema) error {
 }
 
 func applyAllMigrationsToSchema(schema *serializers.Schema) error {
-	migrationsByVersion, err := migrationloaders.Load()
+	migrationRepo, err := migrationrepositories.Load()
 	if err != nil {
 		return err
 	}
 
-	versions := migrationloaders.GetSortedVersions(migrationsByVersion)
-
-	for _, version := range versions {
-		err = migrationsByVersion[version].ApplyToSchema(schema)
+	for _, version := range migrationRepo.SortedVersions() {
+		err = migrationRepo[version].ApplyToSchema(schema)
 		if err != nil {
 			return err
 		}

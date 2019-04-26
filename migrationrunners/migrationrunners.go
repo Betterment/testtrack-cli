@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/migrationrepositories"
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
@@ -37,7 +37,7 @@ func New() (*Runner, error) {
 
 // RunOutstanding runs all outstanding migrations
 func (r *Runner) RunOutstanding() error {
-	migrationsByVersion, err := migrationloaders.Load()
+	migrationRepo, err := migrationrepositories.Load()
 	if err != nil {
 		return err
 	}
@@ -48,13 +48,13 @@ func (r *Runner) RunOutstanding() error {
 	}
 
 	for _, version := range appliedMigrationVersions {
-		delete(migrationsByVersion, version.Version)
+		delete(migrationRepo, version.Version)
 	}
 
-	versions := migrationloaders.GetSortedVersions(migrationsByVersion)
+	versions := migrationRepo.SortedVersions()
 
 	for _, version := range versions {
-		mgr := migrationmanagers.NewWithDependencies(migrationsByVersion[version], r.server, r.schema)
+		mgr := migrationmanagers.NewWithDependencies(migrationRepo[version], r.server, r.schema)
 		err := mgr.Run()
 		if err != nil {
 			return err
@@ -95,22 +95,22 @@ func (r *Runner) Undo() error {
 }
 
 func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
-	migrationsByVersion, err := migrationloaders.Load()
+	migrationRepo, err := migrationrepositories.Load()
 	if err != nil {
 		return nil, err
 	}
 
-	versions := migrationloaders.GetSortedVersions(migrationsByVersion)
+	versions := migrationRepo.SortedVersions()
 
 	if len(versions) == 0 {
 		return nil, errors.New("no migration to undo")
 	}
 
-	latestMigration := migrationsByVersion[versions[len(versions)-1]]
+	latestMigration := migrationRepo[versions[len(versions)-1]]
 
 	var previousMigration migrations.IMigration
 	for i := len(versions) - 2; i >= 0; i-- {
-		m := migrationsByVersion[versions[i]]
+		m := migrationRepo[versions[i]]
 		if m.SameResourceAs(latestMigration) {
 			previousMigration = m
 			break
@@ -129,7 +129,11 @@ func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.schema.SchemaVersion = versions[len(versions)-2]
+	if len(versions) > 1 {
+		r.schema.SchemaVersion = versions[len(versions)-2]
+	} else {
+		r.schema.SchemaVersion = ""
+	}
 	return latestMigration, nil
 }
 

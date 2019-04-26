@@ -1,4 +1,4 @@
-package migrationloaders
+package migrationrepositories
 
 import (
 	"fmt"
@@ -18,14 +18,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MigrationRepository is a map of migrations indexed by migration version
+type MigrationRepository map[string]migrations.IMigration
+
 // Load loads a set of migrations
-func Load() (map[string]migrations.IMigration, error) {
+func Load() (MigrationRepository, error) {
 	files, err := ioutil.ReadDir("testtrack/migrate")
 	if err != nil {
 		return nil, err
 	}
 
-	migrationsByVersion := make(map[string]migrations.IMigration)
+	migrationRepo := make(MigrationRepository)
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
 			continue // Skip hidden files
@@ -48,32 +51,33 @@ func Load() (map[string]migrations.IMigration, error) {
 		}
 
 		if migrationFile.FeatureCompletion != nil {
-			migrationsByVersion[migrationVersion] = featurecompletions.FromFile(&migrationVersion, migrationFile.FeatureCompletion)
+			migrationRepo[migrationVersion] = featurecompletions.FromFile(&migrationVersion, migrationFile.FeatureCompletion)
 		} else if migrationFile.RemoteKill != nil {
-			migrationsByVersion[migrationVersion] = remotekills.FromFile(&migrationVersion, migrationFile.RemoteKill)
+			migrationRepo[migrationVersion] = remotekills.FromFile(&migrationVersion, migrationFile.RemoteKill)
 		} else if migrationFile.Split != nil {
-			migrationsByVersion[migrationVersion], err = splits.FromFile(&migrationVersion, migrationFile.Split)
+			migrationRepo[migrationVersion], err = splits.FromFile(&migrationVersion, migrationFile.Split)
 			if err != nil {
 				return nil, err
 			}
 		} else if migrationFile.SplitRetirement != nil {
-			migrationsByVersion[migrationVersion] = splitretirements.FromFile(&migrationVersion, migrationFile.SplitRetirement)
+			migrationRepo[migrationVersion] = splitretirements.FromFile(&migrationVersion, migrationFile.SplitRetirement)
 		} else if migrationFile.SplitDecision != nil {
-			migrationsByVersion[migrationVersion] = splitdecisions.FromFile(&migrationVersion, migrationFile.SplitDecision)
+			migrationRepo[migrationVersion] = splitdecisions.FromFile(&migrationVersion, migrationFile.SplitDecision)
 		} else if migrationFile.IdentifierType != nil {
-			migrationsByVersion[migrationVersion] = identifiertypes.FromFile(&migrationVersion, migrationFile.IdentifierType)
+			migrationRepo[migrationVersion] = identifiertypes.FromFile(&migrationVersion, migrationFile.IdentifierType)
 		} else {
 			return nil, fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
 		}
 	}
-	return migrationsByVersion, nil
+	return migrationRepo, nil
 }
 
-// GetSortedVersions sorts and returns the migration versions from a map of migrations by version
-func GetSortedVersions(migrationsByVersion map[string]migrations.IMigration) []string {
-	versions := make([]string, 0, len(migrationsByVersion))
+// SortedVersions sorts and returns the migration versions in a repo because
+// maps don't preserve order in go
+func (m *MigrationRepository) SortedVersions() []string {
+	versions := make([]string, 0, len(*m))
 
-	for version := range migrationsByVersion {
+	for version := range *m {
 		versions = append(versions, version)
 	}
 
