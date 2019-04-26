@@ -73,6 +73,7 @@ func WeightsFromString(weights string) (*Weights, error) {
 // FromFile reifies a migration from the yaml serializable representation
 func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (migrations.IMigration, error) {
 	weights := make(Weights)
+	cumulativeWeight := 0
 	for _, item := range serializable.Weights {
 		variant, ok := item.Key.(string)
 		if !ok {
@@ -82,7 +83,14 @@ func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (mi
 		if !ok {
 			return nil, fmt.Errorf("weighting %v is not an int", item.Value)
 		}
+		if weight < 0 {
+			return nil, fmt.Errorf("weight %d is less than zero", weight)
+		}
+		cumulativeWeight += weight
 		weights[variant] = weight
+	}
+	if cumulativeWeight != 100 {
+		return nil, fmt.Errorf("weights must sum to 100, got %d", cumulativeWeight)
 	}
 	return &Split{
 		migrationVersion: migrationVersion,
