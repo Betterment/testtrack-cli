@@ -127,8 +127,8 @@ func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema) error {
 	for i, candidate := range schema.FeatureCompletions { // Replace
 		if candidate.FeatureGate == *f.featureGate {
 			schema.FeatureCompletions[i] = *f.serializable()
+			return nil
 		}
-		return nil
 	}
 	schema.FeatureCompletions = append(schema.FeatureCompletions, *f.serializable()) // Add
 	return nil
