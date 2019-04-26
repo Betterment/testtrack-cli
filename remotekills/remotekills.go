@@ -101,7 +101,7 @@ func (r *RemoteKill) SyncPath() string {
 	return "api/v2/migrations/app_remote_kill"
 }
 
-// Serializable returns a JSON/YAML serializable representation
+// Serializable returns a JSON serializable representation
 func (r *RemoteKill) Serializable() interface{} {
 	return r.serializable()
 }
@@ -133,7 +133,7 @@ func (r *RemoteKill) SameResourceAs(other migrations.IMigration) bool {
 // Inverse returns a logical inverse operation if possible
 func (r *RemoteKill) Inverse() (migrations.IMigration, error) {
 	if r.firstBadVersion == nil {
-		return nil, fmt.Errorf("can't invert RemoteKill destroy %s for %s %s", *r.migrationVersion, *r.split, *r.reason)
+		return nil, fmt.Errorf("can't invert remote_kill destroy %s for %s %s", *r.migrationVersion, *r.split, *r.reason)
 	}
 	migrationVersion, err := migrations.GenerateMigrationVersion()
 	if err != nil {

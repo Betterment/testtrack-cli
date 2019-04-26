@@ -1,5 +1,7 @@
 package serializers
 
+import "gopkg.in/yaml.v2"
+
 // SerializerVersion is the current version of the migration file format so we can evolve over time
 const SerializerVersion = 1
 
@@ -13,6 +15,7 @@ type MigrationFile struct {
 	SerializerVersion int                `yaml:"serializer_version"`
 	FeatureCompletion *FeatureCompletion `yaml:"feature_completion,omitempty"`
 	RemoteKill        *RemoteKill        `yaml:"remote_kill,omitempty"`
+	Split             *SplitYAML         `yaml:"split,omitempty"`
 }
 
 // FeatureCompletion is the marshalable representation of a FeatureCompletion
@@ -28,4 +31,16 @@ type RemoteKill struct {
 	OverrideTo      *string `yaml:"override_to" json:"override_to"`
 	FirstBadVersion *string `yaml:"first_bad_version" json:"first_bad_version"`
 	FixedVersion    *string `yaml:"fixed_version" json:"fixed_version"`
+}
+
+// SplitYAML is the YAML-marshalable representation of a Split
+type SplitYAML struct {
+	Name    string        `yaml:"name"`
+	Weights yaml.MapSlice `yaml:"weights"`
+}
+
+// SplitJSON is is the JSON-marshalabe representation of a Split
+type SplitJSON struct {
+	Name              string         `json:"name"`
+	WeightingRegistry map[string]int `json:"weighting_registry"`
 }
