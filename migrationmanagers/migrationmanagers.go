@@ -61,13 +61,13 @@ func (m *MigrationManager) Save() error {
 	}
 
 	valid, err := m.sync()
-	if err != nil {
+	if !valid || err != nil {
 		m.deleteFile()
+	}
+	if err != nil {
 		return err
 	}
-
 	if !valid {
-		m.deleteFile()
 		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
 	}
 
