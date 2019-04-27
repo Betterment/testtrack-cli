@@ -10,8 +10,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Load a schema from disk or generate one
-func Load() (*serializers.Schema, error) {
+// Read a schema from disk or generate one
+func Read() (*serializers.Schema, error) {
 	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
 		return Generate()
 	}
@@ -27,23 +27,23 @@ func Load() (*serializers.Schema, error) {
 	return &schema, nil
 }
 
-// Generate a schema from migrations on the filesystem and dump it to disk
+// Generate a schema from migrations on the filesystem and write it to disk
 func Generate() (*serializers.Schema, error) {
 	schema := &serializers.Schema{SerializerVersion: serializers.SerializerVersion}
 	err := applyAllMigrationsToSchema(schema)
 	if err != nil {
 		return nil, err
 	}
-	err = Dump(schema)
+	err = Write(schema)
 	if err != nil {
 		return nil, err
 	}
 	return schema, nil
 }
 
-// Dump a schema to disk after alpha-sorting its resources
-func Dump(schema *serializers.Schema) error {
-	sortAlphabetically(schema)
+// Write a schema to disk after alpha-sorting its resources
+func Write(schema *serializers.Schema) error {
+	SortAlphabetically(schema)
 	out, err := yaml.Marshal(schema)
 
 	err = ioutil.WriteFile("testtrack/schema.yml", out, 0644)
@@ -60,16 +60,22 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 		return err
 	}
 
-	for _, version := range migrationRepo.SortedVersions() {
+	versions := migrationRepo.SortedVersions()
+
+	for _, version := range versions {
 		err = migrationRepo[version].ApplyToSchema(schema)
 		if err != nil {
 			return err
 		}
 	}
+	if len(versions) != 0 {
+		schema.SchemaVersion = versions[len(versions)-1]
+	}
 	return nil
 }
 
-func sortAlphabetically(schema *serializers.Schema) {
+// SortAlphabetically sorts the schema's resource slices by their natural keys
+func SortAlphabetically(schema *serializers.Schema) {
 	sort.Slice(schema.RemoteKills, func(i, j int) bool {
 		return schema.RemoteKills[i].Split < schema.RemoteKills[j].Split &&
 			schema.RemoteKills[i].Reason < schema.RemoteKills[j].Reason

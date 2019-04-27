@@ -27,7 +27,7 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 		return nil, err
 	}
 
-	schema, err := schema.Load()
+	schema, err := schema.Read()
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,8 @@ func NewWithDependencies(migration migrations.IMigration, server servers.IServer
 	}
 }
 
-// Save does the whole operation of validating, persisting, and sending a migration to the local TT server
+// Save does the whole operation of validating, persisting, and sending a
+// migration to the local TT server, writing out the schema
 func (m *MigrationManager) Save() error {
 	err := m.migration.Validate()
 	if err != nil {
@@ -70,17 +71,24 @@ func (m *MigrationManager) Save() error {
 	if !valid {
 		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
 	}
-
-	return m.syncVersion()
+	err = m.SyncVersion()
+	if err != nil {
+		return err
+	}
+	return schema.Write(m.schema)
 }
 
-// Run applies a migration to the TestTrack server
+// Run applies a migration to the TestTrack server, writing out the schema
 func (m *MigrationManager) Run() error {
 	err := m.Apply()
 	if err != nil {
 		return err
 	}
-	return m.syncVersion()
+	err = m.SyncVersion()
+	if err != nil {
+		return err
+	}
+	return schema.Write(m.schema)
 }
 
 // Apply applies a migration to the TestTrack server without recording the version to TestTrack server
@@ -145,7 +153,8 @@ func (m *MigrationManager) sync() (bool, error) {
 	}
 }
 
-func (m *MigrationManager) syncVersion() error {
+// SyncVersion marks schema versions as applied on TestTrack server
+func (m *MigrationManager) SyncVersion() error {
 	resp, err := m.server.Post("api/v2/migrations", &serializers.MigrationVersion{Version: *m.migration.MigrationVersion()})
 	if err != nil {
 		return err
@@ -160,5 +169,5 @@ func (m *MigrationManager) syncVersion() error {
 		m.schema.SchemaVersion = *appliedVersion
 	}
 
-	return schema.Dump(m.schema)
+	return nil
 }

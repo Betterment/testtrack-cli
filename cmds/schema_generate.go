@@ -6,7 +6,7 @@ import (
 )
 
 var schemaGenerateDoc = `
-Reads the migrations in testtrack/migrate and dumps the resulting schema state
+Reads the migrations in testtrack/migrate and writes the resulting schema state
 to testtrack/schema.yml, overwriting the file if it already exists. Generate
 makes no TestTrack API calls.
 
