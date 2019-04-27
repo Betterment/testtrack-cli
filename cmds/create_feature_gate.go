@@ -1,9 +1,7 @@
 package cmds
 
 import (
-	"errors"
 	"fmt"
-	"os"
 
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
 	"github.com/Betterment/testtrack-cli/splits"
@@ -12,7 +10,7 @@ import (
 )
 
 var createFeatureGateDoc = `
-Creates a feature gate in TestTrack.
+Creates or updates a feature gate split in TestTrack.
 
 Example:
 
@@ -24,16 +22,17 @@ weighting of 100% false.
 You can specify a default with the default flag, or select your own variants
 with the weights flag.
 
-Weights are specified as a string and must sum to 100:
+Optional weights are specified as a string, must have the variants true and
+false, and must sum to 100:
 
---weights "variant_1: 25, variant_2: 25, variant_3: 50"
+--weights "true: 25, false: 75"
 `
 
-var defaultVariant, weights string
+var createFeatureGateDefault, createFeatureGateWeights string
 
 func init() {
-	createFeatureGateCmd.Flags().StringVar(&defaultVariant, "default", "false", "Default variant for your feature flag")
-	createFeatureGateCmd.Flags().StringVar(&weights, "weights", "", "Variant weights to use (overrides default)")
+	createFeatureGateCmd.Flags().StringVar(&createFeatureGateDefault, "default", "false", "Default variant for your feature flag")
+	createFeatureGateCmd.Flags().StringVar(&createFeatureGateWeights, "weights", "", "Variant weights to use (overrides default)")
 	createCmd.AddCommand(createFeatureGateCmd)
 }
 
@@ -43,17 +42,17 @@ var createFeatureGateCmd = &cobra.Command{
 	Long:  createFeatureGateDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return createFeatureGate(args[0], defaultVariant, weights)
+		return createFeatureGate(args[0], createFeatureGateDefault, createFeatureGateWeights)
 	},
 }
 
 func createFeatureGate(name, defaultVariant, weights string) error {
-	appName, ok := os.LookupEnv("TESTTRACK_APP_NAME")
-	if !ok {
-		return errors.New("TESTTRACK_APP_NAME must be set")
+	appName, err := getAppName()
+	if err != nil {
+		return err
 	}
 
-	err := validations.NonPrefixedFeatureGate("name", &name)
+	err = validations.NonPrefixedFeatureGate("name", &name)
 	if err != nil {
 		return err
 	}

@@ -26,10 +26,10 @@ field for customers to use.
 You can reverse complete_feature with the uncomplete_feature command.
 `
 
-var appVersion string
+var createFeatureCompletionAppVersion string
 
 func init() {
-	createFeatureCompletionCmd.Flags().StringVar(&appVersion, "app_version", "", "App version (required)")
+	createFeatureCompletionCmd.Flags().StringVar(&createFeatureCompletionAppVersion, "app_version", "", "App version (required)")
 	createFeatureCompletionCmd.MarkFlagRequired("app_version")
 	createCmd.AddCommand(createFeatureCompletionCmd)
 }
@@ -40,7 +40,7 @@ var createFeatureCompletionCmd = &cobra.Command{
 	Long:  createFeatureCompletionDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return createFeatureCompletion(&args[0], &appVersion)
+		return createFeatureCompletion(&args[0], &createFeatureCompletionAppVersion)
 	},
 }
 

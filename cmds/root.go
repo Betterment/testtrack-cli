@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -12,7 +13,9 @@ var version string
 var build string
 
 func init() {
-	if _, ok := os.LookupEnv("TESTTRACK_CLI_URL"); !ok {
+	_, urlSet := os.LookupEnv("TESTTRACK_CLI_URL")
+	_, appNameSet := os.LookupEnv("TESTTRACK_APP_NAME")
+	if !urlSet && !appNameSet {
 		godotenv.Load()
 	}
 }
@@ -33,4 +36,12 @@ func Execute() {
 		}
 		os.Exit(1)
 	}
+}
+
+func getAppName() (string, error) {
+	appName, ok := os.LookupEnv("TESTTRACK_APP_NAME")
+	if !ok {
+		return "", errors.New("TESTTRACK_APP_NAME must be set")
+	}
+	return appName, nil
 }
