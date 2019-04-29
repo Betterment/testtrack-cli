@@ -71,7 +71,7 @@ type IdentifierType struct {
 type SchemaSplit struct {
 	Name    string        `yaml:"name"`
 	Weights yaml.MapSlice `yaml:"weights"`
-	Decided bool          `yaml:"decided"`
+	Decided bool          `yaml:"decided,omitempty"`
 }
 
 // Schema is the YAML-marshalable representation of the TestTrack schema for

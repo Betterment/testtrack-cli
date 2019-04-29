@@ -119,7 +119,7 @@ func WeightsYAMLToMap(yamlWeights yaml.MapSlice) (*Weights, error) {
 
 // Validate validates that a feature completion may be persisted
 func (s *Split) Validate() error {
-	return validations.PrefixedSplit("name", s.name)
+	return validations.Split("name", s.name)
 }
 
 // Filename generates a filename for this migration
