@@ -15,6 +15,7 @@ import (
 	"github.com/Betterment/testtrack-cli/remotekills"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
+	"github.com/Betterment/testtrack-cli/splitretirements"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -175,6 +176,8 @@ func loadMigrations() (map[string]migrations.IMigration, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if migrationFile.SplitRetirement != nil {
+			migrationsByVersion[migrationVersion] = splitretirements.FromFile(&migrationVersion, migrationFile.SplitRetirement)
 		} else {
 			return nil, fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
 		}
