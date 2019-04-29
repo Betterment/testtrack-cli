@@ -11,6 +11,8 @@ import (
 
 var version string
 var build string
+var noPrefix bool
+var force bool
 
 func init() {
 	_, urlSet := os.LookupEnv("TESTTRACK_CLI_URL")
