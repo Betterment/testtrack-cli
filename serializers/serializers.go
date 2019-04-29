@@ -17,6 +17,7 @@ type MigrationFile struct {
 	RemoteKill        *RemoteKill        `yaml:"remote_kill,omitempty"`
 	Split             *SplitYAML         `yaml:"split,omitempty"`
 	SplitRetirement   *SplitRetirement   `yaml:"split_retirement,omitempty"`
+	SplitDecision     *SplitDecision     `yaml:"split_decision,omitempty"`
 }
 
 // FeatureCompletion is the marshalable representation of a FeatureCompletion
@@ -50,4 +51,10 @@ type SplitJSON struct {
 type SplitRetirement struct {
 	Split    string `json:"split"`
 	Decision string `json:"decision"`
+}
+
+// SplitDecision is the JSON and YAML-marshalable representation of a SplitDecision
+type SplitDecision struct {
+	Split   string `json:"split"`
+	Variant string `json:"variant"`
 }
