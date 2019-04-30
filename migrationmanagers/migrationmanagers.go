@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
@@ -134,7 +135,11 @@ func (m *MigrationManager) deleteFile() error {
 }
 
 func (m *MigrationManager) sync() (bool, error) {
-	err := m.migration.ApplyToSchema(m.schema)
+	migrationRepo, err := migrationloaders.Load()
+	if err != nil {
+		return false, err
+	}
+	err = m.migration.ApplyToSchema(m.schema, migrationRepo)
 	if err != nil {
 		return false, err
 	}

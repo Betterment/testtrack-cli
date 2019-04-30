@@ -41,7 +41,7 @@ func FromFile(migrationVersion *string, serializable *serializers.SplitRetiremen
 
 // Validate validates that a feature completion may be persisted
 func (s *SplitRetirement) Validate() error {
-	return validations.PrefixedSplit("split", s.split)
+	return validations.Split("split", s.split)
 }
 
 // Filename generates a filename for this migration
@@ -84,6 +84,11 @@ func (s *SplitRetirement) ResourceKey() splits.SplitKey {
 	return splits.SplitKey(*s.split)
 }
 
+// Weights represents the weightings of a split
+func (s *SplitRetirement) Weights() *splits.Weights {
+	return nil // SplitRetirements don't have weights
+}
+
 // SameResourceAs returns whether the migrations refer to the same TestTrack resource
 func (s *SplitRetirement) SameResourceAs(other migrations.IMigration) bool {
 	if otherS, ok := other.(splits.ISplitMigration); ok {
@@ -98,7 +103,7 @@ func (s *SplitRetirement) Inverse() (migrations.IMigration, error) {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema) error {
+func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
 			schema.Splits = append(schema.Splits[:i], schema.Splits[i+1:]...)

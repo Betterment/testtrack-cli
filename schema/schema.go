@@ -6,7 +6,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/Betterment/testtrack-cli/migrationrepositories"
+	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/splits"
 	"gopkg.in/yaml.v2"
@@ -87,14 +87,14 @@ func mergeLegacySchema(schema *serializers.Schema) error {
 		if !ok {
 			return fmt.Errorf("expected weights, got %v", mapSlice.Value)
 		}
-		weights, err := splits.WeightsYAMLToMap(weightsYAML)
+		weights, err := splits.WeightsFromYAML(weightsYAML)
 		if err != nil {
 			return err
 		}
 
 		schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 			Name:    name,
-			Weights: splits.WeightsMapToYAML(weights),
+			Weights: weights.ToYAML(),
 			Decided: false,
 		})
 	}
@@ -102,7 +102,7 @@ func mergeLegacySchema(schema *serializers.Schema) error {
 }
 
 func applyAllMigrationsToSchema(schema *serializers.Schema) error {
-	migrationRepo, err := migrationrepositories.Load()
+	migrationRepo, err := migrationloaders.Load()
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 	versions := migrationRepo.SortedVersions()
 
 	for _, version := range versions {
-		err = migrationRepo[version].ApplyToSchema(schema)
+		err = migrationRepo[version].ApplyToSchema(schema, migrationRepo)
 		if err != nil {
 			return err
 		}

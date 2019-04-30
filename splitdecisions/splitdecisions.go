@@ -7,6 +7,7 @@ import (
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/Betterment/testtrack-cli/validations"
+	"github.com/pkg/errors"
 )
 
 // SplitDecision represents a feature we're marking (un)completed
@@ -39,9 +40,9 @@ func FromFile(migrationVersion *string, serializable *serializers.SplitDecision)
 	}
 }
 
-// Validate validates that a feature completion may be persisted
+// Validate validates that a migration may be persisted
 func (s *SplitDecision) Validate() error {
-	return validations.PrefixedSplit("split", s.split)
+	return validations.Split("split", s.split)
 }
 
 // Filename generates a filename for this migration
@@ -84,6 +85,11 @@ func (s *SplitDecision) ResourceKey() splits.SplitKey {
 	return splits.SplitKey(*s.split)
 }
 
+// Weights represents the weightings of a split
+func (s *SplitDecision) Weights() *splits.Weights {
+	return nil // SplitDecisions don't have weights
+}
+
 // SameResourceAs returns whether the migrations refer to the same TestTrack resource
 func (s *SplitDecision) SameResourceAs(other migrations.IMigration) bool {
 	if otherS, ok := other.(splits.ISplitMigration); ok {
@@ -98,27 +104,35 @@ func (s *SplitDecision) Inverse() (migrations.IMigration, error) {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema) error {
+func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository) error {
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
 			schema.Splits[i].Decided = true
-			weights, err := splits.WeightsYAMLToMap(candidate.Weights)
+			weights, err := splits.WeightsFromYAML(candidate.Weights)
 			if err != nil {
 				return err
 			}
-			foundVariant := false
-			for variant := range *weights {
-				if variant == *s.variant {
-					foundVariant = true
-					(*weights)[variant] = 100
-				} else {
-					(*weights)[variant] = 0
-				}
+			err = weights.ReweightToDecision(*s.variant)
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("in split %s in schema", *s.split))
 			}
-			if !foundVariant {
-				return fmt.Errorf("couldn't locate variant %s in split %s in schema", *s.variant, *s.split)
+			schema.Splits[i].Weights = weights.ToYAML()
+			return nil
+		}
+	}
+	if s.migrationVersion != nil {
+		split := splits.MostRecentNamed(*s.split, *s.migrationVersion, migrationRepo)
+		if split != nil {
+			weights := split.Weights()
+			err := weights.ReweightToDecision(*s.variant)
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("in split %s in schema", *s.split))
 			}
-			schema.Splits[i].Weights = splits.WeightsMapToYAML(weights)
+			schema.Splits = append(schema.Splits, serializers.SchemaSplit{
+				Name:    *s.split,
+				Weights: weights.ToYAML(),
+				Decided: true,
+			})
 			return nil
 		}
 	}

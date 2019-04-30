@@ -94,7 +94,7 @@ func (i *IdentifierType) Inverse() (migrations.IMigration, error) {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (i *IdentifierType) ApplyToSchema(schema *serializers.Schema) error {
+func (i *IdentifierType) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
 	for _, candidate := range schema.IdentifierTypes {
 		if candidate.Name == *i.name {
 			return fmt.Errorf("identifier_type %s already exists", *i.name)

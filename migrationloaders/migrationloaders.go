@@ -1,10 +1,9 @@
-package migrationrepositories
+package migrationloaders
 
 import (
 	"fmt"
 	"io/ioutil"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/Betterment/testtrack-cli/featurecompletions"
@@ -18,17 +17,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// MigrationRepository is a map of migrations indexed by migration version
-type MigrationRepository map[string]migrations.IMigration
-
 // Load loads a set of migrations
-func Load() (MigrationRepository, error) {
+func Load() (migrations.Repository, error) {
 	files, err := ioutil.ReadDir("testtrack/migrate")
 	if err != nil {
 		return nil, err
 	}
 
-	migrationRepo := make(MigrationRepository)
+	migrationRepo := make(migrations.Repository)
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
 			continue // Skip hidden files
@@ -70,18 +66,4 @@ func Load() (MigrationRepository, error) {
 		}
 	}
 	return migrationRepo, nil
-}
-
-// SortedVersions sorts and returns the migration versions in a repo because
-// maps don't preserve order in go
-func (m *MigrationRepository) SortedVersions() []string {
-	versions := make([]string, 0, len(*m))
-
-	for version := range *m {
-		versions = append(versions, version)
-	}
-
-	sort.Strings(versions)
-
-	return versions
 }

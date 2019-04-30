@@ -51,19 +51,6 @@ func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName 
 	return nil
 }
 
-// PrefixedSplit validates that split name param is valid with an app prefix
-func PrefixedSplit(paramName string, value *string) error {
-	err := Presence(paramName, value)
-	if err != nil {
-		return err
-	}
-
-	if !prefixedSplitRegex.MatchString(*value) {
-		return fmt.Errorf("%s '%s' must be an app-name prefixed split name", paramName, *value)
-	}
-	return nil
-}
-
 // NonPrefixedSplit validates that a split name param is valid with no app prefix
 func NonPrefixedSplit(paramName string, value *string) error {
 	err := Presence(paramName, value)
