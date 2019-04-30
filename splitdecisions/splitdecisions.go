@@ -126,7 +126,7 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 			weights := split.Weights()
 			err := weights.ReweightToDecision(*s.variant)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("in split %s in schema", *s.split))
+				return errors.Wrap(err, fmt.Sprintf("in most recent split migration %s", *s.split))
 			}
 			schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 				Name:    *s.split,
