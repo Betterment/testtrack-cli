@@ -7,6 +7,7 @@ import (
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/Betterment/testtrack-cli/validations"
+	"github.com/pkg/errors"
 )
 
 // SplitRetirement represents a feature we're marking (un)completed
@@ -101,6 +102,14 @@ func (s *SplitRetirement) Inverse() (migrations.IMigration, error) {
 func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
+			weights, err := splits.WeightsFromYAML(candidate.Weights)
+			if err != nil {
+				return err
+			}
+			err = weights.ReweightToDecision(*s.decision)
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("in split %s in schema", *s.split))
+			}
 			schema.Splits = append(schema.Splits[:i], schema.Splits[i+1:]...)
 			return nil
 		}
