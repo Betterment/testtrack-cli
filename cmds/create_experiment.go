@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
@@ -28,6 +29,7 @@ var createExperimentWeights string
 
 func init() {
 	createExperimentCmd.Flags().StringVar(&createExperimentWeights, "weights", "control: 50, treatment: 50", "Variant weights to use")
+	createExperimentCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix experiment with app_name to refer to legacy splits")
 	createCmd.AddCommand(createExperimentCmd)
 }
 
@@ -42,17 +44,25 @@ var createExperimentCmd = &cobra.Command{
 }
 
 func createExperiment(name, weights string) error {
-	appName, err := getAppName()
+	schema, err := schema.Read()
 	if err != nil {
 		return err
 	}
 
-	err = validations.NonPrefixedExperiment("name", &name)
-	if err != nil {
-		return err
-	}
+	err = validations.SplitExistsInSchema("name", &name, schema)
+	if err != nil && !noPrefix { // Bare name doesn't exist in schema
+		appName, err := getAppName()
+		if err != nil {
+			return err
+		}
 
-	name = fmt.Sprintf("%s.%s", appName, name)
+		err = validations.NonPrefixedExperiment("name", &name)
+		if err != nil {
+			return err
+		}
+
+		name = fmt.Sprintf("%s.%s", appName, name)
+	}
 
 	weightsMap, err := splits.WeightsFromString(weights)
 	if err != nil {
