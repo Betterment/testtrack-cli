@@ -85,11 +85,6 @@ func (s *SplitDecision) ResourceKey() splits.SplitKey {
 	return splits.SplitKey(*s.split)
 }
 
-// Weights represents the weightings of a split
-func (s *SplitDecision) Weights() *splits.Weights {
-	return nil // SplitDecisions don't have weights
-}
-
 // SameResourceAs returns whether the migrations refer to the same TestTrack resource
 func (s *SplitDecision) SameResourceAs(other migrations.IMigration) bool {
 	if otherS, ok := other.(splits.ISplitMigration); ok {

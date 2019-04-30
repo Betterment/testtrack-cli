@@ -18,7 +18,6 @@ type SplitKey string
 // types to determine whether they operate on the same split
 type ISplitMigration interface {
 	ResourceKey() SplitKey
-	Weights() *Weights
 }
 
 // Split represents a feature we're marking (un)completed
