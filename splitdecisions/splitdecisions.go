@@ -96,3 +96,31 @@ func (s *SplitDecision) SameResourceAs(other migrations.IMigration) bool {
 func (s *SplitDecision) Inverse() (migrations.IMigration, error) {
 	return nil, fmt.Errorf("can't invert split decision %s", *s.split)
 }
+
+// ApplyToSchema applies a migrations changes to in-memory schema representation
+func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema) error {
+	for i, candidate := range schema.Splits {
+		if candidate.Name == *s.split {
+			schema.Splits[i].Decided = true
+			weights, err := splits.WeightsYAMLToMap(candidate.Weights)
+			if err != nil {
+				return err
+			}
+			foundVariant := false
+			for variant := range *weights {
+				if variant == *s.variant {
+					foundVariant = true
+					(*weights)[variant] = 100
+				} else {
+					(*weights)[variant] = 0
+				}
+			}
+			if !foundVariant {
+				return fmt.Errorf("couldn't locate variant %s in split %s in schema", *s.variant, *s.split)
+			}
+			schema.Splits[i].Weights = splits.WeightsMapToYAML(weights)
+			return nil
+		}
+	}
+	return fmt.Errorf("Couldn't locate split %s in schema to decide", *s.split)
+}

@@ -1,6 +1,8 @@
 package serializers
 
-import "gopkg.in/yaml.v2"
+import (
+	"gopkg.in/yaml.v2"
+)
 
 // SerializerVersion is the current version of the migration file format so we can evolve over time
 const SerializerVersion = 1
@@ -63,4 +65,22 @@ type SplitDecision struct {
 // IdentifierType is the JSON and YAML-marshalable representation of an IdentifierType
 type IdentifierType struct {
 	Name string `json:"name"`
+}
+
+// SchemaSplit is the schema-file YAML-marshalable representation of a split's state
+type SchemaSplit struct {
+	Name    string        `yaml:"name"`
+	Weights yaml.MapSlice `yaml:"weights"`
+	Decided bool          `yaml:"decided"`
+}
+
+// Schema is the YAML-marshalable representation of the TestTrack schema for
+// migration validation and bootstrapping of new ecosystems
+type Schema struct {
+	SerializerVersion  int                 `yaml:"serializer_version"`
+	SchemaVersion      string              `yaml:"schema_version"`
+	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty"`
+	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty"`
+	Splits             []SchemaSplit       `yaml:"splits,omitempty"`
+	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty"`
 }

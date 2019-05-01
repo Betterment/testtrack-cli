@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Betterment/testtrack-cli/migrations"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ import (
 type MigrationManager struct {
 	migration migrations.IMigration
 	server    servers.IServer
+	schema    *serializers.Schema
 }
 
 // New returns a fully-loaded MigrationManager
@@ -25,17 +27,24 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 		return nil, err
 	}
 
+	schema, err := schema.Load()
+	if err != nil {
+		return nil, err
+	}
+
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
+		schema:    schema,
 	}, nil
 }
 
-// NewWithServer returns a MigrationManager using a provided Server
-func NewWithServer(migration migrations.IMigration, server servers.IServer) *MigrationManager {
+// NewWithDependencies returns a MigrationManager using a provided Server
+func NewWithDependencies(migration migrations.IMigration, server servers.IServer, schema *serializers.Schema) *MigrationManager {
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
+		schema:    schema,
 	}
 }
 
@@ -52,12 +61,13 @@ func (m *MigrationManager) Save() error {
 	}
 
 	valid, err := m.sync()
+	if !valid || err != nil {
+		m.deleteFile()
+	}
 	if err != nil {
 		return err
 	}
-
 	if !valid {
-		m.deleteFile()
 		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
 	}
 
@@ -73,7 +83,7 @@ func (m *MigrationManager) Run() error {
 	return m.syncVersion()
 }
 
-// Apply applies a migration to the TestTrack server without recording the version
+// Apply applies a migration to the TestTrack server without recording the version to TestTrack server
 func (m *MigrationManager) Apply() error {
 	err := m.migration.Validate()
 	if err != nil {
@@ -116,6 +126,10 @@ func (m *MigrationManager) deleteFile() error {
 }
 
 func (m *MigrationManager) sync() (bool, error) {
+	err := m.migration.ApplyToSchema(m.schema)
+	if err != nil {
+		return false, err
+	}
 	resp, err := m.server.Post(m.migration.SyncPath(), m.migration.Serializable())
 	if err != nil {
 		return false, err
@@ -141,5 +155,10 @@ func (m *MigrationManager) syncVersion() error {
 		return fmt.Errorf("got %d status code", resp.StatusCode)
 	}
 
-	return nil
+	appliedVersion := m.migration.MigrationVersion()
+	if m.schema.SchemaVersion < *appliedVersion {
+		m.schema.SchemaVersion = *appliedVersion
+	}
+
+	return schema.Dump(m.schema)
 }

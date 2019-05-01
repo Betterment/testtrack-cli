@@ -96,3 +96,14 @@ func (s *SplitRetirement) SameResourceAs(other migrations.IMigration) bool {
 func (s *SplitRetirement) Inverse() (migrations.IMigration, error) {
 	return nil, fmt.Errorf("can't invert split retirement %s", *s.split)
 }
+
+// ApplyToSchema applies a migrations changes to in-memory schema representation
+func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema) error {
+	for i, candidate := range schema.Splits {
+		if candidate.Name == *s.split {
+			schema.Splits = append(schema.Splits[:i], schema.Splits[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("Couldn't locate split %s in schema to retire", *s.split)
+}
