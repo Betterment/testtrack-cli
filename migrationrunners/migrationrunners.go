@@ -27,7 +27,7 @@ func New() (*Runner, error) {
 		return nil, err
 	}
 
-	schema, err := schema.Load()
+	schema, err := schema.Read()
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (r *Runner) Undo() error {
 		return err
 	}
 
-	err = schema.Dump(r.schema)
+	err = schema.Write(r.schema)
 	if err != nil {
 		return err
 	}
