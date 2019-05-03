@@ -90,17 +90,3 @@ type LegacySchema struct {
 	IdentifierTypes []string      `yaml:"identifier_types"`
 	Splits          yaml.MapSlice `yaml:"splits"`
 }
-
-// V1Visitor is the JSON output type for the V1 visitor endpoint
-type V1Visitor struct {
-	ID          string         `json:"id"`
-	Assignments []V1Assignment `json:"assignments"`
-}
-
-// V1Assignment is the JSON output type for the V1 visitor endpoint
-type V1Assignment struct {
-	SplitName string `json:"split_name"`
-	Variant   string `json:"variant"`
-	Context   string `json:"context"`
-	Unsynced  bool   `json:"unsynced"`
-}
