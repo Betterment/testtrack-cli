@@ -6,7 +6,6 @@ import (
 	"github.com/Betterment/testtrack-cli/fakeassignments"
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/splits"
-	"github.com/gorilla/mux"
 )
 
 // v1Visitor is the JSON output type for V1 visitor endpoints
@@ -57,17 +56,47 @@ type v1AssignmentDetail struct {
 	AssignedAt         string `json:"assigned_at"`
 }
 
-func (s *server) routes(r *mux.Router) {
-	r.HandleFunc("/api/v1/split_registry", s.handleGet(getV1SplitRegistry))
-	r.HandleFunc("/api/v1/assignment_event", s.handlePost(postNoop))
-	r.HandleFunc("/api/v1/identifier", s.handlePost(postNoop))
-	r.HandleFunc("/api/v1/visitors/{id}", s.handleGet(getV1Visitor))
-	r.HandleFunc("/api/v1/identifier_types/{t}/identifiers/{i}/visitor", s.handleGet(getV1Visitor))
-	r.HandleFunc("/api/v1/identifier_types/{t}/identifiers/{i}/visitor_detail", s.handleGet(getV1VisitorDetail))
-	r.HandleFunc("/api/v1/assignment_override", s.handlePost(postV1AssignmentOverride))
-	r.HandleFunc("/api/v1/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config", s.handleGet(getV1AppVisitorConfig))
-	r.HandleFunc("/api/v1/apps/{a}/versions/{v}/builds/{b}/identifier_types/{t}/identifiers/{i}/visitor_config", s.handleGet(getV1AppVisitorConfig))
-	r.HandleFunc("/api/v1/split_details/{id}", s.handleGet(getV1SplitDetail))
+func (s *server) routes() {
+	s.handleGet(
+		"/api/v1/split_registry",
+		getV1SplitRegistry,
+	)
+	s.handlePost(
+		"/api/v1/assignment_event",
+		postNoop,
+	)
+	s.handlePost(
+		"/api/v1/identifier",
+		postNoop,
+	)
+	s.handleGet(
+		"/api/v1/visitors/{id}",
+		getV1Visitor,
+	)
+	s.handleGet(
+		"/api/v1/identifier_types/{t}/identifiers/{i}/visitor",
+		getV1Visitor,
+	)
+	s.handleGet(
+		"/api/v1/identifier_types/{t}/identifiers/{i}/visitor_detail",
+		getV1VisitorDetail,
+	)
+	s.handlePost(
+		"/api/v1/assignment_override",
+		postV1AssignmentOverride,
+	)
+	s.handleGet(
+		"/api/v1/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config",
+		getV1AppVisitorConfig,
+	)
+	s.handleGet(
+		"/api/v1/apps/{a}/versions/{v}/builds/{b}/identifier_types/{t}/identifiers/{i}/visitor_config",
+		getV1AppVisitorConfig,
+	)
+	s.handleGet(
+		"/api/v1/split_details/{id}",
+		getV1SplitDetail,
+	)
 }
 
 func getV1SplitRegistry() (interface{}, error) {

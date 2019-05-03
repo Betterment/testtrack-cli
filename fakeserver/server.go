@@ -32,7 +32,7 @@ func Start() {
 		IdleTimeout:  time.Second,
 		Handler:      r, // Pass our instance of gorilla/mux in.
 	}
-	s.routes(r)
+	s.routes()
 
 	srv := (*http.Server)(s)
 
@@ -65,8 +65,9 @@ func Start() {
 	os.Exit(0)
 }
 
-func (s *server) handleGet(responseFunc func() (interface{}, error)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {
+	r := s.Handler.(*mux.Router)
+	r.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		result, err := responseFunc()
 		if err != nil {
 			log.Println(err)
@@ -80,11 +81,12 @@ func (s *server) handleGet(responseFunc func() (interface{}, error)) http.Handle
 			return
 		}
 		w.Write(bytes)
-	}
+	}).Methods("GET")
 }
 
-func (s *server) handlePost(actionFunc func([]byte) error) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (s *server) handlePost(pattern string, actionFunc func([]byte) error) {
+	r := s.Handler.(*mux.Router)
+	r.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		requestBytes, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			log.Println(err)
@@ -98,5 +100,5 @@ func (s *server) handlePost(actionFunc func([]byte) error) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
-	}
+	}).Methods("POST")
 }
