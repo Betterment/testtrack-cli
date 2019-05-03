@@ -79,10 +79,10 @@ type SchemaSplit struct {
 type Schema struct {
 	SerializerVersion  int                 `yaml:"serializer_version"`
 	SchemaVersion      string              `yaml:"schema_version"`
-	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty"`
-	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty"`
 	Splits             []SchemaSplit       `yaml:"splits,omitempty"`
 	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty"`
+	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty"`
+	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty"`
 }
 
 // LegacySchema represents the Rails migration-piggybacked testtrack schema files of old
