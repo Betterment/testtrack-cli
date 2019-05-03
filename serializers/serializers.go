@@ -64,14 +64,14 @@ type SplitDecision struct {
 
 // IdentifierType is the JSON and YAML-marshalable representation of an IdentifierType
 type IdentifierType struct {
-	Name string `json:"name"`
+	Name string `yaml:"name" json:"name"`
 }
 
 // SchemaSplit is the schema-file YAML-marshalable representation of a split's state
 type SchemaSplit struct {
 	Name    string        `yaml:"name"`
 	Weights yaml.MapSlice `yaml:"weights"`
-	Decided bool          `yaml:"decided"`
+	Decided bool          `yaml:"decided,omitempty"`
 }
 
 // Schema is the YAML-marshalable representation of the TestTrack schema for
@@ -83,4 +83,10 @@ type Schema struct {
 	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty"`
 	Splits             []SchemaSplit       `yaml:"splits,omitempty"`
 	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty"`
+}
+
+// LegacySchema represents the Rails migration-piggybacked testtrack schema files of old
+type LegacySchema struct {
+	IdentifierTypes []string      `yaml:"identifier_types"`
+	Splits          yaml.MapSlice `yaml:"splits"`
 }

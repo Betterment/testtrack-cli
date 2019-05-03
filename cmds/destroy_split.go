@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/splitretirements"
 	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
@@ -38,6 +39,7 @@ var destroySplitDecision string
 func init() {
 	destroySplitCmd.Flags().StringVar(&destroySplitDecision, "decision", "", "Variant that clients in the field should see after retirement")
 	destroySplitCmd.MarkFlagRequired("decision")
+	decideCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
 	destroyCmd.AddCommand(destroySplitCmd)
 }
 
@@ -52,17 +54,25 @@ var destroySplitCmd = &cobra.Command{
 }
 
 func destroySplit(name, decision string) error {
-	appName, err := getAppName()
+	schema, err := schema.Read()
 	if err != nil {
 		return err
 	}
 
-	err = validations.NonPrefixedSplit("name", &name)
-	if err != nil {
-		return err
-	}
+	err = validations.SplitExistsInSchema("name", &name, schema)
+	if err != nil && !noPrefix { // Bare name doesn't exist in schema
+		appName, err := getAppName()
+		if err != nil {
+			return err
+		}
 
-	name = fmt.Sprintf("%s.%s", appName, name)
+		err = validations.NonPrefixedSplit("name", &name)
+		if err != nil {
+			return err
+		}
+
+		name = fmt.Sprintf("%s.%s", appName, name)
+	}
 
 	splitRetirement, err := splitretirements.New(&name, &decision)
 	if err != nil {

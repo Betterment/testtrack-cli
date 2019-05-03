@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
@@ -33,6 +34,7 @@ var createFeatureGateDefault, createFeatureGateWeights string
 func init() {
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateDefault, "default", "false", "Default variant for your feature flag")
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateWeights, "weights", "", "Variant weights to use (overrides default)")
+	createFeatureGateCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name (supports legacy splits)")
 	createCmd.AddCommand(createFeatureGateCmd)
 }
 
@@ -47,17 +49,25 @@ var createFeatureGateCmd = &cobra.Command{
 }
 
 func createFeatureGate(name, defaultVariant, weights string) error {
-	appName, err := getAppName()
+	schema, err := schema.Read()
 	if err != nil {
 		return err
 	}
 
-	err = validations.NonPrefixedFeatureGate("name", &name)
-	if err != nil {
-		return err
-	}
+	err = validations.SplitExistsInSchema("name", &name, schema)
+	if err != nil && !noPrefix { // Bare name doesn't exist in schema
+		appName, err := getAppName()
+		if err != nil {
+			return err
+		}
 
-	name = fmt.Sprintf("%s.%s", appName, name)
+		err = validations.NonPrefixedFeatureGate("name", &name)
+		if err != nil {
+			return err
+		}
+
+		name = fmt.Sprintf("%s.%s", appName, name)
+	}
 
 	if len(weights) == 0 {
 		switch defaultVariant {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/splitdecisions"
 	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
@@ -33,6 +34,7 @@ var decideVariant string
 func init() {
 	decideCmd.Flags().StringVar(&decideVariant, "variant", "", "Variant that all clients should see going forward")
 	decideCmd.MarkFlagRequired("variant")
+	decideCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
 	rootCmd.AddCommand(decideCmd)
 }
 
@@ -47,17 +49,25 @@ var decideCmd = &cobra.Command{
 }
 
 func decide(name, variant string) error {
-	appName, err := getAppName()
+	schema, err := schema.Read()
 	if err != nil {
 		return err
 	}
 
-	err = validations.NonPrefixedSplit("name", &name)
-	if err != nil {
-		return err
-	}
+	err = validations.SplitExistsInSchema("name", &name, schema)
+	if err != nil && !noPrefix { // Bare name doesn't exist in schema
+		appName, err := getAppName()
+		if err != nil {
+			return err
+		}
 
-	name = fmt.Sprintf("%s.%s", appName, name)
+		err = validations.NonPrefixedSplit("name", &name)
+		if err != nil {
+			return err
+		}
+
+		name = fmt.Sprintf("%s.%s", appName, name)
+	}
 
 	splitDecision, err := splitdecisions.New(&name, &variant)
 	if err != nil {

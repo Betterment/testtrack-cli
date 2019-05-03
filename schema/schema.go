@@ -1,12 +1,14 @@
 package schema
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sort"
 
 	"github.com/Betterment/testtrack-cli/migrationrepositories"
 	"github.com/Betterment/testtrack-cli/serializers"
+	"github.com/Betterment/testtrack-cli/splits"
 	"gopkg.in/yaml.v2"
 )
 
@@ -30,7 +32,11 @@ func Read() (*serializers.Schema, error) {
 // Generate a schema from migrations on the filesystem and write it to disk
 func Generate() (*serializers.Schema, error) {
 	schema := &serializers.Schema{SerializerVersion: serializers.SerializerVersion}
-	err := applyAllMigrationsToSchema(schema)
+	err := mergeLegacySchema(schema)
+	if err != nil {
+		return nil, err
+	}
+	err = applyAllMigrationsToSchema(schema)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +57,47 @@ func Write(schema *serializers.Schema) error {
 		return err
 	}
 
+	return nil
+}
+
+func mergeLegacySchema(schema *serializers.Schema) error {
+	if _, err := os.Stat("db/test_track_schema.yml"); os.IsNotExist(err) {
+		return nil
+	}
+	legacySchemaBytes, err := ioutil.ReadFile("db/test_track_schema.yml")
+	if err != nil {
+		return err
+	}
+	var legacySchema serializers.LegacySchema
+	err = yaml.Unmarshal(legacySchemaBytes, &legacySchema)
+	if err != nil {
+		return err
+	}
+	for _, name := range legacySchema.IdentifierTypes {
+		schema.IdentifierTypes = append(schema.IdentifierTypes, serializers.IdentifierType{
+			Name: name,
+		})
+	}
+	for _, mapSlice := range legacySchema.Splits {
+		name, ok := mapSlice.Key.(string)
+		if !ok {
+			return fmt.Errorf("expected split name, got %v", mapSlice.Key)
+		}
+		weightsYAML, ok := mapSlice.Value.(yaml.MapSlice)
+		if !ok {
+			return fmt.Errorf("expected weights, got %v", mapSlice.Value)
+		}
+		weights, err := splits.WeightsYAMLToMap(weightsYAML)
+		if err != nil {
+			return err
+		}
+
+		schema.Splits = append(schema.Splits, serializers.SchemaSplit{
+			Name:    name,
+			Weights: splits.WeightsMapToYAML(weights),
+			Decided: false,
+		})
+	}
 	return nil
 }
 
