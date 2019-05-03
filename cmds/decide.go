@@ -34,7 +34,7 @@ var decideVariant string
 func init() {
 	decideCmd.Flags().StringVar(&decideVariant, "variant", "", "Variant that all clients should see going forward")
 	decideCmd.MarkFlagRequired("variant")
-	decideCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name to refer to legacy splits")
+	decideCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
 	rootCmd.AddCommand(decideCmd)
 }
 
