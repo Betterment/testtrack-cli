@@ -145,7 +145,7 @@ func (r *RemoteKill) Inverse() (migrations.IMigration, error) {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (r *RemoteKill) ApplyToSchema(schema *serializers.Schema) error {
+func (r *RemoteKill) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
 	if r.firstBadVersion == nil { // Delete
 		for i, candidate := range schema.RemoteKills {
 			if candidate.Split == *r.split && candidate.Reason == *r.reason {

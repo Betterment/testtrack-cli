@@ -6,8 +6,8 @@ import (
 
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/identifiertypes"
+	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
-	"github.com/Betterment/testtrack-cli/migrationrepositories"
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/remotekills"
 	"github.com/Betterment/testtrack-cli/schema"
@@ -23,7 +23,7 @@ import (
 type SchemaLoader struct {
 	server        servers.IServer
 	schema        *serializers.Schema
-	migrationRepo *migrationrepositories.MigrationRepository
+	migrationRepo *migrations.Repository
 }
 
 // New returns a SchemaLoader ready to use
@@ -38,7 +38,7 @@ func New() (*SchemaLoader, error) {
 		return nil, err
 	}
 
-	migrationRepo, err := migrationrepositories.Load()
+	migrationRepo, err := migrationloaders.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func schemaSplitMigrations(schemaSplit serializers.SchemaSplit) ([]migrations.IM
 
 	if schemaSplit.Decided {
 		var decision *string
-		weights, err := splits.WeightsYAMLToMap(schemaSplit.Weights)
+		weights, err := splits.WeightsFromYAML(schemaSplit.Weights)
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("schema split %s invalid", schemaSplit.Name))
 		}

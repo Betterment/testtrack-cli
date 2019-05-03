@@ -62,6 +62,11 @@ func createExperiment(name, weights string) error {
 		}
 
 		name = fmt.Sprintf("%s.%s", appName, name)
+	} else {
+		err = validations.ExperimentSuffix("name", &name)
+		if err != nil {
+			return err
+		}
 	}
 
 	weightsMap, err := splits.WeightsFromString(weights)

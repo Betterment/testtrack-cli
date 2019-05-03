@@ -67,6 +67,11 @@ func createFeatureGate(name, defaultVariant, weights string) error {
 		}
 
 		name = fmt.Sprintf("%s.%s", appName, name)
+	} else {
+		err = validations.FeatureGateSuffix("name", &name)
+		if err != nil {
+			return err
+		}
 	}
 
 	if len(weights) == 0 {

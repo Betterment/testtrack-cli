@@ -3,14 +3,12 @@ package splits
 import (
 	"fmt"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/validations"
-	"gopkg.in/yaml.v2"
 )
 
 // SplitKey is the resource key for migrations impacting split state
@@ -21,9 +19,6 @@ type SplitKey string
 type ISplitMigration interface {
 	ResourceKey() SplitKey
 }
-
-// Weights represents the weightings of a split
-type Weights map[string]int
 
 // Split represents a feature we're marking (un)completed
 type Split struct {
@@ -81,7 +76,7 @@ func WeightsFromString(weights string) (*Weights, error) {
 
 // FromFile reifies a migration from the yaml serializable representation
 func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (migrations.IMigration, error) {
-	weights, err := WeightsYAMLToMap(serializable.Weights)
+	weights, err := WeightsFromYAML(serializable.Weights)
 	if err != nil {
 		return nil, err
 	}
@@ -90,31 +85,6 @@ func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (mi
 		name:             &serializable.Name,
 		weights:          weights,
 	}, nil
-}
-
-// WeightsYAMLToMap converts YAML-serializable weights to a weights map
-func WeightsYAMLToMap(yamlWeights yaml.MapSlice) (*Weights, error) {
-	weights := make(Weights)
-	cumulativeWeight := 0
-	for _, item := range yamlWeights {
-		variant, ok := item.Key.(string)
-		if !ok {
-			return nil, fmt.Errorf("variant %v is not a string", item.Key)
-		}
-		weight, ok := item.Value.(int)
-		if !ok {
-			return nil, fmt.Errorf("weighting %v is not an int", item.Value)
-		}
-		if weight < 0 {
-			return nil, fmt.Errorf("weight %d is less than zero", weight)
-		}
-		cumulativeWeight += weight
-		weights[variant] = weight
-	}
-	if cumulativeWeight != 100 {
-		return nil, fmt.Errorf("weights must sum to 100, got %d", cumulativeWeight)
-	}
-	return &weights, nil
 }
 
 // Validate validates that a feature completion may be persisted
@@ -134,23 +104,9 @@ func (s *Split) File() *serializers.MigrationFile {
 		SerializerVersion: serializers.SerializerVersion,
 		Split: &serializers.SplitYAML{
 			Name:    *s.name,
-			Weights: WeightsMapToYAML(s.weights),
+			Weights: s.weights.ToYAML(),
 		},
 	}
-}
-
-// WeightsMapToYAML converts weights to a YAML-serializable representation
-func WeightsMapToYAML(weights *Weights) yaml.MapSlice {
-	var variants = make([]string, 0, len(*weights))
-	for variant := range *weights {
-		variants = append(variants, variant)
-	}
-	sort.Strings(variants)
-	weightsYaml := make(yaml.MapSlice, 0, len(variants))
-	for _, variant := range variants {
-		weightsYaml = append(weightsYaml, yaml.MapItem{Key: variant, Value: (*weights)[variant]})
-	}
-	return weightsYaml
 }
 
 // SyncPath returns the server path to post the migration to
@@ -190,29 +146,64 @@ func (s *Split) Inverse() (migrations.IMigration, error) {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (s *Split) ApplyToSchema(schema *serializers.Schema) error {
-	for i, candidate := range schema.Splits {
+func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository) error {
+	for i, candidate := range schema.Splits { // Replace
 		if candidate.Name == *s.name {
-			schema.Splits[i].Decided = false
-			schemaWeights, err := WeightsYAMLToMap(candidate.Weights)
+			schemaWeights, err := WeightsFromYAML(candidate.Weights)
 			if err != nil {
 				return err
 			}
-			for variant := range *schemaWeights {
-				(*schemaWeights)[variant] = 0
-			}
-			for variant, weight := range *s.weights {
-				(*schemaWeights)[variant] = weight
-			}
-			schema.Splits[i].Weights = WeightsMapToYAML(schemaWeights)
+			schemaWeights.Merge(*s.weights)
+			schema.Splits[i].Decided = false
+			schema.Splits[i].Weights = schemaWeights.ToYAML()
 			return nil
 		}
 	}
-	schemaSplit := serializers.SchemaSplit{
+	if s.migrationVersion != nil { // Revive weights from old migration
+		split := MostRecentNamed(*s.name, *s.migrationVersion, migrationRepo)
+		if split != nil {
+			weights := split.Weights()
+			weights.Merge(*s.weights)
+			schema.Splits = append(schema.Splits, serializers.SchemaSplit{
+				Name:    *s.name,
+				Weights: weights.ToYAML(),
+				Decided: false,
+			})
+			return nil
+		}
+	}
+	schemaSplit := serializers.SchemaSplit{ // Create
 		Name:    *s.name,
-		Weights: WeightsMapToYAML(s.weights),
+		Weights: s.weights.ToYAML(),
 		Decided: false,
 	}
 	schema.Splits = append(schema.Splits, schemaSplit)
+	return nil
+}
+
+// Weights of the split
+func (s *Split) Weights() *Weights {
+	return s.weights
+}
+
+// MostRecentNamed returns the most recent matching migration in a repo
+func MostRecentNamed(name, migrationVersion string, migrationRepo migrations.Repository) *Split {
+	versions := migrationRepo.SortedVersions()
+	migrationIndex := -1
+	for i, version := range versions {
+		if version == migrationVersion {
+			migrationIndex = i
+			break
+		}
+	}
+	if migrationIndex < 1 {
+		return nil
+	}
+	for i := migrationIndex - 1; i >= 0; i-- {
+		split, ok := migrationRepo[versions[i]].(*Split)
+		if ok && *split.name == name {
+			return split
+		}
+	}
 	return nil
 }

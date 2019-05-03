@@ -114,7 +114,7 @@ func (f *FeatureCompletion) Inverse() (migrations.IMigration, error) {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema) error {
+func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
 	if f.version == nil { // Delete
 		for i, candidate := range schema.FeatureCompletions {
 			if candidate.FeatureGate == *f.featureGate {

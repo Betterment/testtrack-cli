@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
-	"github.com/Betterment/testtrack-cli/migrationrepositories"
 	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
@@ -37,7 +37,7 @@ func New() (*Runner, error) {
 
 // RunOutstanding runs all outstanding migrations
 func (r *Runner) RunOutstanding() error {
-	migrationRepo, err := migrationrepositories.Load()
+	migrationRepo, err := migrationloaders.Load()
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (r *Runner) Undo() error {
 }
 
 func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
-	migrationRepo, err := migrationrepositories.Load()
+	migrationRepo, err := migrationloaders.Load()
 	if err != nil {
 		return nil, err
 	}

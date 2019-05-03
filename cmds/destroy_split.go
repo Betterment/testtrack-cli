@@ -39,7 +39,7 @@ var destroySplitDecision string
 func init() {
 	destroySplitCmd.Flags().StringVar(&destroySplitDecision, "decision", "", "Variant that clients in the field should see after retirement")
 	destroySplitCmd.MarkFlagRequired("decision")
-	decideCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
+	destroySplitCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
 	destroyCmd.AddCommand(destroySplitCmd)
 }
 
