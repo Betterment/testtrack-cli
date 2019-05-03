@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/Betterment/testtrack-cli/serializers"
+	"github.com/pkg/errors"
 )
 
 const appVersionMaxLength = 18 // This conforms to iOS version numering rules
 const splitMaxLength = 128     // This is arbitrary but way bigger than you need and smaller than the column will fit
 
-var prefixedSplitRegex = regexp.MustCompile(`^[a-z_\-\d]+\.[a-z_\d]+$`)
+var prefixedSplitRegex = regexp.MustCompile(`^([a-z_\-\d]+)\.[a-z_\d]+$`)
 var nonPrefixedSplitRegex = regexp.MustCompile(`^[a-z_\d]+$`)
 var ambiPrefixedSplitRegex = regexp.MustCompile(`^(?:[a-z_\-\d]+\.)?[a-z_\d]+$`)
 var snakeCaseRegex = regexp.MustCompile(`^[a-z_\d]+$`)
@@ -21,6 +24,32 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 	decimalIntegerRegexPart,
 	`$`,
 }, ""))
+
+// AutoPrefixAndValidateSplit automatically prefixes a split with app name
+// according to flags and optionally validates it for presence in the schema
+func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName string, schema *serializers.Schema, noPrefix, force bool) error {
+	prefix := appNamePrefix(value)
+	splitAppName := prefix
+	if prefix == nil {
+		if !noPrefix {
+			splitAppName = &currentAppName
+			prefixed := fmt.Sprintf("%s.%s", currentAppName, *value)
+			*value = prefixed
+		}
+	}
+	if splitAppName != nil && *splitAppName == currentAppName {
+		if !force {
+			err := SplitExistsInSchema(paramName, value, schema)
+			if err != nil {
+				if prefix == nil {
+					return errors.Wrap(err, "use --no-prefix to reference unprefixed split and skip schema validation")
+				}
+				return errors.Wrap(err, "use --force to skip schema validation")
+			}
+		}
+	}
+	return nil
+}
 
 // PrefixedSplit validates that split name param is valid with an app prefix
 func PrefixedSplit(paramName string, value *string) error {
@@ -61,6 +90,14 @@ func Split(paramName string, value *string) error {
 	return nil
 }
 
+// ExperimentSuffix validates that an experiment name param ends in _experiment
+func ExperimentSuffix(paramName string, value *string) error {
+	if !strings.HasSuffix(*value, "_experiment") {
+		return fmt.Errorf("%s '%s' must end in _experiment", paramName, *value)
+	}
+	return nil
+}
+
 // NonPrefixedExperiment validates that an experiment name param is valid with
 // no app prefix
 func NonPrefixedExperiment(paramName string, value *string) error {
@@ -69,23 +106,25 @@ func NonPrefixedExperiment(paramName string, value *string) error {
 		return err
 	}
 
-	if !strings.HasSuffix(*value, "_experiment") {
-		return fmt.Errorf("%s '%s' must end in _experiment", paramName, *value)
+	return ExperimentSuffix(paramName, value)
+}
+
+// FeatureGateSuffix validates that an experiment name param ends in _enabled
+func FeatureGateSuffix(paramName string, value *string) error {
+	if !strings.HasSuffix(*value, "_enabled") {
+		return fmt.Errorf("%s '%s' must end in _enabled", paramName, *value)
 	}
 	return nil
 }
 
-// NonPrefixedFeatureGate validates that a `feature_gate_name` param is valid
+// NonPrefixedFeatureGate validates that a feature_gate name param is valid
 func NonPrefixedFeatureGate(paramName string, value *string) error {
 	err := NonPrefixedSplit(paramName, value)
 	if err != nil {
 		return err
 	}
 
-	if !strings.HasSuffix(*value, "_enabled") {
-		return fmt.Errorf("%s '%s' must end in _enabled", paramName, *value)
-	}
-	return nil
+	return FeatureGateSuffix(paramName, value)
 }
 
 // FeatureGate validates that a feature_gate name param is valid with no
@@ -96,10 +135,7 @@ func FeatureGate(paramName string, value *string) error {
 		return err
 	}
 
-	if !strings.HasSuffix(*value, "_enabled") {
-		return fmt.Errorf("%s '%s' must end in _enabled", paramName, *value)
-	}
-	return nil
+	return FeatureGateSuffix(paramName, value)
 }
 
 // Presence validates that a param is present
@@ -131,7 +167,7 @@ func SnakeCaseParam(paramName string, value *string) error {
 	return nil
 }
 
-// OptionalAppVersion validates that a param, if non-null, matches required format
+// OptionalAppVersion validates that app version, if non-null, matches required format
 func OptionalAppVersion(paramName string, value *string) error {
 	if value != nil && len(*value) > 0 {
 		if !appVersionRegex.MatchString(*value) {
@@ -141,6 +177,28 @@ func OptionalAppVersion(paramName string, value *string) error {
 		if len(*value) > appVersionMaxLength {
 			return fmt.Errorf("%s '%s' must be %d characters or less", paramName, *value, appVersionMaxLength)
 		}
+	}
+	return nil
+}
+
+// SplitExistsInSchema validates that a split exists in the schema
+func SplitExistsInSchema(paramName string, value *string, schema *serializers.Schema) error {
+	err := Presence(paramName, value)
+	if err != nil {
+		return err
+	}
+	for _, schemaSplit := range schema.Splits {
+		if schemaSplit.Name == *value {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s '%s' not found in schema", paramName, *value)
+}
+
+func appNamePrefix(value *string) *string {
+	matches := prefixedSplitRegex.FindStringSubmatch(*value)
+	if matches != nil {
+		return &matches[1]
 	}
 	return nil
 }

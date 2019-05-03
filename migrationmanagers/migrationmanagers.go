@@ -69,7 +69,7 @@ func (m *MigrationManager) Save() error {
 		return err
 	}
 	if !valid {
-		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
+		return errors.New("Migration unsuccessful on server. Does your split exist?")
 	}
 	err = m.SyncVersion()
 	if err != nil {
@@ -104,7 +104,7 @@ func (m *MigrationManager) Apply() error {
 	}
 
 	if !valid {
-		return errors.New("Migration unsuccessful on server. Does your feature flag exist?")
+		return errors.New("Migration unsuccessful on server. Does your split exist?")
 	}
 	return nil
 }

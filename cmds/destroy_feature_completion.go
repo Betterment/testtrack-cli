@@ -3,6 +3,8 @@ package cmds
 import (
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/schema"
+	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +20,8 @@ field for customers to use.
 `
 
 func init() {
+	destroyFeatureCompletionCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name to refer to legacy splits")
+	destroyFeatureCompletionCmd.Flags().BoolVar(&force, "force", false, "Force creation if feature gate isn't found in schema, e.g. if split is retired")
 	destroyCmd.AddCommand(destroyFeatureCompletionCmd)
 }
 
@@ -27,12 +31,25 @@ var destroyFeatureCompletionCmd = &cobra.Command{
 	Long:  destroyFeatureCompletionDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return destroyFeatureCompletion(args[0])
+		return destroyFeatureCompletion(&args[0])
 	},
 }
 
-func destroyFeatureCompletion(featureGate string) error {
-	featureCompletion, err := featurecompletions.New(&featureGate, nil)
+func destroyFeatureCompletion(featureGate *string) error {
+	currentAppName, err := getAppName()
+	if err != nil {
+		return err
+	}
+	schema, err := schema.Read()
+	if err != nil {
+		return err
+	}
+	err = validations.AutoPrefixAndValidateSplit("feature_gate_name", featureGate, currentAppName, schema, noPrefix, force)
+	if err != nil {
+		return err
+	}
+
+	featureCompletion, err := featurecompletions.New(featureGate, nil)
 	if err != nil {
 		return err
 	}

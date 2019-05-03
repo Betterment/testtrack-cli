@@ -3,6 +3,7 @@ package cmds
 import (
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,8 @@ var createFeatureCompletionAppVersion string
 func init() {
 	createFeatureCompletionCmd.Flags().StringVar(&createFeatureCompletionAppVersion, "app_version", "", "App version (required)")
 	createFeatureCompletionCmd.MarkFlagRequired("app_version")
+	createFeatureCompletionCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name to refer to legacy splits")
+	createFeatureCompletionCmd.Flags().BoolVar(&force, "force", false, "Force creation if feature gate isn't found in schema, e.g. if split is retired")
 	createCmd.AddCommand(createFeatureCompletionCmd)
 }
 
@@ -45,8 +48,25 @@ var createFeatureCompletionCmd = &cobra.Command{
 }
 
 func createFeatureCompletion(featureGate, version *string) error {
+	currentAppName, err := getAppName()
+	if err != nil {
+		return err
+	}
+	schema, err := schema.Read()
+	if err != nil {
+		return err
+	}
+	err = validations.AutoPrefixAndValidateSplit("feature_gate_name", featureGate, currentAppName, schema, noPrefix, force)
+	if err != nil {
+		return err
+	}
+	err = validations.FeatureGateSuffix("feature_gate_name", featureGate)
+	if err != nil {
+		return err
+	}
+
 	// This validation is the difference between complete_feature and uncomplete_feature which is why it's inline
-	err := validations.Presence("app_version", version)
+	err = validations.Presence("app_version", version)
 	if err != nil {
 		return err
 	}

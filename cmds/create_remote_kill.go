@@ -3,6 +3,7 @@ package cmds
 import (
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
 	"github.com/Betterment/testtrack-cli/remotekills"
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +39,8 @@ func init() {
 	createRemoteKillCmd.Flags().StringVar(&createRemoteKillFirstBadVersion, "first_bad_version", "", "First bad app version (required)")
 	createRemoteKillCmd.MarkFlagRequired("first_bad_version")
 	createRemoteKillCmd.Flags().StringVar(&createRemoteKillFixedVersion, "fixed_version", "", "Fixed app version")
+	createRemoteKillCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name to refer to legacy splits")
+	createRemoteKillCmd.Flags().BoolVar(&force, "force", false, "Force creation if split isn't found in schema, e.g. if split is retired")
 	createCmd.AddCommand(createRemoteKillCmd)
 }
 
@@ -52,8 +55,21 @@ var createRemoteKillCmd = &cobra.Command{
 }
 
 func createRemoteKill(split, reason, overrideTo, firstBadVersion, fixedVersion *string) error {
+	currentAppName, err := getAppName()
+	if err != nil {
+		return err
+	}
+	schema, err := schema.Read()
+	if err != nil {
+		return err
+	}
+	err = validations.AutoPrefixAndValidateSplit("split_name", split, currentAppName, schema, noPrefix, force)
+	if err != nil {
+		return err
+	}
+
 	// These validations are the difference between remote_kill and unset_remote_kill which is why they're inline
-	err := validations.Presence("override_to", overrideTo)
+	err = validations.Presence("override_to", overrideTo)
 	if err != nil {
 		return err
 	}
