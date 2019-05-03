@@ -34,7 +34,7 @@ var createFeatureGateDefault, createFeatureGateWeights string
 func init() {
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateDefault, "default", "false", "Default variant for your feature flag")
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateWeights, "weights", "", "Variant weights to use (overrides default)")
-	createFeatureGateCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name to refer to legacy splits")
+	createFeatureGateCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name (supports legacy splits)")
 	createCmd.AddCommand(createFeatureGateCmd)
 }
 

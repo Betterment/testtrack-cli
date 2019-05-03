@@ -29,7 +29,7 @@ var createExperimentWeights string
 
 func init() {
 	createExperimentCmd.Flags().StringVar(&createExperimentWeights, "weights", "control: 50, treatment: 50", "Variant weights to use")
-	createExperimentCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix experiment with app_name to refer to legacy splits")
+	createExperimentCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix experiment with app_name (supports legacy splits)")
 	createCmd.AddCommand(createExperimentCmd)
 }
 
