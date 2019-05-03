@@ -1,9 +1,12 @@
 package schema
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
+	"path"
 	"sort"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
@@ -58,6 +61,27 @@ func Write(schema *serializers.Schema) error {
 	}
 
 	return nil
+}
+
+// Link a schema to the user's home dir
+func Link() error {
+	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
+		return errors.New("testtrack/schema.yml does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+	}
+	user, err := user.Current()
+	if err != nil {
+		return err
+	}
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	dirname := path.Base(dir)
+	err = os.MkdirAll(user.HomeDir+"/.testtrack/schemas", 0755)
+	if err != nil {
+		return err
+	}
+	return os.Symlink(dir+"/testtrack/schema.yml", fmt.Sprintf("%s/.testtrack/schemas/%s.yml", user.HomeDir, dirname))
 }
 
 func mergeLegacySchema(schema *serializers.Schema) error {
