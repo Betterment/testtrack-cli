@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
 	"sort"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
@@ -82,6 +83,56 @@ func Link() error {
 		return err
 	}
 	return os.Symlink(dir+"/testtrack/schema.yml", fmt.Sprintf("%s/.testtrack/schemas/%s.yml", user.HomeDir, dirname))
+}
+
+// ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
+func ReadMerged() (*serializers.Schema, error) {
+	user, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+	paths, err := filepath.Glob(user.HomeDir + "/.testtrack/schemas/*.yml")
+	if err != nil {
+		return nil, err
+	}
+	var mergedSchema serializers.Schema
+	for _, path := range paths {
+		// Deref symlink
+		fi, err := os.Lstat(path)
+		if err != nil {
+			return nil, err
+		}
+		if fi.Mode()&os.ModeSymlink != 0 {
+			path, err = os.Readlink(path)
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Read file
+		schemaBytes, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		var schema serializers.Schema
+		err = yaml.Unmarshal(schemaBytes, &schema)
+		if err != nil {
+			return nil, err
+		}
+		// Merge into master schema
+		for _, split := range schema.Splits {
+			mergedSchema.Splits = append(mergedSchema.Splits, split)
+		}
+		for _, featureCompletion := range schema.FeatureCompletions {
+			mergedSchema.FeatureCompletions = append(mergedSchema.FeatureCompletions, featureCompletion)
+		}
+		for _, remoteKill := range schema.RemoteKills {
+			mergedSchema.RemoteKills = append(mergedSchema.RemoteKills, remoteKill)
+		}
+		for _, identifierType := range schema.IdentifierTypes {
+			mergedSchema.IdentifierTypes = append(mergedSchema.IdentifierTypes, identifierType)
+		}
+	}
+	return &mergedSchema, nil
 }
 
 func mergeLegacySchema(schema *serializers.Schema) error {
