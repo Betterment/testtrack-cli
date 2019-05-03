@@ -6,7 +6,7 @@ import (
 )
 
 var serverDoc = `
-Run a fake TestTrack server for local development, backed by shema.yml files
+Run a fake TestTrack server for local development, backed by schema.yml files
 and nonsense.
 `
 
