@@ -64,14 +64,31 @@ func (s *server) handleGet(pattern string, responseFunc func() (interface{}, err
 	}).Methods("GET")
 }
 
-func (s *server) handlePost(pattern string, actionFunc func(*http.Request) error) {
+func (s *server) handlePost(pattern string, actionFunc func(*http.Request) (interface{}, error)) {
 	s.router.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		err := actionFunc(r)
+		result, err := actionFunc(r)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusNoContent)
+		if result == nil {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		bytes, err := json.Marshal(result)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Write(bytes)
 	}).Methods("POST")
+}
+
+func (s *server) handlePostReturnNoContent(pattern string, actionFunc func(*http.Request) error) {
+	s.handlePost(pattern, func(r *http.Request) (interface{}, error) {
+		err := actionFunc(r)
+		return nil, err
+	})
 }

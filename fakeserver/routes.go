@@ -65,13 +65,13 @@ func (s *server) routes() {
 		"/api/v1/split_registry",
 		getV1SplitRegistry,
 	)
-	s.handlePost(
+	s.handlePostReturnNoContent(
 		"/api/v1/assignment_event",
 		postNoop,
 	)
 	s.handlePost(
 		"/api/v1/identifier",
-		postNoop,
+		postV1Identifier,
 	)
 	s.handleGet(
 		"/api/v1/visitors/{id}",
@@ -85,7 +85,7 @@ func (s *server) routes() {
 		"/api/v1/identifier_types/{t}/identifiers/{i}/visitor_detail",
 		getV1VisitorDetail,
 	)
-	s.handlePost(
+	s.handlePostReturnNoContent(
 		"/api/v1/assignment_override",
 		postV1AssignmentOverride,
 	)
@@ -120,6 +120,15 @@ func getV1SplitRegistry() (interface{}, error) {
 
 func postNoop(*http.Request) error {
 	return nil
+}
+
+func postV1Identifier(*http.Request) (interface{}, error) {
+	ivisitor, err := getV1Visitor()
+	visitor := ivisitor.(v1Visitor)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]v1Visitor{"visitor": visitor}, nil
 }
 
 func getV1Visitor() (interface{}, error) {
