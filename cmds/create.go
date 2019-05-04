@@ -5,9 +5,8 @@ import (
 )
 
 var createDoc = `
-Immediately create a resource in the local TestTrack and write a migration file
-so the change can be applied in other environments via the build/deploy
-pipeline.
+Create a resource in the local schema and write a migration file so the change
+can be applied in other environments via the build/deploy pipeline.
 `
 
 func init() {
