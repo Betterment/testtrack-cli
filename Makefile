@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-VERSION=0.3
+VERSION=0.9
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-w -s \
@@ -25,6 +25,7 @@ release: distclean dist
 		-a dist/testtrack.linux\
 		-a dist/testtrack.darwin\
 		-m "TestTrack CLI ${VERSION}"\
+		-t "${BUILD}"\
 		v${VERSION}
 
 test:
