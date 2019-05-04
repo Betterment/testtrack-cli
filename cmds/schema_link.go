@@ -16,7 +16,7 @@ provisions databases, etc.
 `
 
 func init() {
-	schemaLinkCmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite symlink if it exists")
+	schemaLinkCmd.Flags().BoolVar(&force, "force", false, "Overwrite symlink if it exists")
 	schemaCmd.AddCommand(schemaLinkCmd)
 }
 
