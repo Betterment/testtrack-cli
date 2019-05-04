@@ -1,9 +1,13 @@
 package schema
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
+	"path"
+	"path/filepath"
 	"sort"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
@@ -58,6 +62,77 @@ func Write(schema *serializers.Schema) error {
 	}
 
 	return nil
+}
+
+// Link a schema to the user's home dir
+func Link() error {
+	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
+		return errors.New("testtrack/schema.yml does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+	}
+	user, err := user.Current()
+	if err != nil {
+		return err
+	}
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	dirname := path.Base(dir)
+	err = os.MkdirAll(user.HomeDir+"/.testtrack/schemas", 0755)
+	if err != nil {
+		return err
+	}
+	return os.Symlink(dir+"/testtrack/schema.yml", fmt.Sprintf("%s/.testtrack/schemas/%s.yml", user.HomeDir, dirname))
+}
+
+// ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
+func ReadMerged() (*serializers.Schema, error) {
+	user, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+	paths, err := filepath.Glob(user.HomeDir + "/.testtrack/schemas/*.yml")
+	if err != nil {
+		return nil, err
+	}
+	var mergedSchema serializers.Schema
+	for _, path := range paths {
+		// Deref symlink
+		fi, err := os.Lstat(path)
+		if err != nil {
+			return nil, err
+		}
+		if fi.Mode()&os.ModeSymlink != 0 {
+			path, err = os.Readlink(path)
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Read file
+		schemaBytes, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		var schema serializers.Schema
+		err = yaml.Unmarshal(schemaBytes, &schema)
+		if err != nil {
+			return nil, err
+		}
+		// Merge into master schema
+		for _, split := range schema.Splits {
+			mergedSchema.Splits = append(mergedSchema.Splits, split)
+		}
+		for _, featureCompletion := range schema.FeatureCompletions {
+			mergedSchema.FeatureCompletions = append(mergedSchema.FeatureCompletions, featureCompletion)
+		}
+		for _, remoteKill := range schema.RemoteKills {
+			mergedSchema.RemoteKills = append(mergedSchema.RemoteKills, remoteKill)
+		}
+		for _, identifierType := range schema.IdentifierTypes {
+			mergedSchema.IdentifierTypes = append(mergedSchema.IdentifierTypes, identifierType)
+		}
+	}
+	return &mergedSchema, nil
 }
 
 func mergeLegacySchema(schema *serializers.Schema) error {

@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +37,8 @@ func initProject() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	keepfile.Close()
-	return nil
+
+	_, err = schema.Generate()
+	return err
 }

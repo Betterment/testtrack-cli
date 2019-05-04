@@ -100,7 +100,7 @@ func (s *server) routes() {
 }
 
 func getV1SplitRegistry() (interface{}, error) {
-	schema, err := schema.Read()
+	schema, err := schema.ReadMerged()
 	if err != nil {
 		return nil, err
 	}
