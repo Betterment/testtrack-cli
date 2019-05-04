@@ -16,6 +16,7 @@ provisions databases, etc.
 `
 
 func init() {
+	schemaLinkCmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite symlink if it exists")
 	schemaCmd.AddCommand(schemaLinkCmd)
 }
 
@@ -30,5 +31,5 @@ var schemaLinkCmd = &cobra.Command{
 }
 
 func schemaLink() error {
-	return schema.Link()
+	return schema.Link(force)
 }
