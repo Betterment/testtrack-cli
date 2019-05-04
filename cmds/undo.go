@@ -28,7 +28,7 @@ var undoCmd = &cobra.Command{
 }
 
 func undo() error {
-	runner, err := migrationrunners.New()
+	runner, err := migrationrunners.New(nil)
 	if err != nil {
 		return err
 	}

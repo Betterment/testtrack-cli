@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"github.com/Betterment/testtrack-cli/migrationrunners"
+	"github.com/Betterment/testtrack-cli/servers"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,11 @@ var migrateCmd = &cobra.Command{
 }
 
 func migrate() error {
-	runner, err := migrationrunners.New()
+	server, err := servers.New()
+	if err != nil {
+		return err
+	}
+	runner, err := migrationrunners.New(server)
 	if err != nil {
 		return err
 	}

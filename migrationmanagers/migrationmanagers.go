@@ -21,13 +21,8 @@ type MigrationManager struct {
 	schema    *serializers.Schema
 }
 
-// New returns a fully-loaded MigrationManager
+// New returns a MigrationManager without server connectivity for filesystem-only side effects
 func New(migration migrations.IMigration) (*MigrationManager, error) {
-	server, err := servers.New()
-	if err != nil {
-		return nil, err
-	}
-
 	schema, err := schema.Read()
 	if err != nil {
 		return nil, err
@@ -35,7 +30,7 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 
 	return &MigrationManager{
 		migration: migration,
-		server:    server,
+		server:    nil,
 		schema:    schema,
 	}, nil
 }
@@ -49,8 +44,8 @@ func NewWithDependencies(migration migrations.IMigration, server servers.IServer
 	}
 }
 
-// Save does the whole operation of validating, persisting, and sending a
-// migration to the local TT server, writing out the schema
+// Save does the whole operation of validating and persisting a
+// migration to disk, and updating the schema
 func (m *MigrationManager) Save() error {
 	err := m.migration.Validate()
 	if err != nil {
@@ -62,26 +57,21 @@ func (m *MigrationManager) Save() error {
 		return err
 	}
 
-	valid, err := m.sync()
-	if !valid || err != nil {
-		m.deleteFile()
-	}
+	migrationRepo, err := migrationloaders.Load()
 	if err != nil {
 		return err
 	}
-	if !valid {
-		return errors.New("Migration unsuccessful on server. Does your split exist?")
-	}
-	err = m.SyncVersion()
+	err = m.ApplyToSchema(migrationRepo)
 	if err != nil {
 		return err
 	}
+
 	return schema.Write(m.schema)
 }
 
 // Run applies a migration to the TestTrack server, writing out the schema
-func (m *MigrationManager) Run() error {
-	err := m.Apply()
+func (m *MigrationManager) Run(migrationRepo migrations.Repository) error {
+	err := m.Apply(migrationRepo)
 	if err != nil {
 		return err
 	}
@@ -92,22 +82,50 @@ func (m *MigrationManager) Run() error {
 	return schema.Write(m.schema)
 }
 
-// Apply applies a migration to the TestTrack server without recording the version to TestTrack server
-func (m *MigrationManager) Apply() error {
+// ApplyToSchema validates and applies a migration to the in-memory schema representation
+func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository) error {
 	err := m.migration.Validate()
 	if err != nil {
 		return err
 	}
 
-	valid, err := m.sync()
+	err = m.migration.ApplyToSchema(m.schema, migrationRepo)
 	if err != nil {
 		return err
 	}
 
-	if !valid {
-		return errors.New("Migration unsuccessful on server. Does your split exist?")
+	appliedVersion := m.migration.MigrationVersion()
+	if appliedVersion != nil && m.schema.SchemaVersion < *appliedVersion {
+		m.schema.SchemaVersion = *appliedVersion
 	}
 	return nil
+}
+
+// Apply applies a migration to the TestTrack server and in-memory schema
+// without recording the version to TestTrack server
+func (m *MigrationManager) Apply(migrationRepo migrations.Repository) error {
+	err := m.migration.Validate()
+	if err != nil {
+		return err
+	}
+
+	err = m.migration.ApplyToSchema(m.schema, migrationRepo)
+	if err != nil {
+		return err
+	}
+	resp, err := m.server.Post(m.migration.SyncPath(), m.migration.Serializable())
+	if err != nil {
+		return err
+	}
+
+	switch resp.StatusCode {
+	case 204:
+		return nil
+	case 422:
+		return errors.New("Migration unsuccessful on server. Does your split exist?")
+	default:
+		return fmt.Errorf("got %d status code", resp.StatusCode)
+	}
 }
 
 func (m *MigrationManager) persistFile() error {
@@ -132,30 +150,6 @@ func (m *MigrationManager) persistFile() error {
 
 func (m *MigrationManager) deleteFile() error {
 	return os.Remove(fmt.Sprintf("testtrack/migrate/%s", *m.migration.Filename()))
-}
-
-func (m *MigrationManager) sync() (bool, error) {
-	migrationRepo, err := migrationloaders.Load()
-	if err != nil {
-		return false, err
-	}
-	err = m.migration.ApplyToSchema(m.schema, migrationRepo)
-	if err != nil {
-		return false, err
-	}
-	resp, err := m.server.Post(m.migration.SyncPath(), m.migration.Serializable())
-	if err != nil {
-		return false, err
-	}
-
-	switch resp.StatusCode {
-	case 204:
-		return true, nil
-	case 422:
-		return false, nil
-	default:
-		return false, fmt.Errorf("got %d status code", resp.StatusCode)
-	}
 }
 
 // SyncVersion marks schema versions as applied on TestTrack server
