@@ -11,9 +11,9 @@ import (
 )
 
 var destroySplitDoc = `
-Destroy soft-deletes a split (i.e. a feature gate or experiment) in TestTrack
-or updates an already-destroyed split's decision. The split will continue to be returned
-to clients in the field built before it was destroyed.
+Destroy soft-deletes a split (i.e. a feature gate or experiment) or updates an
+already-destroyed split's decision. The split will continue to be returned to
+clients in the field built before it was destroyed.
 
 Destroying a split is also known as retirement. Retired splits have a decision
 so old clients know which variant to choose.

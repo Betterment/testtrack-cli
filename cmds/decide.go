@@ -11,10 +11,10 @@ import (
 )
 
 var decideDoc = `
-Decides a split (a feature gate or experiment) in TestTrack or edits a previous
-decision, automatically reviving it if it was previously destroyed. Decided
-splits will continue to be returned to all clients, so it's appropriate to
-decide a split before you remove all references to the split from code.
+Decides a split (a feature gate or experiment) or edits a previous decision,
+automatically reviving it if it was previously destroyed. Decided splits will
+continue to be returned to all clients, so it's appropriate to decide a split
+before you remove all references to the split from code.
 
 Feature-completion and remote-kill both take precedence over decisions, though,
 so clients with incomplete or broken versions of a feature will not be enabled

@@ -6,11 +6,11 @@ import (
 )
 
 var undoDoc = `
-Unapplies the most recent migration, deletes it from the local TestTrack, and
-deletes the migration file.
+Unapplies the most recent migration from your schema, and deletes the migration
+file.
 
 Undo is for before you've merged a migration so you can remove it from your
-local server. After a migration is in a shared branch, you shouldn't use undo.
+local machine. After a migration is in a shared branch, you shouldn't use undo.
 `
 
 func init() {
@@ -28,7 +28,7 @@ var undoCmd = &cobra.Command{
 }
 
 func undo() error {
-	runner, err := migrationrunners.New()
+	runner, err := migrationrunners.New(nil)
 	if err != nil {
 		return err
 	}

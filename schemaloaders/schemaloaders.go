@@ -48,31 +48,31 @@ func New() (*SchemaLoader, error) {
 
 // Load the schema into TestTrack server, marking all migrations as applied
 func (s *SchemaLoader) Load() error {
-	migrations := []migrations.IMigration{}
+	ms := []migrations.IMigration{}
 
 	for i := range s.schema.IdentifierTypes {
-		migrations = append(migrations, identifiertypes.FromFile(nil, &s.schema.IdentifierTypes[i]))
+		ms = append(ms, identifiertypes.FromFile(nil, &s.schema.IdentifierTypes[i]))
 	}
 	for _, split := range s.schema.Splits {
 		splitMigrations, err := schemaSplitMigrations(split)
 		if err != nil {
 			return err
 		}
-		migrations = append(migrations, splitMigrations...)
+		ms = append(ms, splitMigrations...)
 	}
 	for i := range s.schema.RemoteKills {
-		migrations = append(migrations, remotekills.FromFile(nil, &s.schema.RemoteKills[i]))
+		ms = append(ms, remotekills.FromFile(nil, &s.schema.RemoteKills[i]))
 	}
 	for i := range s.schema.FeatureCompletions {
-		migrations = append(migrations, featurecompletions.FromFile(nil, &s.schema.FeatureCompletions[i]))
+		ms = append(ms, featurecompletions.FromFile(nil, &s.schema.FeatureCompletions[i]))
 	}
 
 	newSchema := &serializers.Schema{
 		SerializerVersion: serializers.SerializerVersion,
 		SchemaVersion:     s.schema.SchemaVersion,
 	}
-	for _, migration := range migrations {
-		err := migrationmanagers.NewWithDependencies(migration, s.server, newSchema).Apply()
+	for _, migration := range ms {
+		err := migrationmanagers.NewWithDependencies(migration, s.server, newSchema).Apply(migrations.Repository{}) // generated migrations are data-complete and don't need migrations
 		if err != nil {
 			return err
 		}

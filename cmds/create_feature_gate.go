@@ -11,7 +11,7 @@ import (
 )
 
 var createFeatureGateDoc = `
-Creates or updates a feature gate split in TestTrack.
+Creates or updates a feature gate split.
 
 Example:
 

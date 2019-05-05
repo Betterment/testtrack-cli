@@ -11,7 +11,7 @@ import (
 )
 
 var createExperimentDoc = `
-Creates or updates an experiment split in TestTrack.
+Creates or updates an experiment split.
 
 Example:
 

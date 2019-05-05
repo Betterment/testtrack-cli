@@ -20,13 +20,8 @@ type Runner struct {
 	schema *serializers.Schema
 }
 
-// New returns a Runner ready to use
-func New() (*Runner, error) {
-	server, err := servers.New()
-	if err != nil {
-		return nil, err
-	}
-
+// New returns a Runner configured with the provided server
+func New(server servers.IServer) (*Runner, error) {
 	schema, err := schema.Read()
 	if err != nil {
 		return nil, err
@@ -55,7 +50,7 @@ func (r *Runner) RunOutstanding() error {
 
 	for _, version := range versions {
 		mgr := migrationmanagers.NewWithDependencies(migrationRepo[version], r.server, r.schema)
-		err := mgr.Run()
+		err := mgr.Run(migrationRepo)
 		if err != nil {
 			return err
 		}
@@ -79,11 +74,6 @@ func (r *Runner) Undo() error {
 	}
 	if len(filepaths) != 1 {
 		return fmt.Errorf("Couldn't find exactly one migration %s to delete", migrationVersion)
-	}
-
-	err = r.server.Delete(fmt.Sprintf("api/v2/migrations/%s", migrationVersion))
-	if err != nil {
-		return err
 	}
 
 	err = schema.Write(r.schema)
@@ -125,7 +115,7 @@ func (r *Runner) unapplyLatest() (migrations.IMigration, error) {
 	}
 
 	mgr := migrationmanagers.NewWithDependencies(previousMigration, r.server, r.schema)
-	err = mgr.Apply()
+	err = mgr.ApplyToSchema(migrationRepo)
 	if err != nil {
 		return nil, err
 	}

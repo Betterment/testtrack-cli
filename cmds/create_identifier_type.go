@@ -8,7 +8,7 @@ import (
 )
 
 var createIdentifierTypeDoc = `
-Creates an identifier type in TestTrack.
+Creates an identifier type.
 
 Example:
 

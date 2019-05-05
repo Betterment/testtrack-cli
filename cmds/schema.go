@@ -5,8 +5,9 @@ import (
 )
 
 var schemaDoc = `
-Manage your testtrack schema by generating fresh from migrations or loading the
-schema state into a TestTrack server.
+Manage your testtrack schema by generating fresh from migrations, loading the
+schema state into a TestTrack server, or linking your schema for 'testtrack
+server' to use.
 `
 
 func init() {
@@ -15,6 +16,6 @@ func init() {
 
 var schemaCmd = &cobra.Command{
 	Use:   "schema",
-	Short: "Regenerate or load your testtrack schema file",
+	Short: "Manage your testtrack schema file",
 	Long:  schemaDoc,
 }
