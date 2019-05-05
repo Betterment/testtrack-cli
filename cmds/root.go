@@ -3,6 +3,7 @@ package cmds
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -41,6 +42,17 @@ func Execute() {
 }
 
 func getAppName() (string, error) {
+	urlString, ok := os.LookupEnv("TESTTRACK_CLI_URL")
+	if ok {
+		url, err := url.Parse(urlString)
+		if err != nil {
+			return "", err
+		}
+		if url.User != nil {
+			return url.User.Username(), nil
+		}
+	}
+
 	appName, ok := os.LookupEnv("TESTTRACK_APP_NAME")
 	if !ok {
 		return "", errors.New("TESTTRACK_APP_NAME must be set")
