@@ -2,6 +2,10 @@ package fakeserver
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 
 	"github.com/Betterment/testtrack-cli/fakeassignments"
 	"github.com/Betterment/testtrack-cli/schema"
@@ -114,7 +118,7 @@ func getV1SplitRegistry() (interface{}, error) {
 	return splitRegistry, nil
 }
 
-func postNoop([]byte) error {
+func postNoop(*http.Request) error {
 	return nil
 }
 
@@ -156,11 +160,30 @@ func getV1VisitorDetail() (interface{}, error) {
 	return map[string][]v1AssignmentDetail{"assignment_details": v1AssignmentDetails}, nil
 }
 
-func postV1AssignmentOverride(requestBytes []byte) error {
+func postV1AssignmentOverride(r *http.Request) error {
 	var assignment v1Assignment
-	err := json.Unmarshal(requestBytes, &assignment)
-	if err != nil {
-		return err
+	contentType := r.Header.Get("content-type")
+	switch {
+	case strings.HasPrefix(contentType, "application/x-www-form-urlencoded"):
+		err := r.ParseForm()
+		if err != nil {
+			return err
+		}
+		assignment = v1Assignment{
+			SplitName: r.PostForm.Get("split_name"),
+			Variant:   r.PostForm.Get("variant"),
+		}
+	case strings.HasPrefix(contentType, "application/json"):
+		requestBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(requestBytes, &assignment)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("got unexpected content type %s", contentType)
 	}
 	assignments, err := fakeassignments.Read()
 	(*assignments)[assignment.SplitName] = assignment.Variant
