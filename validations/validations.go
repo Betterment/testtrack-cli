@@ -30,22 +30,18 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName string, schema *serializers.Schema, noPrefix, force bool) error {
 	prefix := appNamePrefix(value)
 	splitAppName := prefix
-	if prefix == nil {
-		if !noPrefix {
+	if prefix == nil && !noPrefix {
+		prefixed := fmt.Sprintf("%s.%s", currentAppName, *value)
+		err := SplitExistsInSchema(paramName, &prefixed, schema)
+		if err == nil {
 			splitAppName = &currentAppName
-			prefixed := fmt.Sprintf("%s.%s", currentAppName, *value)
 			*value = prefixed
 		}
 	}
-	if splitAppName != nil && *splitAppName == currentAppName {
-		if !force {
-			err := SplitExistsInSchema(paramName, value, schema)
-			if err != nil {
-				if prefix == nil {
-					return errors.Wrap(err, "use --no-prefix to reference unprefixed split and skip schema validation")
-				}
-				return errors.Wrap(err, "use --force to skip schema validation")
-			}
+	if splitAppName != nil && *splitAppName == currentAppName && !force {
+		err := SplitExistsInSchema(paramName, value, schema)
+		if err != nil {
+			return errors.Wrap(err, "use --force to skip schema validation")
 		}
 	}
 	return nil
