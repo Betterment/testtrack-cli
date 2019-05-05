@@ -65,7 +65,7 @@ func Write(schema *serializers.Schema) error {
 }
 
 // Link a schema to the user's home dir
-func Link() error {
+func Link(force bool) error {
 	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
 		return errors.New("testtrack/schema.yml does not exist. Are you in your app root dir? If so, call testtrack init_project first")
 	}
@@ -82,7 +82,11 @@ func Link() error {
 	if err != nil {
 		return err
 	}
-	return os.Symlink(dir+"/testtrack/schema.yml", fmt.Sprintf("%s/.testtrack/schemas/%s.yml", user.HomeDir, dirname))
+	path := fmt.Sprintf("%s/.testtrack/schemas/%s.yml", user.HomeDir, dirname)
+	if force {
+		os.Remove(path) // If this fails it might just not exist, we'll error on the next line if something else is up
+	}
+	return os.Symlink(dir+"/testtrack/schema.yml", path)
 }
 
 // ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
