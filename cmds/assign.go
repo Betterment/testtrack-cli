@@ -49,7 +49,7 @@ func assign(name, variant string) error {
 	if err != nil {
 		return fmt.Errorf("split_name '%s' not found in schema", name)
 	}
-	err = validations.VariantExistsInSchema("variant", name, &variant, mergedSchema)
+	err = validations.VariantExistsInSchema("variant", &variant, name, mergedSchema)
 	if err != nil {
 		return err
 	}

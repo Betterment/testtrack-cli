@@ -46,8 +46,9 @@ var unassignCmd = &cobra.Command{
 }
 
 func unassign(name string, all bool) error {
-	if all && len(name) > 0 {
-		return errors.New("split_name and --all are mutually exclusive")
+	nameProvided := len(name) > 0
+	if all == nameProvided {
+		return errors.New("split_name and --all are mutually exclusive but one is required")
 	}
 
 	if all {
