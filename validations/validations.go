@@ -178,6 +178,31 @@ func SplitExistsInSchema(paramName string, value *string, schema *serializers.Sc
 	return fmt.Errorf("%s '%s' not found in schema", paramName, *value)
 }
 
+// VariantExistsInSchema validates that a variant exists for a split in the schema
+func VariantExistsInSchema(paramName string, split string, variant *string, schema *serializers.Schema) error {
+	err := Presence(paramName, variant)
+	if err != nil {
+		return err
+	}
+	for _, schemaSplit := range schema.Splits {
+		if schemaSplit.Name == split {
+			variants := make(map[string]struct{}, len(schemaSplit.Weights))
+			for _, item := range schemaSplit.Weights {
+				variant, ok := item.Key.(string)
+				if !ok {
+					return fmt.Errorf("variant %v is not a string", item.Key)
+				}
+				variants[variant] = struct{}{}
+			}
+			if _, ok := variants[*variant]; ok {
+				return nil
+			}
+			return fmt.Errorf("Split '%s' does not have variant '%s'", split, *variant)
+		}
+	}
+	return fmt.Errorf("Split '%s' not found in schema", split)
+}
+
 func appNamePrefix(value *string) *string {
 	matches := prefixedSplitRegex.FindStringSubmatch(*value)
 	if matches != nil {
