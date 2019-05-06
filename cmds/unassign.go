@@ -22,12 +22,11 @@ testtrack unassign my_fancy_experiment
 testtrack unassign --all
 `
 
-var unassignVariant string
 var unassignAll bool
 
 func init() {
-	unassignCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
 	unassignCmd.Flags().BoolVar(&unassignAll, "all", false, "Unassign all splits")
+	unassignCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
 	rootCmd.AddCommand(unassignCmd)
 }
 
@@ -37,7 +36,7 @@ var unassignCmd = &cobra.Command{
 	Long:  unassignDoc,
 	Args:  cobra.RangeArgs(0, 1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		name := ""
+		var name string
 		if len(args) == 1 {
 			name = args[0]
 		}
