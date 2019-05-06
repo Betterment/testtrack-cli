@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Betterment/testtrack-cli/fakeassignments"
@@ -45,7 +46,11 @@ var unassignCmd = &cobra.Command{
 }
 
 func unassign(name string, all bool) error {
-	if all == true {
+	if all && len(name) > 0 {
+		return errors.New("split_name and --all are mutually exclusive")
+	}
+
+	if all {
 		return runUnassignAll()
 	}
 	return runUnassign(name)
