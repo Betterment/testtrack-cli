@@ -93,13 +93,8 @@ func (s *SplitDecision) SameResourceAs(other migrations.IMigration) bool {
 	return false
 }
 
-// Inverse returns a logical inverse operation if possible
-func (s *SplitDecision) Inverse() (migrations.IMigration, error) {
-	return nil, fmt.Errorf("can't invert split decision %s", *s.split)
-}
-
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository) error {
+func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository, idempotently bool) error {
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
 			schema.Splits[i].Decided = true
@@ -130,6 +125,9 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 			})
 			return nil
 		}
+	}
+	if idempotently {
+		return nil
 	}
 	return fmt.Errorf("Couldn't locate split %s in schema to decide", *s.split)
 }

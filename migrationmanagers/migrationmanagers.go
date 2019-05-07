@@ -61,7 +61,7 @@ func (m *MigrationManager) Save() error {
 	if err != nil {
 		return err
 	}
-	err = m.ApplyToSchema(migrationRepo)
+	err = m.ApplyToSchema(migrationRepo, false)
 	if err != nil {
 		return err
 	}
@@ -83,13 +83,13 @@ func (m *MigrationManager) Run(migrationRepo migrations.Repository) error {
 }
 
 // ApplyToSchema validates and applies a migration to the in-memory schema representation
-func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository) error {
+func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository, idempotently bool) error {
 	err := m.migration.Validate()
 	if err != nil {
 		return err
 	}
 
-	err = m.migration.ApplyToSchema(m.schema, migrationRepo)
+	err = m.migration.ApplyToSchema(m.schema, migrationRepo, idempotently)
 	if err != nil {
 		return err
 	}
@@ -101,15 +101,15 @@ func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository) er
 	return nil
 }
 
-// Apply applies a migration to the TestTrack server and in-memory schema
-// without recording the version to TestTrack server
+// Apply idempotently applies a migration to the TestTrack server and in-memory
+// schema without recording the version to TestTrack server
 func (m *MigrationManager) Apply(migrationRepo migrations.Repository) error {
 	err := m.migration.Validate()
 	if err != nil {
 		return err
 	}
 
-	err = m.migration.ApplyToSchema(m.schema, migrationRepo)
+	err = m.migration.ApplyToSchema(m.schema, migrationRepo, true)
 	if err != nil {
 		return err
 	}
