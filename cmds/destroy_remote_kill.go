@@ -9,12 +9,12 @@ import (
 )
 
 var destroyRemoteKillDoc = `
-Unsets a remote kill, allowing users of affected apps to see whatever variant
+Destroys a remote kill, allowing users of affected apps to see whatever variant
 of the split they would otherwise see.
 
 Example:
 
-testtrack unset_remote_kill my_fancy_experiment
+testtrack destroy remote_kill my_fancy_experiment
 `
 
 func init() {
