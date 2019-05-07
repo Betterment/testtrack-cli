@@ -140,13 +140,8 @@ func (s *Split) SameResourceAs(other migrations.IMigration) bool {
 	return false
 }
 
-// Inverse returns a logical inverse operation if possible
-func (s *Split) Inverse() (migrations.IMigration, error) {
-	return nil, fmt.Errorf("can't invert split creation %s", *s.name)
-}
-
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository) error {
+func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository, _idempotently bool) error {
 	for i, candidate := range schema.Splits { // Replace
 		if candidate.Name == *s.name {
 			schemaWeights, err := WeightsFromYAML(candidate.Weights)

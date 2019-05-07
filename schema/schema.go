@@ -189,7 +189,7 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 	versions := migrationRepo.SortedVersions()
 
 	for _, version := range versions {
-		err = migrationRepo[version].ApplyToSchema(schema, migrationRepo)
+		err = migrationRepo[version].ApplyToSchema(schema, migrationRepo, false)
 		if err != nil {
 			return err
 		}

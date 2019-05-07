@@ -21,8 +21,7 @@ type IMigration interface {
 	Serializable() interface{}
 	MigrationVersion() *string
 	SameResourceAs(other IMigration) bool
-	Inverse() (IMigration, error)
-	ApplyToSchema(*serializers.Schema, Repository) error
+	ApplyToSchema(schema *serializers.Schema, migrationRepo Repository, idempotently bool) error
 }
 
 var migrationFilenameRegex = regexp.MustCompile(`^(\d{13}(?:v\d{3})?)_[a-z\d_\-\.]+.yml$`)

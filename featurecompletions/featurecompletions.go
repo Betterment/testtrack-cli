@@ -102,25 +102,17 @@ func (f *FeatureCompletion) SameResourceAs(other migrations.IMigration) bool {
 	return false
 }
 
-// Inverse returns a logical inverse operation if possible
-func (f *FeatureCompletion) Inverse() (migrations.IMigration, error) {
-	if f.version == nil {
-		return nil, fmt.Errorf("can't invert feature_completion destroy %s for %s", *f.migrationVersion, *f.featureGate)
-	}
-	return &FeatureCompletion{
-		featureGate: f.featureGate,
-		version:     nil,
-	}, nil
-}
-
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
+func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository, idempotently bool) error {
 	if f.version == nil { // Delete
 		for i, candidate := range schema.FeatureCompletions {
 			if candidate.FeatureGate == *f.featureGate {
 				schema.FeatureCompletions = append(schema.FeatureCompletions[:i], schema.FeatureCompletions[i+1:]...)
 				return nil
 			}
+		}
+		if idempotently {
+			return nil
 		}
 		return fmt.Errorf("Couldn't locate feature_completion of %s in schema", *f.featureGate)
 	}

@@ -130,28 +130,17 @@ func (r *RemoteKill) SameResourceAs(other migrations.IMigration) bool {
 	return false
 }
 
-// Inverse returns a logical inverse operation if possible
-func (r *RemoteKill) Inverse() (migrations.IMigration, error) {
-	if r.firstBadVersion == nil {
-		return nil, fmt.Errorf("can't invert remote_kill destroy %s for %s %s", *r.migrationVersion, *r.split, *r.reason)
-	}
-	return &RemoteKill{
-		split:           r.split,
-		reason:          r.reason,
-		overrideTo:      nil,
-		firstBadVersion: nil,
-		fixedVersion:    nil,
-	}, nil
-}
-
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (r *RemoteKill) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository) error {
+func (r *RemoteKill) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository, idempotently bool) error {
 	if r.firstBadVersion == nil { // Delete
 		for i, candidate := range schema.RemoteKills {
 			if candidate.Split == *r.split && candidate.Reason == *r.reason {
 				schema.RemoteKills = append(schema.RemoteKills[:i], schema.RemoteKills[i+1:]...)
 				return nil
 			}
+		}
+		if idempotently {
+			return nil
 		}
 		return fmt.Errorf("Couldn't locate remote_kill %s of %s in schema", *r.reason, *r.split)
 	}

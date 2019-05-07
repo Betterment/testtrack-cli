@@ -68,7 +68,7 @@ func createRemoteKill(split, reason, overrideTo, firstBadVersion, fixedVersion *
 		return err
 	}
 
-	// These validations are the difference between remote_kill and unset_remote_kill which is why they're inline
+	// These validations are the difference between create and destroy remote_kill which is why they're inline
 	err = validations.Presence("override_to", overrideTo)
 	if err != nil {
 		return err
