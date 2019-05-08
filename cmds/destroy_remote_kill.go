@@ -38,11 +38,11 @@ func destroyRemoteKill(split, reason *string) error {
 	if err != nil {
 		return err
 	}
-	schema, err := schema.Read()
+	mergedSchema, err := schema.ReadMerged()
 	if err != nil {
 		return err
 	}
-	err = validations.AutoPrefixAndValidateSplit("split_name", split, currentAppName, schema, noPrefix, force)
+	err = validations.AutoPrefixAndValidateSplit("split_name", split, currentAppName, mergedSchema, noPrefix, force)
 	if err != nil {
 		return err
 	}

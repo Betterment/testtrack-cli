@@ -94,7 +94,7 @@ func (s *SplitRetirement) SameResourceAs(other migrations.IMigration) bool {
 }
 
 // ApplyToSchema applies a migrations changes to in-memory schema representation
-func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository, idempotently bool) error {
+func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository, _idempotently bool) error {
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
 			weights, err := splits.WeightsFromYAML(candidate.Weights)
@@ -109,8 +109,5 @@ func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema, _ migrations
 			return nil
 		}
 	}
-	if idempotently {
-		return nil
-	}
-	return fmt.Errorf("Couldn't locate split %s in schema to retire", *s.split)
+	return nil
 }

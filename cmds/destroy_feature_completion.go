@@ -40,11 +40,11 @@ func destroyFeatureCompletion(featureGate *string) error {
 	if err != nil {
 		return err
 	}
-	schema, err := schema.Read()
+	mergedSchema, err := schema.ReadMerged()
 	if err != nil {
 		return err
 	}
-	err = validations.AutoPrefixAndValidateSplit("feature_gate_name", featureGate, currentAppName, schema, noPrefix, force)
+	err = validations.AutoPrefixAndValidateSplit("feature_gate_name", featureGate, currentAppName, mergedSchema, noPrefix, force)
 	if err != nil {
 		return err
 	}

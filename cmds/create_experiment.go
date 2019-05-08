@@ -49,23 +49,21 @@ func createExperiment(name, weights string) error {
 		return err
 	}
 
-	err = validations.SplitExistsInSchema("name", &name, schema)
-	if err != nil && !noPrefix { // Bare name doesn't exist in schema
-		appName, err := getAppName()
-		if err != nil {
-			return err
-		}
+	err = validations.NonPrefixedExperiment("name", &name)
+	if err != nil {
+		return err
+	}
 
-		err = validations.NonPrefixedExperiment("name", &name)
-		if err != nil {
-			return err
-		}
+	appName, err := getAppName()
+	if err != nil {
+		return err
+	}
 
-		name = fmt.Sprintf("%s.%s", appName, name)
-	} else {
-		err = validations.ExperimentSuffix("name", &name)
-		if err != nil {
-			return err
+	err = validations.AutoPrefixAndValidateSplit("name", &name, appName, schema, noPrefix, force)
+	if err != nil {
+		// if this errors, we know this is a create (not an update), so maybe prefix
+		if !noPrefix {
+			name = fmt.Sprintf("%s.%s", appName, name)
 		}
 	}
 
