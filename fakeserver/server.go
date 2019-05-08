@@ -8,11 +8,16 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
+
+// Force every biz logic operation acquire the same lock so nobody's reading or
+// writing inconsistent state from/to the filesystem
+var mutex sync.Mutex
 
 // BindTo is the IP and port we're binding to
 const BindTo = "127.0.0.1:8297"
@@ -48,7 +53,9 @@ func Start() {
 
 func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {
 	s.router.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		mutex.Lock()
 		result, err := responseFunc()
+		mutex.Unlock()
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -66,7 +73,9 @@ func (s *server) handleGet(pattern string, responseFunc func() (interface{}, err
 
 func (s *server) handlePost(pattern string, actionFunc func(*http.Request) (interface{}, error)) {
 	s.router.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		mutex.Lock()
 		result, err := actionFunc(r)
+		mutex.Unlock()
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
