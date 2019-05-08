@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/Betterment/testtrack-cli/serializers"
-	"github.com/pkg/errors"
 )
 
 const appVersionMaxLength = 18 // This conforms to iOS version numering rules
@@ -29,22 +28,41 @@ var appVersionRegex = regexp.MustCompile(strings.Join([]string{
 // according to flags and optionally validates it for presence in the schema
 func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName string, schema *serializers.Schema, noPrefix, force bool) error {
 	prefix := appNamePrefix(value)
-	splitAppName := prefix
-	if prefix == nil && !noPrefix {
-		prefixed := fmt.Sprintf("%s.%s", currentAppName, *value)
-		err := SplitExistsInSchema(paramName, &prefixed, schema)
+	prefixed := fmt.Sprintf("%s.%s", currentAppName, *value)
+
+	if noPrefix && prefix != nil {
+		return fmt.Errorf("--no-prefix incompatible with prefix '%s'", *prefix)
+	}
+
+	if force {
+		if noPrefix {
+			return nil
+		}
+
+		if prefix != nil {
+			return nil
+		}
+		*value = prefixed
+		return nil
+	}
+
+	if !noPrefix {
+		var candidate string
+
+		if prefix == nil {
+			candidate = prefixed
+		} else {
+			candidate = *value
+		}
+
+		err := SplitExistsInSchema(paramName, &candidate, schema)
 		if err == nil {
-			splitAppName = &currentAppName
-			*value = prefixed
+			*value = candidate
+			return nil
 		}
 	}
-	if splitAppName != nil && *splitAppName == currentAppName && !force {
-		err := SplitExistsInSchema(paramName, value, schema)
-		if err != nil {
-			return errors.Wrap(err, "use --force to skip schema validation")
-		}
-	}
-	return nil
+
+	return SplitExistsInSchema(paramName, value, schema)
 }
 
 // NonPrefixedSplit validates that a split name param is valid with no app prefix
