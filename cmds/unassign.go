@@ -27,7 +27,6 @@ var unassignAll bool
 func init() {
 	unassignCmd.Flags().BoolVar(&unassignAll, "all", false, "Unassign all splits")
 	unassignCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
-	unassignCmd.Flags().BoolVar(&force, "force", false, "Force remove assignment if split is no longer in schema")
 	rootCmd.AddCommand(unassignCmd)
 }
 
@@ -75,7 +74,7 @@ func runUnassign(name string) error {
 	if err != nil {
 		return err
 	}
-	err = validations.AutoPrefixAndValidateSplit("split_name", &name, currentAppName, mergedSchema, noPrefix, force)
+	err = validations.AutoPrefixAndValidateSplit("split_name", &name, currentAppName, mergedSchema, noPrefix, false)
 	if err != nil {
 		return fmt.Errorf("split_name '%s' not found in schema", name)
 	}

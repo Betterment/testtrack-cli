@@ -23,7 +23,6 @@ func init() {
 	assignCmd.Flags().StringVar(&assignVariant, "variant", "", "Variant to assign")
 	assignCmd.MarkFlagRequired("variant")
 	assignCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
-	assignCmd.Flags().BoolVar(&force, "force", false, "Force create assignment if split is no longer in schema")
 	rootCmd.AddCommand(assignCmd)
 }
 
@@ -46,7 +45,7 @@ func assign(name, variant string) error {
 	if err != nil {
 		return err
 	}
-	err = validations.AutoPrefixAndValidateSplit("split_name", &name, currentAppName, mergedSchema, noPrefix, force)
+	err = validations.AutoPrefixAndValidateSplit("split_name", &name, currentAppName, mergedSchema, noPrefix, false)
 	if err != nil {
 		return fmt.Errorf("split_name '%s' not found in schema", name)
 	}
