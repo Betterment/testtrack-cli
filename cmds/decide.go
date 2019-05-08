@@ -33,6 +33,7 @@ func init() {
 	decideCmd.Flags().StringVar(&decideVariant, "variant", "", "Variant that all clients should see going forward")
 	decideCmd.MarkFlagRequired("variant")
 	decideCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name (supports legacy splits)")
+	decideCmd.Flags().BoolVar(&force, "force", false, "Force decision if split isn't found in schema, e.g. if split is retired")
 	rootCmd.AddCommand(decideCmd)
 }
 

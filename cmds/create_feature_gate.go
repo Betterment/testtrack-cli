@@ -66,7 +66,10 @@ func createFeatureGate(name, defaultVariant, weights string) error {
 
 	err = validations.AutoPrefixAndValidateSplit("name", &name, appName, schema, noPrefix, force)
 	if err != nil {
-		return err
+		// if this errors, we know this is a create (not an update), so maybe prefix
+		if !noPrefix {
+			name = fmt.Sprintf("%s.%s", appName, name)
+		}
 	}
 
 	if len(weights) == 0 {
