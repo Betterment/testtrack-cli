@@ -8,7 +8,7 @@ import (
 )
 
 var assignDoc = `
-Assigns a variant to all visitors in the testtrack fake server.
+Overrides all assignments for a split in the fake TestTrack server.
 
 Example:
 

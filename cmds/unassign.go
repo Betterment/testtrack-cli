@@ -11,10 +11,9 @@ import (
 )
 
 var unassignDoc = `
-Removes split assignment from all visitors in the testtrack fake server.
+Removes an assignment override for a split in the fake TestTrack server.
 
-This command can be used to remove the assignment for a specific split
-or to remove all split assignments.
+This command can also be used to reset all overrides.
 
 Example:
 
