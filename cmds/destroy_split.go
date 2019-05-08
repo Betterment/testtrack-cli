@@ -83,7 +83,7 @@ func destroySplit(name, decision string) error {
 		return err
 	}
 
-	err = mgr.Save()
+	err = mgr.CreateMigration()
 	if err != nil {
 		return err
 	}

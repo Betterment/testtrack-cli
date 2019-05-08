@@ -88,7 +88,7 @@ func createRemoteKill(split, reason, overrideTo, firstBadVersion, fixedVersion *
 		return err
 	}
 
-	err = mgr.Save()
+	err = mgr.CreateMigration()
 	if err != nil {
 		return err
 	}

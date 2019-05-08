@@ -57,7 +57,7 @@ func destroyRemoteKill(split, reason *string) error {
 		return err
 	}
 
-	err = mgr.Save()
+	err = mgr.CreateMigration()
 	if err != nil {
 		return err
 	}

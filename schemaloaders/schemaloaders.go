@@ -72,7 +72,7 @@ func (s *SchemaLoader) Load() error {
 		SchemaVersion:     s.schema.SchemaVersion,
 	}
 	for _, migration := range ms {
-		err := migrationmanagers.NewWithDependencies(migration, s.server, newSchema).Apply(migrations.Repository{}) // generated migrations are data-complete and don't need migrations
+		err := migrationmanagers.NewWithDependencies(migration, s.server, newSchema).Sync()
 		if err != nil {
 			return err
 		}
