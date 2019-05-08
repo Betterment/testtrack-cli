@@ -1,8 +1,6 @@
 package cmds
 
 import (
-	"fmt"
-
 	"github.com/Betterment/testtrack-cli/fakeassignments"
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/validations"
@@ -47,7 +45,7 @@ func assign(name, variant string) error {
 	}
 	err = validations.AutoPrefixAndValidateSplit("split_name", &name, currentAppName, mergedSchema, noPrefix, false)
 	if err != nil {
-		return fmt.Errorf("split_name '%s' not found in schema", name)
+		return err
 	}
 	err = validations.VariantExistsInSchema("variant", &variant, name, mergedSchema)
 	if err != nil {

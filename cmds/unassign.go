@@ -2,8 +2,11 @@ package cmds
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/Betterment/testtrack-cli/fakeassignments"
+	"github.com/Betterment/testtrack-cli/serializers"
+	"github.com/Betterment/testtrack-cli/validations"
 	"github.com/spf13/cobra"
 )
 
@@ -63,9 +66,26 @@ func runUnassignAll() error {
 }
 
 func runUnassign(name string) error {
+	currentAppName, err := getAppName()
+	if err != nil {
+		return err
+	}
+
 	fakeAssigns, err := fakeassignments.Read()
 	if err != nil {
 		return err
+	}
+
+	fakeSchema := &serializers.Schema{}
+	for split := range *fakeAssigns {
+		fakeSchema.Splits = append(fakeSchema.Splits, serializers.SchemaSplit{
+			Name: split,
+		})
+	}
+
+	err = validations.AutoPrefixAndValidateSplit("split_name", &name, currentAppName, fakeSchema, noPrefix, false)
+	if err != nil {
+		return errors.New(strings.Replace(err.Error(), " in schema", " in assignments", 1))
 	}
 
 	delete(*fakeAssigns, name)
