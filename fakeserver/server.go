@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -43,10 +44,28 @@ func Start() {
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"authorization"},
 		AllowOriginFunc: func(origin string) bool {
-			dotTest := strings.HasSuffix(origin, ".test")
-			localhost := origin == "localhost"
+			allowedOrigins, ok := os.LookupEnv("TESTTRACK_ALLOWED_ORIGINS")
+			if ok {
+				for _, allowedOrigin := range strings.Split(allowedOrigins, ",") {
+					allowedOrigin = strings.Trim(allowedOrigin, " ")
+					if strings.HasSuffix(origin, allowedOrigin) {
+						return true
+					}
+				}
+			} else {
+				// .test cannot be registered so we allow it by default
+				if strings.HasSuffix(origin, ".test") {
+					return true
+				}
+			}
+			if origin == "localhost" {
+				return true
+			}
 			ip := net.ParseIP(origin)
-			return dotTest || localhost || (ip != nil && ip.IsLoopback())
+			if ip != nil && ip.IsLoopback() {
+				return true
+			}
+			return false
 		},
 	}).Handler(r)))
 }
