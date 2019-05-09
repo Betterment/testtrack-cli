@@ -86,6 +86,7 @@ func (s *server) handleGet(pattern string, responseFunc func() (interface{}, err
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes)
 	}).Methods("GET")
 }
@@ -110,6 +111,7 @@ func (s *server) handlePost(pattern string, actionFunc func(*http.Request) (inte
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes)
 	}).Methods("POST")
 }
