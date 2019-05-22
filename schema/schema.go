@@ -109,7 +109,7 @@ func ReadMerged() (*serializers.Schema, error) {
 		if fi.Mode()&os.ModeSymlink != 0 {
 			path, err = os.Readlink(path)
 			if err != nil {
-				return nil, err
+				continue // It's OK if this symlink isn't traversable (e.g. app was uninstalled), we'll just skip it.
 			}
 		}
 		// Read file
