@@ -35,18 +35,18 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 	}, nil
 }
 
-// NewWithDependencies returns a MigrationManager using a provided Server
-func NewWithDependencies(migration migrations.IMigration, server servers.IServer, schema *serializers.Schema) *MigrationManager {
+// NewWithServer returns a MigrationManager using a provided Server
+func NewWithServer(migration migrations.IMigration, server servers.IServer) *MigrationManager {
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
-		schema:    schema,
+		schema:    &serializers.Schema{},
 	}
 }
 
-// Save does the whole operation of validating and persisting a
+// CreateMigration does the whole operation of validating and persisting a
 // migration to disk, and updating the schema
-func (m *MigrationManager) Save() error {
+func (m *MigrationManager) CreateMigration() error {
 	err := m.migration.Validate()
 	if err != nil {
 		return err
@@ -69,9 +69,9 @@ func (m *MigrationManager) Save() error {
 	return schema.Write(m.schema)
 }
 
-// Run applies a migration to the TestTrack server, writing out the schema
-func (m *MigrationManager) Run(migrationRepo migrations.Repository) error {
-	err := m.Apply(migrationRepo)
+// Migrate syncs a migration and its version to the TestTrack server
+func (m *MigrationManager) Migrate() error {
+	err := m.Sync()
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (m *MigrationManager) Run(migrationRepo migrations.Repository) error {
 	if err != nil {
 		return err
 	}
-	return schema.Write(m.schema)
+	return nil
 }
 
 // ApplyToSchema validates and applies a migration to the in-memory schema representation
@@ -101,18 +101,13 @@ func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository, id
 	return nil
 }
 
-// Apply idempotently applies a migration to the TestTrack server and in-memory
-// schema without recording the version to TestTrack server
-func (m *MigrationManager) Apply(migrationRepo migrations.Repository) error {
+// Sync applies the contents of a migration to the TestTrack server
+func (m *MigrationManager) Sync() error {
 	err := m.migration.Validate()
 	if err != nil {
 		return err
 	}
 
-	err = m.migration.ApplyToSchema(m.schema, migrationRepo, true)
-	if err != nil {
-		return err
-	}
 	resp, err := m.server.Post(m.migration.SyncPath(), m.migration.Serializable())
 	if err != nil {
 		return err

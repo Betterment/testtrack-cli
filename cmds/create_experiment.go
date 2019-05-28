@@ -82,7 +82,7 @@ func createExperiment(name, weights string) error {
 		return err
 	}
 
-	err = mgr.Save()
+	err = mgr.CreateMigration()
 	if err != nil {
 		return err
 	}

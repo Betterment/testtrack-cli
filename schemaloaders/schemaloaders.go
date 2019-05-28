@@ -2,7 +2,6 @@ package schemaloaders
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/identifiertypes"
@@ -16,7 +15,6 @@ import (
 	"github.com/Betterment/testtrack-cli/splitdecisions"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 )
 
 // SchemaLoader loads schemas into TestTrack
@@ -67,28 +65,11 @@ func (s *SchemaLoader) Load() error {
 		ms = append(ms, featurecompletions.FromFile(nil, &s.schema.FeatureCompletions[i]))
 	}
 
-	newSchema := &serializers.Schema{
-		SerializerVersion: serializers.SerializerVersion,
-		SchemaVersion:     s.schema.SchemaVersion,
-	}
 	for _, migration := range ms {
-		err := migrationmanagers.NewWithDependencies(migration, s.server, newSchema).Apply(migrations.Repository{}) // generated migrations are data-complete and don't need migrations
+		err := migrationmanagers.NewWithServer(migration, s.server).Sync()
 		if err != nil {
 			return err
 		}
-	}
-
-	schema.SortAlphabetically(newSchema)
-	if !reflect.DeepEqual(*s.schema, *newSchema) {
-		before, err := yaml.Marshal(s.schema)
-		if err != nil {
-			return err
-		}
-		after, err := yaml.Marshal(newSchema)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("testtrack bug! load resulted in different schema.\n\nBefore:\n\n%s\n\nAfter:\n\n%s", before, after)
 	}
 
 	for _, version := range s.migrationRepo.SortedVersions() {
@@ -96,7 +77,7 @@ func (s *SchemaLoader) Load() error {
 			fmt.Println("Schema load complete, but there are migrations newer than the schema file - run testtrack migrate to apply them.")
 			break
 		}
-		err := migrationmanagers.NewWithDependencies((*s.migrationRepo)[version], s.server, newSchema).SyncVersion()
+		err := migrationmanagers.NewWithServer((*s.migrationRepo)[version], s.server).SyncVersion()
 		if err != nil {
 			return err
 		}

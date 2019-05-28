@@ -3,6 +3,7 @@ package migrationrunners
 import (
 	"github.com/Betterment/testtrack-cli/migrationloaders"
 	"github.com/Betterment/testtrack-cli/migrationmanagers"
+	"github.com/Betterment/testtrack-cli/migrations"
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
@@ -26,31 +27,39 @@ func New(server servers.IServer) (*Runner, error) {
 
 // RunOutstanding runs all outstanding migrations
 func (r *Runner) RunOutstanding() error {
-	migrationRepo, err := migrationloaders.Load()
+	migrationRepo, err := r.getOutstandingMigrations()
 	if err != nil {
 		return err
-	}
-
-	appliedMigrationVersions, err := r.getAppliedMigrationVersions()
-	if err != nil {
-		return err
-	}
-
-	for _, version := range appliedMigrationVersions {
-		delete(migrationRepo, version.Version)
 	}
 
 	versions := migrationRepo.SortedVersions()
 
 	for _, version := range versions {
-		mgr := migrationmanagers.NewWithDependencies(migrationRepo[version], r.server, r.schema)
-		err := mgr.Run(migrationRepo)
+		mgr := migrationmanagers.NewWithServer(migrationRepo[version], r.server)
+		err := mgr.Migrate()
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (r *Runner) getOutstandingMigrations() (migrations.Repository, error) {
+	migrationRepo, err := migrationloaders.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	appliedMigrationVersions, err := r.getAppliedMigrationVersions()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, version := range appliedMigrationVersions {
+		delete(migrationRepo, version.Version)
+	}
+	return migrationRepo, nil
 }
 
 func (r *Runner) getAppliedMigrationVersions() ([]serializers.MigrationVersion, error) {
