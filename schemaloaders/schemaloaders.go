@@ -2,7 +2,6 @@ package schemaloaders
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/Betterment/testtrack-cli/featurecompletions"
 	"github.com/Betterment/testtrack-cli/identifiertypes"
@@ -16,7 +15,6 @@ import (
 	"github.com/Betterment/testtrack-cli/splitdecisions"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 )
 
 // SchemaLoader loads schemas into TestTrack
@@ -76,19 +74,6 @@ func (s *SchemaLoader) Load() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	schema.SortAlphabetically(newSchema)
-	if !reflect.DeepEqual(*s.schema, *newSchema) {
-		before, err := yaml.Marshal(s.schema)
-		if err != nil {
-			return err
-		}
-		after, err := yaml.Marshal(newSchema)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("testtrack bug! load resulted in different schema.\n\nBefore:\n\n%s\n\nAfter:\n\n%s", before, after)
 	}
 
 	for _, version := range s.migrationRepo.SortedVersions() {
