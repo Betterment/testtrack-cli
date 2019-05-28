@@ -35,12 +35,12 @@ func New(migration migrations.IMigration) (*MigrationManager, error) {
 	}, nil
 }
 
-// NewWithDependencies returns a MigrationManager using a provided Server
-func NewWithDependencies(migration migrations.IMigration, server servers.IServer, schema *serializers.Schema) *MigrationManager {
+// NewWithServer returns a MigrationManager using a provided Server
+func NewWithServer(migration migrations.IMigration, server servers.IServer) *MigrationManager {
 	return &MigrationManager{
 		migration: migration,
 		server:    server,
-		schema:    schema,
+		schema:    &serializers.Schema{},
 	}
 }
 

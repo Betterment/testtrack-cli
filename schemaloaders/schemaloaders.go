@@ -65,12 +65,8 @@ func (s *SchemaLoader) Load() error {
 		ms = append(ms, featurecompletions.FromFile(nil, &s.schema.FeatureCompletions[i]))
 	}
 
-	newSchema := &serializers.Schema{
-		SerializerVersion: serializers.SerializerVersion,
-		SchemaVersion:     s.schema.SchemaVersion,
-	}
 	for _, migration := range ms {
-		err := migrationmanagers.NewWithDependencies(migration, s.server, newSchema).Sync()
+		err := migrationmanagers.NewWithServer(migration, s.server).Sync()
 		if err != nil {
 			return err
 		}
@@ -81,7 +77,7 @@ func (s *SchemaLoader) Load() error {
 			fmt.Println("Schema load complete, but there are migrations newer than the schema file - run testtrack migrate to apply them.")
 			break
 		}
-		err := migrationmanagers.NewWithDependencies((*s.migrationRepo)[version], s.server, newSchema).SyncVersion()
+		err := migrationmanagers.NewWithServer((*s.migrationRepo)[version], s.server).SyncVersion()
 		if err != nil {
 			return err
 		}

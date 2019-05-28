@@ -35,7 +35,7 @@ func (r *Runner) RunOutstanding() error {
 	versions := migrationRepo.SortedVersions()
 
 	for _, version := range versions {
-		mgr := migrationmanagers.NewWithDependencies(migrationRepo[version], r.server, r.schema)
+		mgr := migrationmanagers.NewWithServer(migrationRepo[version], r.server)
 		err := mgr.Migrate()
 		if err != nil {
 			return err
