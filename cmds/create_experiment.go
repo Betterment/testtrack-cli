@@ -23,13 +23,17 @@ weightings of 50% each.
 Weights are specified as a string and must sum to 100:
 
 --weights "variant_1: 25, variant_2: 25, variant_3: 50"
+
+Do not use --no-prefix to create a new split. It can be used to revive a
+destroyed split if it was destroyed by mistake, but the migration will fail if
+you attempt to create a new split without a prefix.
 `
 
 var createExperimentWeights string
 
 func init() {
 	createExperimentCmd.Flags().StringVar(&createExperimentWeights, "weights", "control: 50, treatment: 50", "Variant weights to use")
-	createExperimentCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix experiment with app_name (supports legacy splits)")
+	createExperimentCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix experiment with app_name (supports existing legacy splits)")
 	createCmd.AddCommand(createExperimentCmd)
 }
 
