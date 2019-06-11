@@ -27,6 +27,10 @@ Optional weights are specified as a string, must have the variants true and
 false, and must sum to 100:
 
 --weights "true: 25, false: 75"
+
+Do not use --no-prefix to create a new split. It can be used to revive a
+destroyed split if it was destroyed by mistake, but the migration will fail if
+you attempt to create a new split without a prefix.
 `
 
 var createFeatureGateDefault, createFeatureGateWeights string
@@ -34,7 +38,7 @@ var createFeatureGateDefault, createFeatureGateWeights string
 func init() {
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateDefault, "default", "false", "Default variant for your feature flag")
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateWeights, "weights", "", "Variant weights to use (overrides default)")
-	createFeatureGateCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name (supports legacy splits)")
+	createFeatureGateCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name (supports existing legacy splits)")
 	createCmd.AddCommand(createFeatureGateCmd)
 }
 
