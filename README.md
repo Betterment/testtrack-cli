@@ -16,7 +16,7 @@ The `testtrack` CLI has the following features:
 
 1. Download/install testtrack CLI
 
-Currently TestTrack binaries for linux and OS X are distributed via [GitHub releases](https://github.com/Betterment/testtrack-cli/releases). We'll add a homebrew tap soon to assist in installing and daemonizing the server on OS X.
+Currently TestTrack binaries for linux and macOS are distributed via [GitHub releases](https://github.com/Betterment/testtrack-cli/releases). We'll add a homebrew tap soon to assist in installing and daemonizing the server on macOS.
 
 2. Initialize your project
 
@@ -71,3 +71,23 @@ testtrack create feature_gate my_new_feature_q2_2019_enabled
 Just run `testtrack help` for more documentation on how to configure splits and other TestTrack resources.
 
 Happy TestTracking!
+
+## How to Contribute
+
+We would love for you to contribute! Anything that benefits the majority of TestTrack users—from a documentation fix to an entirely new feature—is encouraged.
+
+Before diving in, [check our issue tracker](https://github.com/Betterment/testtrack-cli/issues) and consider creating a new issue to get early feedback on your proposed change.
+
+### Suggested Workflow
+
+* Fork the project and create a new branch for your contribution.
+* Write your contribution (and any applicable test coverage).
+* Make sure all tests pass (`make test`).
+* Submit a pull request.
+
+### Some tips for those new to golang
+
+* Set up your workspace according to [go standards](https://golang.org/doc/code.html#Organization).
+* For macOS and homebrew users, run `brew bundle` to install `go` itself.
+* Run `dep ensure` to install go dependencies.
+* Build and run the CLI using `go run testtrack/main.go`.
