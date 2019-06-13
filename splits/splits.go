@@ -74,6 +74,11 @@ func WeightsFromString(weights string) (*Weights, error) {
 	return &result, nil
 }
 
+// IsFeatureGateFromName returns true if name ends with '_enabled'
+func IsFeatureGateFromName(name string) bool {
+	return strings.HasSuffix(name, "_enabled")
+}
+
 // FromFile reifies a migration from the yaml serializable representation
 func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (migrations.IMigration, error) {
 	weights, err := WeightsFromYAML(serializable.Weights)
