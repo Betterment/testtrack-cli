@@ -25,7 +25,7 @@ type server struct {
 }
 
 // Start the server
-func Start(listenOn string) {
+func Start(port int) {
 	var wait time.Duration
 	flag.DurationVar(&wait, "graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
 	flag.Parse()
@@ -34,6 +34,8 @@ func Start(listenOn string) {
 
 	s := &server{router: r}
 	s.routes()
+
+	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
 
 	// Run our server in a goroutine so that it doesn't block.
 	fmt.Printf("testtrack server listening on %s\n", listenOn)
