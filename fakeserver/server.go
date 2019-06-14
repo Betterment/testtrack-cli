@@ -2,7 +2,6 @@ package fakeserver
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -24,22 +22,15 @@ type server struct {
 	router *mux.Router
 }
 
-// Start the server
-func Start(port int) {
-	var wait time.Duration
-	flag.DurationVar(&wait, "graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
-	flag.Parse()
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.RemoteAddr, r.Method, r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
+}
 
-	r := mux.NewRouter()
-
-	s := &server{router: r}
-	s.routes()
-
-	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
-
-	// Run our server in a goroutine so that it doesn't block.
-	fmt.Printf("testtrack server listening on %s\n", listenOn)
-	log.Fatal(http.ListenAndServe(listenOn, cors.New(cors.Options{
+func corsMiddleware(next http.Handler) http.Handler {
+	return cors.New(cors.Options{
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"authorization"},
 		AllowOriginFunc: func(origin string) bool {
@@ -66,7 +57,25 @@ func Start(port int) {
 			}
 			return false
 		},
-	}).Handler(r)))
+	}).Handler(next)
+}
+
+// Start the server
+func Start(port int, logRequests bool) {
+	r := mux.NewRouter()
+
+	s := &server{router: r}
+	s.routes()
+
+	if logRequests {
+		r.Use(loggingMiddleware)
+	}
+	r.Use(corsMiddleware)
+
+    listenOn := fmt.Sprintf("127.0.0.1:%d", port)
+	
+    fmt.Printf("testtrack server listening on %s\n", listenOn)
+	log.Fatal(http.ListenAndServe(listenOn, r))
 }
 
 func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {
