@@ -15,7 +15,7 @@ var port int
 const defaultPort = 8297
 
 func init() {
-	serverCmd.Flags().IntVarP(&port, "listen", "l", defaultPort, "Port to listen on")
+	serverCmd.Flags().IntVarP(&port, "port", "p", defaultPort, "Port to listen on")
 	rootCmd.AddCommand(serverCmd)
 }
 
