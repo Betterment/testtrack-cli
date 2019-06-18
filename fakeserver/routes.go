@@ -28,21 +28,21 @@ type v1Assignment struct {
 
 // v1VisitorConfig is the JSON output type for V1 visitor_config endpoints
 type v1VisitorConfig struct {
-	Splits  interface{} `json:"splits"`
-	Visitor interface{} `json:"visitor"`
+	Splits  map[string]*splits.Weights `json:"splits"`
+	Visitor v1Visitor                  `json:"visitor"`
 }
 
 // v2VisitorConfig is the JSON output type for V2 visitor_config endpoints
 type v2VisitorConfig struct {
-	Splits                   interface{} `json:"splits"`
-	Visitor                  interface{} `json:"visitor"`
-	ExperienceSamplingWeight int         `json:"experience_sampling_weight"`
+	Splits                   map[string]*v2Split `json:"splits"`
+	Visitor                  v1Visitor           `json:"visitor"`
+	ExperienceSamplingWeight int                 `json:"experience_sampling_weight"`
 }
 
 // v2SplitRegistry is the JSON output type for V2 split_registry endpoint
 type v2SplitRegistry struct {
-	Splits                   interface{} `json:"splits"`
-	ExperienceSamplingWeight int         `json:"experience_sampling_weight"`
+	Splits                   map[string]*v2Split `json:"splits"`
+	ExperienceSamplingWeight int                 `json:"experience_sampling_weight"`
 }
 
 // v2SplitRegistry is the JSON output type for V2 split_registry endpoint
@@ -254,11 +254,13 @@ func postV1AssignmentOverride(r *http.Request) error {
 }
 
 func getV1AppVisitorConfig() (interface{}, error) {
-	splitRegistry, err := getV1SplitRegistry()
+	isplitRegistry, err := getV1SplitRegistry()
+	splitRegistry := isplitRegistry.(map[string]*splits.Weights)
 	if err != nil {
 		return nil, err
 	}
-	visitor, err := getV1Visitor()
+	ivisitor, err := getV1Visitor()
+	visitor := ivisitor.(v1Visitor)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +276,8 @@ func getV2AppVisitorConfig() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	visitor, err := getV1Visitor()
+	ivisitor, err := getV1Visitor()
+	visitor := ivisitor.(v1Visitor)
 	if err != nil {
 		return nil, err
 	}
