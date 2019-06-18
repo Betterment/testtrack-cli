@@ -28,8 +28,27 @@ type v1Assignment struct {
 
 // v1VisitorConfig is the JSON output type for V1 visitor_config endpoints
 type v1VisitorConfig struct {
-	Splits  interface{} `json:"splits"`
-	Visitor interface{} `json:"visitor"`
+	Splits  map[string]*splits.Weights `json:"splits"`
+	Visitor v1Visitor                  `json:"visitor"`
+}
+
+// v2VisitorConfig is the JSON output type for V2 visitor_config endpoints
+type v2VisitorConfig struct {
+	Splits                   map[string]*v2Split `json:"splits"`
+	Visitor                  v1Visitor           `json:"visitor"`
+	ExperienceSamplingWeight int                 `json:"experience_sampling_weight"`
+}
+
+// v2SplitRegistry is the JSON output type for V2 split_registry endpoint
+type v2SplitRegistry struct {
+	Splits                   map[string]*v2Split `json:"splits"`
+	ExperienceSamplingWeight int                 `json:"experience_sampling_weight"`
+}
+
+// v2SplitRegistry is the JSON output type for V2 split_registry endpoint
+type v2Split struct {
+	Weights     map[string]int `json:"weights"`
+	FeatureGate bool           `json:"feature_gate"`
 }
 
 // v1SplitDetail is the JSON output type for the V1 split detail endpoint
@@ -65,6 +84,10 @@ func (s *server) routes() {
 		"/api/v1/split_registry",
 		getV1SplitRegistry,
 	)
+	s.handleGet(
+		"/api/v2/split_registry",
+		getV2SplitRegistry,
+	)
 	s.handlePostReturnNoContent(
 		"/api/v1/assignment_event",
 		postNoop,
@@ -94,6 +117,10 @@ func (s *server) routes() {
 		getV1AppVisitorConfig,
 	)
 	s.handleGet(
+		"/api/v2/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config",
+		getV2AppVisitorConfig,
+	)
+	s.handleGet(
 		"/api/v1/apps/{a}/versions/{v}/builds/{b}/identifier_types/{t}/identifiers/{i}/visitor_config",
 		getV1AppVisitorConfig,
 	)
@@ -116,6 +143,29 @@ func getV1SplitRegistry() (interface{}, error) {
 		}
 	}
 	return splitRegistry, nil
+}
+
+func getV2SplitRegistry() (interface{}, error) {
+	schema, err := schema.ReadMerged()
+	if err != nil {
+		return nil, err
+	}
+	splitRegistry := map[string]*v2Split{}
+	for _, split := range schema.Splits {
+		isFeatureGate := splits.IsFeatureGateFromName(split.Name)
+		weights, err := splits.WeightsFromYAML(split.Weights)
+		if err != nil {
+			return nil, err
+		}
+		splitRegistry[split.Name] = &v2Split{
+			Weights:     *weights,
+			FeatureGate: isFeatureGate,
+		}
+	}
+	return v2SplitRegistry{
+		Splits:                   splitRegistry,
+		ExperienceSamplingWeight: 1,
+	}, nil
 }
 
 func postNoop(*http.Request) error {
@@ -204,17 +254,37 @@ func postV1AssignmentOverride(r *http.Request) error {
 }
 
 func getV1AppVisitorConfig() (interface{}, error) {
-	splitRegistry, err := getV1SplitRegistry()
+	isplitRegistry, err := getV1SplitRegistry()
+	splitRegistry := isplitRegistry.(map[string]*splits.Weights)
 	if err != nil {
 		return nil, err
 	}
-	visitor, err := getV1Visitor()
+	ivisitor, err := getV1Visitor()
+	visitor := ivisitor.(v1Visitor)
 	if err != nil {
 		return nil, err
 	}
 	return v1VisitorConfig{
 		Splits:  splitRegistry,
 		Visitor: visitor,
+	}, nil
+}
+
+func getV2AppVisitorConfig() (interface{}, error) {
+	isplitRegistry, err := getV2SplitRegistry()
+	splitRegistry := isplitRegistry.(v2SplitRegistry)
+	if err != nil {
+		return nil, err
+	}
+	ivisitor, err := getV1Visitor()
+	visitor := ivisitor.(v1Visitor)
+	if err != nil {
+		return nil, err
+	}
+	return v2VisitorConfig{
+		Splits:                   splitRegistry.Splits,
+		Visitor:                  visitor,
+		ExperienceSamplingWeight: splitRegistry.ExperienceSamplingWeight,
 	}, nil
 }
 
