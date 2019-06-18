@@ -1,5 +1,7 @@
 # testtrack-cli
 
+[![Build Status](https://travis-ci.org/Betterment/testtrack-cli.svg?branch=master)](https://travis-ci.org/Betterment/testtrack-cli)
+
 ## TestTrack Split Config Management
 
 Provides the `testtrack` command line interface as part of Betterment's [TestTrack](https://github.com/Betterment/test_track) open source split testing and feature gating platform.
@@ -49,15 +51,15 @@ We recommend [Scripts To Rule Them All](https://github.com/github/scripts-to-rul
 6. Wire up testtrack to your build/deploy pipeline
 
   a. Set an ENV var named `TESTTRACK_CLI_URL` with your TestTrack app credentials, e.g.:
-  
+
   ```bash
   TESTTRACK_CLI_URL=https://my_app:my_super_secret_app_token@testtrack.mydomain.com
   ```
-  
+
   into your build/deploy pipeline via whatever secrets management solution you use (heroku secrets, [sops](https://github.com/mozilla/sops), etc).
 
   b. Make sure the platform-appropriate `testtrack` binary is installed in your build/deploy environment (e.g. Jenkins, GoCD)
-  
+
   c. Run `testtrack migrate` from your app root. For server-side apps, this is great to wire up to the same build pipeline phase where you'd apply database migrations for your app. For mobile or other client-side apps, you'll want to run it after tests have passed and before persisting your gold master build artifact.
 
 7. Start creating splits!
