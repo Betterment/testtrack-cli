@@ -18,13 +18,15 @@ import (
 // writing inconsistent state from/to the filesystem
 var mutex sync.Mutex
 
+var logger *log.Logger
+
 type server struct {
 	router *mux.Router
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.RemoteAddr, r.Method, r.RequestURI)
+		logger.Printf("%s - %s %s", r.RemoteAddr, r.Method, r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -61,21 +63,20 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 // Start the server
-func Start(port int, logRequests bool) {
+func Start(port int) {
+	logger = log.New(os.Stdout, "", log.LstdFlags)
+
 	r := mux.NewRouter()
 
 	s := &server{router: r}
 	s.routes()
 
-	if logRequests {
-		r.Use(loggingMiddleware)
-	}
+	r.Use(loggingMiddleware)
 	r.Use(corsMiddleware)
 
-    listenOn := fmt.Sprintf("127.0.0.1:%d", port)
-	
-    fmt.Printf("testtrack server listening on %s\n", listenOn)
-	log.Fatal(http.ListenAndServe(listenOn, r))
+	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
+	logger.Printf("testtrack server listening on %s", listenOn)
+	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, r))
 }
 
 func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {
@@ -84,13 +85,13 @@ func (s *server) handleGet(pattern string, responseFunc func() (interface{}, err
 		result, err := responseFunc()
 		mutex.Unlock()
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		bytes, err := json.Marshal(result)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -105,7 +106,7 @@ func (s *server) handlePost(pattern string, actionFunc func(*http.Request) (inte
 		result, err := actionFunc(r)
 		mutex.Unlock()
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -115,7 +116,7 @@ func (s *server) handlePost(pattern string, actionFunc func(*http.Request) (inte
 		}
 		bytes, err := json.Marshal(result)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
