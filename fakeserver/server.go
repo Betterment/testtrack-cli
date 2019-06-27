@@ -31,7 +31,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func createCors() *cors.Cors {
 	return cors.New(cors.Options{
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"authorization"},
@@ -59,7 +59,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 			}
 			return false
 		},
-	}).Handler(next)
+	})
 }
 
 // Start the server
@@ -72,11 +72,12 @@ func Start(port int) {
 	s.routes()
 
 	r.Use(loggingMiddleware)
-	r.Use(corsMiddleware)
+
+	handler := createCors().Handler(r)
 
 	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
 	logger.Printf("testtrack server listening on %s", listenOn)
-	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, r))
+	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, handler))
 }
 
 func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {
