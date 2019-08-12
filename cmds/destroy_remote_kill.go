@@ -19,12 +19,12 @@ testtrack destroy remote_kill my_fancy_experiment
 
 func init() {
 	destroyRemoteKillCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix split with app_name to refer to legacy splits")
-	destroyRemoteKillCmd.Flags().BoolVar(&force, "force", false, "Force creation if split isn't found in schema, e.g. if split is retired")
+	destroyRemoteKillCmd.Flags().BoolVar(&force, "force", false, "Force destruction of remote_kill if split isn't found in schema, e.g. if split is retired")
 	destroyCmd.AddCommand(destroyRemoteKillCmd)
 }
 
 var destroyRemoteKillCmd = &cobra.Command{
-	Use:   "remote_kill split_name reason override_to first_bad_version [fixed_version]",
+	Use:   "remote_kill split_name reason",
 	Short: "Remove a split remote-kill for a range of app versions",
 	Long:  destroyRemoteKillDoc,
 	Args:  cobra.ExactArgs(2),
