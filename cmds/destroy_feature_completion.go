@@ -21,7 +21,7 @@ field for customers to use.
 
 func init() {
 	destroyFeatureCompletionCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name to refer to legacy splits")
-	destroyFeatureCompletionCmd.Flags().BoolVar(&force, "force", false, "Force creation if feature gate isn't found in schema, e.g. if split is retired")
+	destroyFeatureCompletionCmd.Flags().BoolVar(&force, "force", false, "Force destruction of feature completion if feature gate isn't found in schema, e.g. if split is retired")
 	destroyCmd.AddCommand(destroyFeatureCompletionCmd)
 }
 
