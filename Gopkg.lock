@@ -10,17 +10,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  branch = "travis-1.9"
-  digest = "1:d45f5fe0f8bf6cd0bc592502e7e8ec647d769e55387fe326eb624d67282a7d15"
-  name = "github.com/golang/lint"
-  packages = [
-    ".",
-    "golint",
-  ]
-  pruneopts = ""
-  revision = "883fe33ffc4344bad1ecd881f61afd5ec5d80e0a"
-
-[[projects]]
   digest = "1:65c7ed49d9f36dd4752e43013323fa9229db60b29aa4f5a75aaecda3130c74e2"
   name = "github.com/gorilla/mux"
   packages = ["."]
@@ -97,6 +86,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:07a6b419f790dba389a58ba7ef5bb5e5281fe0b3046398b33767e3bd21c0b736"
+  name = "golang.org/x/lint"
+  packages = [
+    ".",
+    "golint",
+  ]
+  pruneopts = ""
+  revision = "16217165b5de779cb6a5e4fc81fa9c1166fda457"
+
+[[projects]]
+  branch = "master"
   digest = "1:8eb8d3e3ac8104f933168344d8961d774cfeecc8340a65a4b0ca01b273fcda9d"
   name = "golang.org/x/tools"
   packages = [
@@ -128,13 +128,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/golang/lint/golint",
     "github.com/gorilla/mux",
     "github.com/joho/godotenv",
     "github.com/pkg/errors",
     "github.com/rs/cors",
     "github.com/spf13/cobra",
     "github.com/stretchr/testify/require",
+    "golang.org/x/lint/golint",
     "golang.org/x/tools/cmd/goimports",
     "gopkg.in/yaml.v2",
   ]

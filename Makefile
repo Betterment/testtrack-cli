@@ -30,7 +30,7 @@ release: distclean dist
 
 test:
 	@go install ./vendor/golang.org/x/tools/cmd/goimports
-	@go install ./vendor/github.com/golang/lint/golint
+	@go install ./vendor/golang.org/x/lint/golint
 	@GOIMPORTS_RESULT=$$(goimports -l ${PACKAGES} | grep -v ${LINTEXCLUDES});\
 		if [ $$(echo "$$GOIMPORTS_RESULT\c" | head -c1 | wc -c) -ne 0 ];\
 			then\
