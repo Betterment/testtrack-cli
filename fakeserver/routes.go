@@ -88,6 +88,10 @@ func (s *server) routes() {
 		"/api/v2/split_registry",
 		getV2SplitRegistry,
 	)
+	s.handleGet(
+		"/api/v2/split_registry/{ts}",
+		getV2SplitRegistry,
+	)
 	s.handlePostReturnNoContent(
 		"/api/v1/assignment_event",
 		postNoop,
