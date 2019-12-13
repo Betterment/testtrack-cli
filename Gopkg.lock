@@ -2,6 +2,33 @@
 
 
 [[projects]]
+  digest = "1:6e1bcd05ad9b028fbc1ee7f5c57732423b1721dc1fa6c9f28d739277a78d6e8d"
+  name = "github.com/Betterment/testtrack-cli"
+  packages = [
+    "cmds",
+    "fakeassignments",
+    "fakeserver",
+    "featurecompletions",
+    "identifiertypes",
+    "migrationloaders",
+    "migrationmanagers",
+    "migrationrunners",
+    "migrations",
+    "remotekills",
+    "schema",
+    "schemaloaders",
+    "serializers",
+    "servers",
+    "splitdecisions",
+    "splitretirements",
+    "splits",
+    "validations",
+  ]
+  pruneopts = ""
+  revision = "4cc560ae696392f72caf3c9843136628b80bf688"
+  version = "v1.0.2"
+
+[[projects]]
   digest = "1:0deddd908b6b4b768cfc272c16ee61e7088a60f7fe2f06c547bd3d8e1f8b8e77"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -128,6 +155,24 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Betterment/testtrack-cli/cmds",
+    "github.com/Betterment/testtrack-cli/fakeassignments",
+    "github.com/Betterment/testtrack-cli/fakeserver",
+    "github.com/Betterment/testtrack-cli/featurecompletions",
+    "github.com/Betterment/testtrack-cli/identifiertypes",
+    "github.com/Betterment/testtrack-cli/migrationloaders",
+    "github.com/Betterment/testtrack-cli/migrationmanagers",
+    "github.com/Betterment/testtrack-cli/migrationrunners",
+    "github.com/Betterment/testtrack-cli/migrations",
+    "github.com/Betterment/testtrack-cli/remotekills",
+    "github.com/Betterment/testtrack-cli/schema",
+    "github.com/Betterment/testtrack-cli/schemaloaders",
+    "github.com/Betterment/testtrack-cli/serializers",
+    "github.com/Betterment/testtrack-cli/servers",
+    "github.com/Betterment/testtrack-cli/splitdecisions",
+    "github.com/Betterment/testtrack-cli/splitretirements",
+    "github.com/Betterment/testtrack-cli/splits",
+    "github.com/Betterment/testtrack-cli/validations",
     "github.com/gorilla/mux",
     "github.com/joho/godotenv",
     "github.com/pkg/errors",
