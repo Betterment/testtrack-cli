@@ -44,9 +44,6 @@ func generateTimestamp() error {
 
 	timestamp := []byte(time.Now().Format("2006-01-02T15:04:05Z"))
 	err := ioutil.WriteFile(TimestampFilePath, timestamp, 0644)
-	if err != nil {
-		return err
-	}
 
 	return err
 }
