@@ -3,6 +3,7 @@ package cmds
 import (
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"time"
 
@@ -30,8 +31,8 @@ var generateTimestampCmd = &cobra.Command{
 }
 
 func generateTimestamp() error {
-	homeDir, _ := os.UserHomeDir()
-	TimestampDir := filepath.Join(homeDir, ".testtrack")
+	usr, _ := user.Current()
+	TimestampDir := filepath.Join(usr.HomeDir, ".testtrack")
 	TimestampFilePath := filepath.Join(TimestampDir, "build_timestamp.txt")
 
 	if _, err := os.Stat(TimestampDir); os.IsNotExist(err) {
