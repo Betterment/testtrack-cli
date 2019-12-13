@@ -3,7 +3,6 @@ package cmds
 import (
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -12,8 +11,8 @@ import (
 
 var generateTimestampDoc = `
 Write the current timestamp to the file '~/.testtrack/build_timestamp.txt'.
-This timestamp can be used by the Testtrack client as a timestamp param when
-calling the split registry endpoint from the Testtrack server.
+This timestamp can be passed as a param by the Testtrack client when calling the
+split registry endpoint from the Testtrack server.
 `
 
 func init() {
@@ -32,7 +31,7 @@ var generateTimestampCmd = &cobra.Command{
 
 func generateTimestamp() error {
 	homeDir, _ := os.UserHomeDir()
-	TimestampDir := path.Join(homeDir, ".testtrack")
+	TimestampDir := filepath.Join(homeDir, ".testtrack")
 	TimestampFilePath := filepath.Join(TimestampDir, "build_timestamp.txt")
 
 	if _, err := os.Stat(TimestampDir); os.IsNotExist(err) {
