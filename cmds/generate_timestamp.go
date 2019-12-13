@@ -22,7 +22,7 @@ func init() {
 
 var generateTimestampCmd = &cobra.Command{
 	Use:   "generate_timestamp",
-	Short: "Write the current timstamp to '~/.testtrack/build_timestamp.txt'",
+	Short: "Write the current timestamp to '~/.testtrack/build_timestamp.txt'",
 	Long:  generateTimestampDoc,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
