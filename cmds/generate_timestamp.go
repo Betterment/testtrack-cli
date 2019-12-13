@@ -8,9 +8,9 @@ import (
 )
 
 var generateTimestampDoc = `
-Write the current timestamp to the file 'build_timestamp.txt' in a TestTrack project.
-This timestamp can be passed as a param by the TestTrack client when calling the
-split registry endpoint from the TestTrack server.
+Write the current timestamp to the file 'testtrack/build_timestamp.txt' in a
+TestTrack project. This timestamp can be passed as a param by the TestTrack
+client when calling the split registry endpoint from the TestTrack server.
 `
 
 func init() {
