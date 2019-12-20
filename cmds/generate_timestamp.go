@@ -28,8 +28,7 @@ var generateTimestampCmd = &cobra.Command{
 }
 
 func generateTimestamp() error {
-	const buildTimestampPath = "testtrack/build_timestamp.txt"
 	timestamp := []byte(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 
-	return ioutil.WriteFile(buildTimestampPath, timestamp, 0644)
+	return ioutil.WriteFile("testtrack/build_timestamp.txt", timestamp, 0644)
 }
