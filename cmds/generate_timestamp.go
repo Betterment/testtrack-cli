@@ -8,7 +8,7 @@ import (
 )
 
 var generateTimestampDoc = `
-Write the current UTC timestamp to the file 'testtrack/build_timestamp.txt'.
+Write the current UTC timestamp to the file 'testtrack/build_timestamp'.
 This timestamp is used by TestTrack clients to request the version of the split
 registry active at the given time.
 `
@@ -19,7 +19,7 @@ func init() {
 
 var generateTimestampCmd = &cobra.Command{
 	Use:   "generate_timestamp",
-	Short: "Write the current UTC timestamp to 'testtrack/build_timestamp.txt'",
+	Short: "Write the current UTC timestamp to 'testtrack/build_timestamp'",
 	Long:  generateTimestampDoc,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -30,5 +30,5 @@ var generateTimestampCmd = &cobra.Command{
 func generateTimestamp() error {
 	timestamp := []byte(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 
-	return ioutil.WriteFile("testtrack/build_timestamp.txt", timestamp, 0644)
+	return ioutil.WriteFile("testtrack/build_timestamp", timestamp, 0644)
 }
