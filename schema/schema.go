@@ -74,15 +74,15 @@ func Link(force bool) error {
 		return err
 	}
 	dirname := path.Base(dir)
-	homeDir, err := paths.HomeDir()
+	configDir, err := paths.ConfigDir()
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(*homeDir+"/schemas", 0755)
+	err = os.MkdirAll(*configDir+"/schemas", 0755)
 	if err != nil {
 		return err
 	}
-	path := fmt.Sprintf("%s/schemas/%s.yml", *homeDir, dirname)
+	path := fmt.Sprintf("%s/schemas/%s.yml", *configDir, dirname)
 	if force {
 		os.Remove(path) // If this fails it might just not exist, we'll error on the next line if something else is up
 	}
@@ -91,11 +91,11 @@ func Link(force bool) error {
 
 // ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
 func ReadMerged() (*serializers.Schema, error) {
-	homeDir, err := paths.HomeDir()
+	configDir, err := paths.ConfigDir()
 	if err != nil {
 		return nil, err
 	}
-	paths, err := filepath.Glob(*homeDir + "/schemas/*.yml")
+	paths, err := filepath.Glob(*configDir + "/schemas/*.yml")
 	if err != nil {
 		return nil, err
 	}

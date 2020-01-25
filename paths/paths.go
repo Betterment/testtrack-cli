@@ -5,16 +5,16 @@ import (
 	"os/user"
 )
 
-// HomeDir return home directory path
-func HomeDir() (*string, error) {
+// ConfigDir return the fake server's configuration directory
+func ConfigDir() (*string, error) {
 	user, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
-	testTrackHomeDir, ok := os.LookupEnv("TESTTRACK_HOME_DIR")
+	configDir, ok := os.LookupEnv("TESTTRACK_CONFIG_DIR")
 	if !ok {
-		testTrackHomeDir = user.HomeDir + "/.testtrack"
+		configDir = user.HomeDir + "/.testtrack"
 	}
 
-	return &testTrackHomeDir, nil
+	return &configDir, nil
 }
