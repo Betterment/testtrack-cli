@@ -67,15 +67,14 @@ func createCors() *cors.Cors {
 
 // Start the server
 func Start(port int) {
-	handler := CreateHandler()
+	handler := createHandler()
 
 	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
 	logger.Printf("testtrack server listening on %s", listenOn)
 	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, handler))
 }
 
-// CreateHandler (exposed for testing)
-func CreateHandler() http.Handler {
+func createHandler() http.Handler {
 	logger = log.New(os.Stdout, "", log.LstdFlags)
 
 	r := mux.NewRouter()

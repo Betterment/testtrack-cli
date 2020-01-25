@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 func TestSplitRegistry(t *testing.T) {
 	t.Run("it loads split registry v2", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		h := CreateHandler()
+		h := createHandler()
 
 		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v2/split_registry", nil))
 
@@ -51,7 +51,7 @@ func TestCors(t *testing.T) {
 
 	t.Run("it fails cors with an unallowed origin", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		h := CreateHandler()
+		h := createHandler()
 
 		request := httptest.NewRequest("GET", "/api/v2/split_registry", nil)
 		request.Header.Add("Origin", "http://www.denied.com")
@@ -64,7 +64,7 @@ func TestCors(t *testing.T) {
 
 	t.Run("it passes cors with an allowed origin", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		h := CreateHandler()
+		h := createHandler()
 
 		request := httptest.NewRequest("GET", "/api/v2/split_registry", nil)
 		request.Header.Add("Origin", "http://www.allowed.com")
@@ -83,7 +83,7 @@ func TestPersistAssignment(t *testing.T) {
 
 	t.Run("it persists assignments to yaml", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		h := CreateHandler()
+		h := createHandler()
 
 		data := url.Values{}
 		data.Set("split_name", "test.test_experiment")
