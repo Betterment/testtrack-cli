@@ -38,6 +38,8 @@ func createCors() *cors.Cors {
 		AllowOriginFunc: func(origin string) bool {
 			allowedOrigins, ok := os.LookupEnv("TESTTRACK_ALLOWED_ORIGINS")
 			if ok {
+				fmt.Println(origin)
+				fmt.Println(allowedOrigins)
 				for _, allowedOrigin := range strings.Split(allowedOrigins, ",") {
 					allowedOrigin = strings.Trim(allowedOrigin, " ")
 					if strings.HasSuffix(origin, allowedOrigin) {
@@ -45,6 +47,7 @@ func createCors() *cors.Cors {
 					}
 				}
 			} else {
+				fmt.Println(allowedOrigins)
 				// .test cannot be registered so we allow it by default
 				if strings.HasSuffix(origin, ".test") {
 					return true
@@ -64,6 +67,15 @@ func createCors() *cors.Cors {
 
 // Start the server
 func Start(port int) {
+	handler := CreateHandler()
+
+	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
+	logger.Printf("testtrack server listening on %s", listenOn)
+	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, handler))
+}
+
+// CreateHandler (exposed for testing)
+func CreateHandler() http.Handler {
 	logger = log.New(os.Stdout, "", log.LstdFlags)
 
 	r := mux.NewRouter()
@@ -73,11 +85,7 @@ func Start(port int) {
 
 	r.Use(loggingMiddleware)
 
-	handler := createCors().Handler(r)
-
-	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
-	logger.Printf("testtrack server listening on %s", listenOn)
-	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, handler))
+	return createCors().Handler(r)
 }
 
 func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {

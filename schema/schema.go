@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path"
 	"path/filepath"
 	"sort"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
+	"github.com/Betterment/testtrack-cli/paths"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/splits"
 	"gopkg.in/yaml.v2"
@@ -69,20 +69,20 @@ func Link(force bool) error {
 	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
 		return errors.New("testtrack/schema.yml does not exist. Are you in your app root dir? If so, call testtrack init_project first")
 	}
-	user, err := user.Current()
-	if err != nil {
-		return err
-	}
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 	dirname := path.Base(dir)
-	err = os.MkdirAll(user.HomeDir+"/.testtrack/schemas", 0755)
+	homeDir, err := paths.HomeDir()
 	if err != nil {
 		return err
 	}
-	path := fmt.Sprintf("%s/.testtrack/schemas/%s.yml", user.HomeDir, dirname)
+	err = os.MkdirAll(*homeDir+"/schemas", 0755)
+	if err != nil {
+		return err
+	}
+	path := fmt.Sprintf("%s/schemas/%s.yml", *homeDir, dirname)
 	if force {
 		os.Remove(path) // If this fails it might just not exist, we'll error on the next line if something else is up
 	}
@@ -91,11 +91,11 @@ func Link(force bool) error {
 
 // ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
 func ReadMerged() (*serializers.Schema, error) {
-	user, err := user.Current()
+	homeDir, err := paths.HomeDir()
 	if err != nil {
 		return nil, err
 	}
-	paths, err := filepath.Glob(user.HomeDir + "/.testtrack/schemas/*.yml")
+	paths, err := filepath.Glob(*homeDir + "/schemas/*.yml")
 	if err != nil {
 		return nil, err
 	}

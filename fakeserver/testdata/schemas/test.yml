@@ -1,0 +1,7 @@
+serializer_version: 1
+schema_version: "2020011774023"
+splits:
+- name: test.test_experiment
+  weights:
+    control: 60
+    treatment: 40
