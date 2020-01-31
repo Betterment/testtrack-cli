@@ -38,8 +38,6 @@ func createCors() *cors.Cors {
 		AllowOriginFunc: func(origin string) bool {
 			allowedOrigins, ok := os.LookupEnv("TESTTRACK_ALLOWED_ORIGINS")
 			if ok {
-				fmt.Println(origin)
-				fmt.Println(allowedOrigins)
 				for _, allowedOrigin := range strings.Split(allowedOrigins, ",") {
 					allowedOrigin = strings.Trim(allowedOrigin, " ")
 					if strings.HasSuffix(origin, allowedOrigin) {
@@ -47,7 +45,6 @@ func createCors() *cors.Cors {
 					}
 				}
 			} else {
-				fmt.Println(allowedOrigins)
 				// .test cannot be registered so we allow it by default
 				if strings.HasSuffix(origin, ".test") {
 					return true
