@@ -17,11 +17,11 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	current, exists := os.LookupEnv("TESTTRACK_CONFIG_DIR")
-	os.Setenv("TESTTRACK_CONFIG_DIR", "testdata")
+	current, exists := os.LookupEnv("TESTTRACK_FAKE_SERVER_CONFIG_DIR")
+	os.Setenv("TESTTRACK_FAKE_SERVER_CONFIG_DIR", "testdata")
 	exitCode := m.Run()
 	if exists {
-		os.Setenv("TESTTRACK_CONFIG_DIR", current)
+		os.Setenv("TESTTRACK_FAKE_SERVER_CONFIG_DIR", current)
 	}
 	os.Exit(exitCode)
 }

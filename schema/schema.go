@@ -74,7 +74,7 @@ func Link(force bool) error {
 		return err
 	}
 	dirname := path.Base(dir)
-	configDir, err := paths.ConfigDir()
+	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func Link(force bool) error {
 
 // ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
 func ReadMerged() (*serializers.Schema, error) {
-	configDir, err := paths.ConfigDir()
+	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
 		return nil, err
 	}

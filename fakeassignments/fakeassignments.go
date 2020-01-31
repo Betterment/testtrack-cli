@@ -11,7 +11,7 @@ import (
 
 // Read reads or creates the assignment file
 func Read() (*map[string]string, error) {
-	configDir, err := paths.ConfigDir()
+	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func Read() (*map[string]string, error) {
 
 // Write dumps the assignment file to disk
 func Write(assignments *map[string]string) error {
-	configDir, err := paths.ConfigDir()
+	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
 		return err
 	}
