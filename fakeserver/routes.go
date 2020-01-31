@@ -128,6 +128,11 @@ func (s *server) routes() {
 		"/api/v1/split_details/{id}",
 		getV1SplitDetail,
 	)
+
+	s.handleGet(
+		"/api/v3/builds/{timeStamp}/split_registry",
+		getV2SplitRegistry,
+	)
 }
 
 func getV1SplitRegistry() (interface{}, error) {
