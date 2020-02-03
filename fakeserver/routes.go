@@ -130,7 +130,7 @@ func (s *server) routes() {
 	)
 
 	s.handleGet(
-		"/api/v3/builds/{timeStamp}/split_registry",
+		"/api/v3/builds/{b}/split_registry",
 		getV2SplitRegistry,
 	)
 }
