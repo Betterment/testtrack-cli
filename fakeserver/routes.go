@@ -86,7 +86,7 @@ func (s *server) routes() {
 	)
 	s.handleGet(
 		"/api/v2/split_registry",
-		getV2SplitRegistry,
+		getV2PlusSplitRegistry,
 	)
 	s.handlePostReturnNoContent(
 		"/api/v1/assignment_event",
@@ -128,10 +128,9 @@ func (s *server) routes() {
 		"/api/v1/split_details/{id}",
 		getV1SplitDetail,
 	)
-
 	s.handleGet(
 		"/api/v3/builds/{b}/split_registry",
-		getV2SplitRegistry,
+		getV2PlusSplitRegistry,
 	)
 }
 
@@ -150,7 +149,7 @@ func getV1SplitRegistry() (interface{}, error) {
 	return splitRegistry, nil
 }
 
-func getV2SplitRegistry() (interface{}, error) {
+func getV2PlusSplitRegistry() (interface{}, error) {
 	schema, err := schema.ReadMerged()
 	if err != nil {
 		return nil, err
@@ -276,7 +275,7 @@ func getV1AppVisitorConfig() (interface{}, error) {
 }
 
 func getV2AppVisitorConfig() (interface{}, error) {
-	isplitRegistry, err := getV2SplitRegistry()
+	isplitRegistry, err := getV2PlusSplitRegistry()
 	splitRegistry := isplitRegistry.(v2SplitRegistry)
 	if err != nil {
 		return nil, err
