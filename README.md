@@ -68,7 +68,15 @@ We recommend [Scripts To Rule Them All](https://github.com/github/scripts-to-rul
 testtrack create feature_gate my_new_feature_q2_2019_enabled
 ```
 
-Just run `testtrack help` for more documentation on how to configure splits and other TestTrack resources.
+8. Retire splits
+
+Once an experiment is finished or feature released, remove all references to split in code. Then, decide and retire split.
+
+```bash
+testtrack destroy split my_new_feature_q2_2019_enabled --decision=true
+```
+
+Run `testtrack help` for more documentation on how to configure splits and other TestTrack resources.
 
 Happy TestTracking!
 
