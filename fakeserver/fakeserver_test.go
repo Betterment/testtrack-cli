@@ -1,10 +1,13 @@
 package fakeserver
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,9 +19,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var testSchema = `
+serializer_version: 1
+schema_version: "2020011774023"
+splits:
+- name: test.test_experiment
+  weights:
+    control: 60
+    treatment: 40
+`
+
 func TestMain(m *testing.M) {
 	current, exists := os.LookupEnv("TESTTRACK_FAKE_SERVER_CONFIG_DIR")
-	os.Setenv("TESTTRACK_FAKE_SERVER_CONFIG_DIR", "testdata")
+
+	dir, err := ioutil.TempDir("", "testtrack-cli")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+
+	schemasDir := filepath.Join(dir, "schemas")
+	if err := os.MkdirAll(schemasDir, 0755); err != nil {
+		log.Fatal(err)
+	}
+
+	schemaContent := []byte(testSchema)
+	if err := ioutil.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	os.Setenv("TESTTRACK_FAKE_SERVER_CONFIG_DIR", dir)
 	exitCode := m.Run()
 	if exists {
 		os.Setenv("TESTTRACK_FAKE_SERVER_CONFIG_DIR", current)
