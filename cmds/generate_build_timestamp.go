@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -29,6 +30,11 @@ var generateBuildTimestampCmd = &cobra.Command{
 
 func generateBuildTimestamp() error {
 	timestamp := []byte(time.Now().UTC().Format("2006-01-02T15:04:05Z"))
+
+	err := os.MkdirAll("testtrack", 0755)
+	if err != nil {
+		return err
+	}
 
 	return ioutil.WriteFile("testtrack/build_timestamp", timestamp, 0644)
 }
