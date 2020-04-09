@@ -64,6 +64,14 @@ func createCors() *cors.Cors {
 
 // Start the server
 func Start(port int) {
+	handler := createHandler()
+
+	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
+	logger.Printf("testtrack server listening on %s", listenOn)
+	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, handler))
+}
+
+func createHandler() http.Handler {
 	logger = log.New(os.Stdout, "", log.LstdFlags)
 
 	r := mux.NewRouter()
@@ -73,11 +81,7 @@ func Start(port int) {
 
 	r.Use(loggingMiddleware)
 
-	handler := createCors().Handler(r)
-
-	listenOn := fmt.Sprintf("127.0.0.1:%d", port)
-	logger.Printf("testtrack server listening on %s", listenOn)
-	logger.Fatalf("fatal - %s", http.ListenAndServe(listenOn, handler))
+	return createCors().Handler(r)
 }
 
 func (s *server) handleGet(pattern string, responseFunc func() (interface{}, error)) {

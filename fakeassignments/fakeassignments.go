@@ -3,28 +3,29 @@ package fakeassignments
 import (
 	"io/ioutil"
 	"os"
-	"os/user"
+
+	"github.com/Betterment/testtrack-cli/paths"
 
 	"gopkg.in/yaml.v2"
 )
 
 // Read reads or creates the assignment file
 func Read() (*map[string]string, error) {
-	user, err := user.Current()
+	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
 		return nil, err
 	}
-	if _, err := os.Stat(user.HomeDir + "/.testtrack/assignments.yml"); os.IsNotExist(err) {
-		err := os.MkdirAll(user.HomeDir+"/.testtrack", 0755)
+	if _, err := os.Stat(*configDir + "/assignments.yml"); os.IsNotExist(err) {
+		err := os.MkdirAll(*configDir, 0755)
 		if err != nil {
 			return nil, err
 		}
-		err = ioutil.WriteFile(user.HomeDir+"/.testtrack/assignments.yml", []byte("{}"), 0644)
+		err = ioutil.WriteFile(*configDir+"/assignments.yml", []byte("{}"), 0644)
 		if err != nil {
 			return nil, err
 		}
 	}
-	assignmentsBytes, err := ioutil.ReadFile(user.HomeDir + "/.testtrack/assignments.yml")
+	assignmentsBytes, err := ioutil.ReadFile(*configDir + "/assignments.yml")
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func Read() (*map[string]string, error) {
 
 // Write dumps the assignment file to disk
 func Write(assignments *map[string]string) error {
-	user, err := user.Current()
+	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,7 @@ func Write(assignments *map[string]string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(user.HomeDir+"/.testtrack/assignments.yml", bytes, 0644)
+	err = ioutil.WriteFile(*configDir+"/assignments.yml", bytes, 0644)
 	if err != nil {
 		return err
 	}
