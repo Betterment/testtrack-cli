@@ -26,6 +26,11 @@ type v1Assignment struct {
 	Unsynced  bool   `json:"unsynced"`
 }
 
+// v2AssignmentOverrideRequestBody is the JSON input for the V2 assignment override endpoint
+type v2AssignmentOverrideRequestBody struct {
+	Assignments []v1Assignment `json:"assignments"`
+}
+
 // v1VisitorConfig is the JSON output type for V1 visitor_config endpoints
 type v1VisitorConfig struct {
 	Splits  map[string]*splits.Weights `json:"splits"`
@@ -111,6 +116,10 @@ func (s *server) routes() {
 	s.handlePostReturnNoContent(
 		"/api/v1/assignment_override",
 		postV1AssignmentOverride,
+	)
+	s.handlePostReturnNoContent(
+		"/api/v2/visitors/{v}/assignment_overrides",
+		postV2AssignmentOverride,
 	)
 	s.handleGet(
 		"/api/v1/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config",
@@ -251,6 +260,35 @@ func postV1AssignmentOverride(r *http.Request) error {
 	assignments, err := fakeassignments.Read()
 	(*assignments)[assignment.SplitName] = assignment.Variant
 	err = fakeassignments.Write(assignments)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func postV2AssignmentOverride(r *http.Request) error {
+	var assignments []v1Assignment
+	contentType := r.Header.Get("content-type")
+	switch {
+	case strings.HasPrefix(contentType, "application/json"):
+		requestBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return err
+		}
+		var assignmentBody v2AssignmentOverrideRequestBody
+		err = json.Unmarshal(requestBytes, &assignmentBody)
+		if err != nil {
+			return err
+		}
+		assignments = assignmentBody.Assignments
+	default:
+		return fmt.Errorf("got unexpected content type %s", contentType)
+	}
+	storedAssignments, err := fakeassignments.Read()
+	for _, assignment := range assignments {
+		(*storedAssignments)[assignment.SplitName] = assignment.Variant
+	}
+	err = fakeassignments.Write(storedAssignments)
 	if err != nil {
 		return err
 	}
