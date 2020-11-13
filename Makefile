@@ -29,8 +29,8 @@ release: distclean dist
 		v${VERSION}
 
 test:
-	@go install ./vendor/golang.org/x/tools/cmd/goimports
-	@go install ./vendor/golang.org/x/lint/golint
+	@(cd; GO111MODULE=on go get golang.org/x/tools/cmd/goimports)
+	@(cd; GO111MODULE=on go get golang.org/x/lint/golint)
 	@GOIMPORTS_RESULT=$$(goimports -l ${PACKAGES} | grep -v ${LINTEXCLUDES});\
 		if [ $$(echo "$$GOIMPORTS_RESULT\c" | head -c1 | wc -c) -ne 0 ];\
 			then\

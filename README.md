@@ -97,5 +97,4 @@ Before diving in, [check our issue tracker](https://github.com/Betterment/testtr
 
 * Set up your workspace according to [go standards](https://golang.org/doc/code.html#Organization).
 * For macOS and homebrew users, run `brew bundle` to install `go` itself.
-* Run `dep ensure` to install go dependencies.
 * Build and run the CLI using `go run testtrack/main.go`.

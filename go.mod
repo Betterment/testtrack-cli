@@ -1,0 +1,16 @@
+module github.com/Betterment/testtrack-cli
+
+go 1.15
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/gorilla/mux v1.7.1
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/joho/godotenv v1.3.0
+	github.com/pkg/errors v0.8.1
+	github.com/rs/cors v1.6.0
+	github.com/spf13/cobra v0.0.3
+	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/stretchr/testify v1.3.0
+	gopkg.in/yaml.v2 v2.2.2
+)
