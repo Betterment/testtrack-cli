@@ -26,6 +26,11 @@ type v1Assignment struct {
 	Unsynced  bool   `json:"unsynced"`
 }
 
+// v2AssignmentOverrideRequestBody is the JSON input for the V2 assignment override endpoint
+type v2AssignmentOverrideRequestBody struct {
+	Assignments []v1Assignment `json:"assignments"`
+}
+
 // v1VisitorConfig is the JSON output type for V1 visitor_config endpoints
 type v1VisitorConfig struct {
 	Splits  map[string]*splits.Weights `json:"splits"`
@@ -270,12 +275,12 @@ func postV2AssignmentOverride(r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		var assignmentMap map[string][]v1Assignment
-		err = json.Unmarshal(requestBytes, &assignmentMap)
+		var assignmentBody v2AssignmentOverrideRequestBody
+		err = json.Unmarshal(requestBytes, &assignmentBody)
 		if err != nil {
 			return err
 		}
-		assignments = assignmentMap["assignments"]
+		assignments = assignmentBody.Assignments
 	default:
 		return fmt.Errorf("got unexpected content type %s", contentType)
 	}

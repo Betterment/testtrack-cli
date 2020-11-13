@@ -1,6 +1,7 @@
 package fakeserver
 
 import (
+	"bytes"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +25,10 @@ serializer_version: 1
 schema_version: "2020011774023"
 splits:
 - name: test.test_experiment
+  weights:
+    control: 60
+    treatment: 40
+- name: test.test2_experiment
   weights:
     control: 60
     treatment: 40
@@ -148,5 +153,42 @@ func TestPersistAssignment(t *testing.T) {
 		assignments, err := fakeassignments.Read()
 		require.Nil(t, err)
 		require.Equal(t, "control", (*assignments)["test.test_experiment"])
+	})
+}
+
+func TestPersistAssignmentV2(t *testing.T) {
+	os.Remove("testdata/assignments.yml")
+
+	t.Run("it persists assignments to yaml", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		overrides := v2AssignmentOverrideRequestBody{
+			Assignments: []v1Assignment{
+				v1Assignment{
+					SplitName: "test.test_experiment",
+					Variant:   "control",
+				},
+				v1Assignment{
+					SplitName: "test.test2_experiment",
+					Variant:   "treatment",
+				},
+			},
+		}
+		data, err := json.Marshal(overrides)
+		require.Nil(t, err)
+
+		request := httptest.NewRequest("POST", "/api/v2/visitors/1/assignment_overrides", bytes.NewReader(data))
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Content-Length", strconv.Itoa(len(data)))
+
+		h.ServeHTTP(w, request)
+
+		require.Equal(t, http.StatusNoContent, w.Code)
+
+		assignments, err := fakeassignments.Read()
+		require.Nil(t, err)
+		require.Equal(t, "control", (*assignments)["test.test_experiment"])
+		require.Equal(t, "treatment", (*assignments)["test.test2_experiment"])
 	})
 }
