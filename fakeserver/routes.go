@@ -112,6 +112,10 @@ func (s *server) routes() {
 		"/api/v1/assignment_override",
 		postV1AssignmentOverride,
 	)
+	s.handlePostReturnNoContent(
+		"/api/v2/visitors/{v}/assignment_overrides",
+		postV2AssignmentOverride,
+	)
 	s.handleGet(
 		"/api/v1/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config",
 		getV1AppVisitorConfig,
@@ -251,6 +255,35 @@ func postV1AssignmentOverride(r *http.Request) error {
 	assignments, err := fakeassignments.Read()
 	(*assignments)[assignment.SplitName] = assignment.Variant
 	err = fakeassignments.Write(assignments)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func postV2AssignmentOverride(r *http.Request) error {
+	var assignments []v1Assignment
+	contentType := r.Header.Get("content-type")
+	switch {
+	case strings.HasPrefix(contentType, "application/json"):
+		requestBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return err
+		}
+		var assignmentMap map[string][]v1Assignment
+		err = json.Unmarshal(requestBytes, &assignmentMap)
+		if err != nil {
+			return err
+		}
+		assignments = assignmentMap["assignments"]
+	default:
+		return fmt.Errorf("got unexpected content type %s", contentType)
+	}
+	storedAssignments, err := fakeassignments.Read()
+	for _, assignment := range assignments {
+		(*storedAssignments)[assignment.SplitName] = assignment.Variant
+	}
+	err = fakeassignments.Write(storedAssignments)
 	if err != nil {
 		return err
 	}
