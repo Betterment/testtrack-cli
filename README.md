@@ -1,6 +1,6 @@
 # testtrack-cli
 
-[![Build Status](https://travis-ci.org/Betterment/testtrack-cli.svg?branch=master)](https://travis-ci.org/Betterment/testtrack-cli)
+[![Build Status](https://travis-ci.org/Betterment/testtrack-cli.svg?branch=main)](https://travis-ci.org/Betterment/testtrack-cli)
 
 ## TestTrack Split Config Management
 
