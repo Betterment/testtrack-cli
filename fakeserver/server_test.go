@@ -97,6 +97,24 @@ func TestSplitRegistry(t *testing.T) {
 		require.Equal(t, 40, registry.Splits["test.test_experiment"].Weights["treatment"])
 		require.Equal(t, false, registry.Splits["test.test_experiment"].FeatureGate)
 	})
+
+	t.Run("it loads split registry v4", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v4/builds/2020-01-02T03:04:05/split_registry", nil))
+
+		require.Equal(t, http.StatusOK, w.Code)
+
+		registry := v4SplitRegistry{}
+		err := json.Unmarshal(w.Body.Bytes(), &registry)
+		require.Nil(t, err)
+
+		require.Equal(t, 1, registry.ExperienceSamplingWeight)
+		require.Equal(t, 60, registry.Splits[0].Variants[0].Weight)
+		require.Equal(t, 40, registry.Splits[0].Variants[1].Weight)
+		require.Equal(t, false, registry.Splits[0].FeatureGate)
+	})
 }
 
 func TestCors(t *testing.T) {
