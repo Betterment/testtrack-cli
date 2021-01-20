@@ -34,6 +34,10 @@ splits:
     treatment: 40
 `
 
+var testAssignments = `
+something_something_enabled: "true"
+`
+
 func TestMain(m *testing.M) {
 	current, exists := os.LookupEnv("TESTTRACK_FAKE_SERVER_CONFIG_DIR")
 
@@ -50,6 +54,11 @@ func TestMain(m *testing.M) {
 
 	schemaContent := []byte(testSchema)
 	if err := ioutil.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	assignmentsContent := []byte(testAssignments)
+	if err := ioutil.WriteFile(filepath.Join(dir, "assignments.yml"), assignmentsContent, 0644); err != nil {
 		log.Fatal(err)
 	}
 
@@ -97,6 +106,73 @@ func TestSplitRegistry(t *testing.T) {
 		require.Equal(t, 40, registry.Splits["test.test_experiment"].Weights["treatment"])
 		require.Equal(t, false, registry.Splits["test.test_experiment"].FeatureGate)
 	})
+
+	t.Run("it loads split registry v4", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v4/builds/2020-01-02T03:04:05/split_registry", nil))
+
+		require.Equal(t, http.StatusOK, w.Code)
+
+		registry := v4SplitRegistry{}
+		err := json.Unmarshal(w.Body.Bytes(), &registry)
+		require.Nil(t, err)
+
+		require.Equal(t, 1, registry.ExperienceSamplingWeight)
+		require.Equal(t, "test.test_experiment", registry.Splits[0].Name)
+		require.Equal(t, 60, registry.Splits[0].Variants[0].Weight)
+		require.Equal(t, 40, registry.Splits[0].Variants[1].Weight)
+		require.Equal(t, false, registry.Splits[0].FeatureGate)
+	})
+}
+
+func TestVisitorConfig(t *testing.T) {
+	t.Run("it loads visitor config v4", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v4/apps/foo/versions/1/builds/2020-01-02T03:04:05/visitors/00000000-0000-0000-0000-000000000000/config", nil))
+
+		require.Equal(t, http.StatusOK, w.Code)
+
+		visitorConfig := v4VisitorConfig{}
+		err := json.Unmarshal(w.Body.Bytes(), &visitorConfig)
+		require.Nil(t, err)
+
+		require.Equal(t, 1, visitorConfig.ExperienceSamplingWeight)
+		require.Equal(t, "test.test_experiment", visitorConfig.Splits[0].Name)
+		require.Equal(t, 60, visitorConfig.Splits[0].Variants[0].Weight)
+		require.Equal(t, 40, visitorConfig.Splits[0].Variants[1].Weight)
+		require.Equal(t, false, visitorConfig.Splits[0].FeatureGate)
+		require.Equal(t, "00000000-0000-0000-0000-000000000000", visitorConfig.Visitor.ID)
+		require.Equal(t, "something_something_enabled", visitorConfig.Visitor.Assignments[0].SplitName)
+		require.Equal(t, "true", visitorConfig.Visitor.Assignments[0].Variant)
+	})
+}
+
+func TestIdentifierVisitorConfig(t *testing.T) {
+	t.Run("it loads visitor config v4", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v4/apps/foo/versions/1/builds/2020-01-02T03:04:05/identifier_types/user_id/identifiers/123/visitor_config", nil))
+
+		require.Equal(t, http.StatusOK, w.Code)
+
+		visitorConfig := v4VisitorConfig{}
+		err := json.Unmarshal(w.Body.Bytes(), &visitorConfig)
+		require.Nil(t, err)
+
+		require.Equal(t, 1, visitorConfig.ExperienceSamplingWeight)
+		require.Equal(t, "test.test_experiment", visitorConfig.Splits[0].Name)
+		require.Equal(t, 60, visitorConfig.Splits[0].Variants[0].Weight)
+		require.Equal(t, 40, visitorConfig.Splits[0].Variants[1].Weight)
+		require.Equal(t, false, visitorConfig.Splits[0].FeatureGate)
+		require.Equal(t, "00000000-0000-0000-0000-000000000000", visitorConfig.Visitor.ID)
+		require.Equal(t, "something_something_enabled", visitorConfig.Visitor.Assignments[0].SplitName)
+		require.Equal(t, "true", visitorConfig.Visitor.Assignments[0].Variant)
+	})
 }
 
 func TestCors(t *testing.T) {
@@ -132,8 +208,6 @@ func TestCors(t *testing.T) {
 }
 
 func TestPersistAssignment(t *testing.T) {
-	os.Remove("testdata/assignments.yml")
-
 	t.Run("it persists assignments to yaml", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		h := createHandler()
@@ -157,8 +231,6 @@ func TestPersistAssignment(t *testing.T) {
 }
 
 func TestPersistAssignmentV2(t *testing.T) {
-	os.Remove("testdata/assignments.yml")
-
 	t.Run("it persists assignments to yaml", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		h := createHandler()
