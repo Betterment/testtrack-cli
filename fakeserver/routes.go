@@ -83,6 +83,7 @@ type v2Split struct {
 
 // v4Split is the JSON output type for V4 split_registry endpoint
 type v4Split struct {
+	Name        string      `json:"name"`
 	Variants    []v4Variant `json:"variants"`
 	FeatureGate bool        `json:"feature_gate"`
 }
@@ -246,6 +247,7 @@ func getV4SplitRegistry() (interface{}, error) {
 			})
 		}
 		v4Splits = append(v4Splits, v4Split{
+			Name:        split.Name,
 			Variants:    v4Variants,
 			FeatureGate: isFeatureGate,
 		})
