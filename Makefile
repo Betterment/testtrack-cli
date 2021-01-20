@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-VERSION=1.1.3
+VERSION=1.2.0
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-w -s \
