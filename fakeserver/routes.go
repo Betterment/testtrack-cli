@@ -171,11 +171,6 @@ func (s *server) routes() {
 		"/api/v4/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config",
 		getV4AppVisitorConfig,
 	)
-	// pretty sure this is deletable
-	s.handleGet(
-		"/api/v1/apps/{a}/versions/{v}/builds/{b}/identifier_types/{t}/identifiers/{i}/visitor_config",
-		getV1AppVisitorConfig,
-	)
 	s.handleGet(
 		"/api/v1/split_details/{id}",
 		getV1SplitDetail,
