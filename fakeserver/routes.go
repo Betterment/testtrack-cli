@@ -139,6 +139,10 @@ func (s *server) routes() {
 		"/api/v1/identifier",
 		postV1Identifier,
 	)
+	s.handlePost(
+		"/api/v4/apps/{a}/versions/{v}/builds/{b}/identifier",
+		postV4AppIdentifier,
+	)
 	s.handleGet(
 		"/api/v1/visitors/{id}",
 		getV1Visitor,
@@ -165,14 +169,6 @@ func (s *server) routes() {
 	)
 	s.handleGet(
 		"/api/v4/apps/{a}/versions/{v}/builds/{b}/visitors/{id}/config",
-		getV4AppVisitorConfig,
-	)
-	s.handleGet(
-		"/api/v1/apps/{a}/versions/{v}/builds/{b}/identifier_types/{t}/identifiers/{i}/visitor_config",
-		getV1AppVisitorConfig,
-	)
-	s.handleGet(
-		"/api/v4/apps/{a}/versions/{v}/builds/{b}/identifier_types/{t}/identifiers/{i}/visitor_config",
 		getV4AppVisitorConfig,
 	)
 	s.handleGet(
@@ -269,6 +265,10 @@ func postV1Identifier(*http.Request) (interface{}, error) {
 		return nil, err
 	}
 	return map[string]v1Visitor{"visitor": visitor}, nil
+}
+
+func postV4AppIdentifier(*http.Request) (interface{}, error) {
+	return getV4AppVisitorConfig()
 }
 
 func getV1Visitor() (interface{}, error) {
