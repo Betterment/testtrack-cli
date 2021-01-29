@@ -151,12 +151,16 @@ func TestVisitorConfig(t *testing.T) {
 	})
 }
 
-func TestIdentifierVisitorConfig(t *testing.T) {
+func TestAppIdentifier(t *testing.T) {
 	t.Run("it loads visitor config v4", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		h := createHandler()
 
-		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v4/apps/foo/versions/1/builds/2020-01-02T03:04:05/identifier_types/user_id/identifiers/123/visitor_config", nil))
+		request := httptest.NewRequest("POST", "/api/v4/apps/foo/versions/1/builds/2020-01-02T03:04:05/identifier", nil)
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Content-Length", "0")
+
+		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
 
