@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"runtime"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 
 var version string
 var build string
+var arch string = fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 var noPrefix bool
 var force bool
 
@@ -26,7 +28,7 @@ func init() {
 var rootCmd = &cobra.Command{
 	Use:     "testtrack",
 	Short:   "TestTrack Split Config Management",
-	Long:    fmt.Sprintf("CLI for managing TestTrack experiments and feature gates\n\nVersion: %s\nBuild: %s", version, build),
+	Long:    fmt.Sprintf("CLI for managing TestTrack experiments and feature gates\n\nVersion: %s\nBuild: %s\nArch: %s", version, build, arch),
 	Version: version,
 }
 
