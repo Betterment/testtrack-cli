@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-VERSION=1.3.0
+VERSION=1.4.0
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-w -s \
@@ -18,20 +18,22 @@ install:
 dist:
 	@mkdir dist &&\
 		GOOS=linux GOARCH=amd64 go build -o "dist/testtrack.linux" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack &&\
-		GOOS=darwin GOARCH=amd64 go build -o "dist/testtrack.darwin" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack
+		GOOS=darwin GOARCH=amd64 go build -o "dist/testtrack.darwin-amd64" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack &&\
+		GOOS=darwin GOARCH=arm64 go build -o "dist/testtrack.darwin-arm64" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack
 
 release: distclean dist
 	@hub release create\
 		-a dist/testtrack.linux\
-		-a dist/testtrack.darwin\
+		-a dist/testtrack.darwin-amd64\
+		-a dist/testtrack.darwin-arm64\
 		-m "TestTrack CLI ${VERSION}"\
 		-t "${BUILD}"\
 		v${VERSION}
 
 test:
-	@(cd; GO111MODULE=on go get golang.org/x/tools/cmd/goimports)
-	@(cd; GO111MODULE=on go get golang.org/x/lint/golint)
-	@GOIMPORTS_RESULT=$$(goimports -l ${PACKAGES} | grep -v ${LINTEXCLUDES});\
+	@go install golang.org/x/tools/cmd/goimports@latest
+	@go install golang.org/x/lint/golint@latest
+	@GOIMPORTS_RESULT=$$($$(go env GOPATH)/bin/goimports -l ${PACKAGES} | grep -v ${LINTEXCLUDES});\
 		if [ $$(echo "$$GOIMPORTS_RESULT\c" | head -c1 | wc -c) -ne 0 ];\
 			then\
 				echo "Style violations found. Run the following command to fix:";\
@@ -41,7 +43,7 @@ test:
 				exit 1;\
 			fi
 	@go vet ${PACKAGES}
-	@GOLINT_RESULT=$$(golint ${PACKAGES} | grep -v ${LINTEXCLUDES});\
+	@GOLINT_RESULT=$$($$(go env GOPATH)/bin/golint ${PACKAGES} | grep -v ${LINTEXCLUDES});\
 		if [ $$(echo "$$GOLINT_RESULT\c" | head -c1 | wc -c) -ne 0 ];\
 			then\
 				echo $$GOLINT_RESULT;\

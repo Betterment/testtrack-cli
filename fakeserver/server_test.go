@@ -120,10 +120,26 @@ func TestSplitRegistry(t *testing.T) {
 		require.Nil(t, err)
 
 		require.Equal(t, 1, registry.ExperienceSamplingWeight)
-		require.Equal(t, "test.test_experiment", registry.Splits[0].Name)
-		require.Equal(t, 60, registry.Splits[0].Variants[0].Weight)
-		require.Equal(t, 40, registry.Splits[0].Variants[1].Weight)
-		require.Equal(t, false, registry.Splits[0].FeatureGate)
+
+		var split v4Split
+		for _, s := range registry.Splits {
+			if s.Name == "test.test_experiment" {
+				split = s
+			}
+		}
+		var control, treatment v4Variant
+		for _, v := range split.Variants {
+			if v.Name == "control" {
+				control = v
+			}
+			if v.Name == "treatment" {
+				treatment = v
+			}
+		}
+		require.Equal(t, "test.test_experiment", split.Name)
+		require.Equal(t, 60, control.Weight)
+		require.Equal(t, 40, treatment.Weight)
+		require.Equal(t, false, split.FeatureGate)
 	})
 }
 
