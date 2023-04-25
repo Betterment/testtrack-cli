@@ -15,7 +15,7 @@ Creates or updates a feature gate split.
 
 Example:
 
-testtrack create feature_gate my_feature_enabled
+testtrack create feature_gate my_feature_enabled --owner <OWNER>
 
 Feature gates will default to having two variants: true and false, and having a
 weighting of 100% false.
@@ -34,8 +34,10 @@ you attempt to create a new split without a prefix.
 `
 
 var createFeatureGateDefault, createFeatureGateWeights string
+var createFeatureGateOwner string
 
 func init() {
+	createFeatureGateCmd.Flags().StringVar(&createFeatureGateOwner, "owner", "", "Who owns this feature flag?")
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateDefault, "default", "false", "Default variant for your feature flag")
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateWeights, "weights", "", "Variant weights to use (overrides default)")
 	createFeatureGateCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix feature gate with app_name (supports existing legacy splits)")
@@ -43,16 +45,16 @@ func init() {
 }
 
 var createFeatureGateCmd = &cobra.Command{
-	Use:   "feature_gate name",
+	Use:   "feature_gate name --owner <OWNER>",
 	Short: "Create or update a feature_gate's configuration",
 	Long:  createFeatureGateDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return createFeatureGate(args[0], createFeatureGateDefault, createFeatureGateWeights)
+		return createFeatureGate(args[0], createFeatureGateDefault, createFeatureGateWeights, createFeatureGateOwner)
 	},
 }
 
-func createFeatureGate(name, defaultVariant, weights string) error {
+func createFeatureGate(name, defaultVariant, weights string, owner string) error {
 	schema, err := schema.Read()
 	if err != nil {
 		return err
@@ -74,6 +76,11 @@ func createFeatureGate(name, defaultVariant, weights string) error {
 		if !noPrefix {
 			name = fmt.Sprintf("%s.%s", appName, name)
 		}
+	}
+
+	err = validations.ValidateOwnerName(owner, ownershipFilename)
+	if err != nil {
+		return err
 	}
 
 	if len(weights) == 0 {
@@ -104,7 +111,7 @@ func createFeatureGate(name, defaultVariant, weights string) error {
 		return fmt.Errorf("weights %v are missing false variant", *weightsMap)
 	}
 
-	split, err := splits.New(&name, weightsMap)
+	split, err := splits.New(&name, weightsMap, &createFeatureGateOwner)
 	if err != nil {
 		return err
 	}

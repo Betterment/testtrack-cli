@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-VERSION=1.4.0
+VERSION=1.5.0
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-w -s \
@@ -38,7 +38,7 @@ test:
 			then\
 				echo "Style violations found. Run the following command to fix:";\
 				echo;\
-				echo "goimports -w" $$GOIMPORTS_RESULT;\
+				echo "$$(go env GOPATH)/bin/goimports -w" $$GOIMPORTS_RESULT;\
 				echo;\
 				exit 1;\
 			fi

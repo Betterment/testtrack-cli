@@ -1,6 +1,7 @@
 package validations_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/Betterment/testtrack-cli/serializers"
@@ -128,6 +129,81 @@ func TestAutoPrefixAndValidateSplit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "foo_enabled", *value)
 	})
+}
+
+func TestValidateOwnerName(t *testing.T) {
+	t.Run("it succeeds with no owner if ownershipFilename is undefined", func(t *testing.T) {
+		err := validations.ValidateOwnerName("", "")
+		require.NoError(t, err)
+	})
+
+	t.Run("it fails with an owner if ownershipFilename is undefined", func(t *testing.T) {
+		err := validations.ValidateOwnerName("super_owner", "")
+		require.Contains(t, err.Error(), "owner must be empty when TESTTRACK_OWNERSHIP_FILE is not defined")
+	})
+
+	t.Run("it succeeds without an owner if no ownership file is present", func(t *testing.T) {
+		var ownershipFilename = ".owners.yml"
+
+		owner := ""
+		err := validations.ValidateOwnerName(owner, ownershipFilename)
+		require.NoError(t, err)
+	})
+
+	t.Run("it errors out if an ownership file is present and the owner is blank", func(t *testing.T) {
+		var ownershipFilename = ".owners.yml"
+
+		ownerContent := []byte("super_squad:\n  delayed_job_alert_slack_channel: '#super_squad'\n")
+		os.WriteFile(ownershipFilename, ownerContent, 0644)
+
+		owner := ""
+		err := validations.ValidateOwnerName(owner, ownershipFilename)
+
+		os.Remove(ownershipFilename)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner must be specified when TESTTRACK_OWNERSHIP_FILE is defined")
+	})
+
+	t.Run("it errors out if owner file can't be found", func(t *testing.T) {
+		var ownershipFilename = ".owners.yml"
+
+		owner := "super_squad"
+		err := validations.ValidateOwnerName(owner, ownershipFilename)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "open .owners.yml: no such file or directory")
+	})
+
+	t.Run("it errors out if owner can not be found in .squads.yml", func(t *testing.T) {
+		var ownershipFilename = ".owners.yml"
+
+		ownerContent := []byte("super_squad:\n  delayed_job_alert_slack_channel: '#super_squad'\n")
+		os.WriteFile(ownershipFilename, ownerContent, 0644)
+
+		owner := "not_super_squad"
+		err := validations.ValidateOwnerName(owner, ownershipFilename)
+
+		os.Remove(ownershipFilename)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner 'not_super_squad' is not defined in TESTTRACK_OWNERSHIP_FILE")
+	})
+
+	t.Run("it succeeds if the owner exists", func(t *testing.T) {
+		var ownershipFilename = ".owners.yml"
+
+		ownerContent := []byte("super_squad:\n  delayed_job_alert_slack_channel: '#super_squad'\n")
+		os.WriteFile(ownershipFilename, ownerContent, 0644)
+
+		owner := "super_squad"
+		err := validations.ValidateOwnerName(owner, ownershipFilename)
+
+		os.Remove(ownershipFilename)
+
+		require.NoError(t, err)
+	})
+
 }
 
 func StrPtr(value string) *string {

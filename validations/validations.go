@@ -2,10 +2,13 @@ package validations
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/Betterment/testtrack-cli/serializers"
+	"gopkg.in/yaml.v2"
 )
 
 const appVersionMaxLength = 18 // This conforms to iOS version numering rules
@@ -63,6 +66,53 @@ func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName 
 	}
 
 	return SplitExistsInSchema(paramName, value, schema)
+}
+
+// ValidateOwnerName ensures that if a .squads.yml file is present, the owner matches
+// the list of owners in that file.
+func ValidateOwnerName(owner string, ownershipFilename string) error {
+	if ownershipFilename == "" {
+		if owner == "" {
+			return nil
+		}
+
+		return fmt.Errorf("owner must be empty when TESTTRACK_OWNERSHIP_FILE is not defined")
+	}
+
+	_, err := os.Stat(ownershipFilename)
+	if owner == "" {
+		if os.IsNotExist(err) {
+			return nil
+		} else if owner == "" {
+			return fmt.Errorf("owner must be specified when TESTTRACK_OWNERSHIP_FILE is defined (%s)", ownershipFilename)
+		}
+	}
+
+	fileBytes, err := ioutil.ReadFile(ownershipFilename)
+	if err != nil {
+		return err
+	}
+
+	ownersArray := make(map[string]*struct{})
+	err = yaml.Unmarshal(fileBytes, ownersArray)
+	if err != nil {
+		return err
+	}
+
+	if !mapContainsValue(owner, ownersArray) {
+		return fmt.Errorf("owner '%s' is not defined in TESTTRACK_OWNERSHIP_FILE (%s)", owner, ownershipFilename)
+	}
+
+	return nil
+}
+
+func mapContainsValue(value string, m map[string]*struct{}) bool {
+	for key := range m {
+		if key == value {
+			return true
+		}
+	}
+	return false
 }
 
 // NonPrefixedSplit validates that a split name param is valid with no app prefix

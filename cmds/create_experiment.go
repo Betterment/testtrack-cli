@@ -30,24 +30,26 @@ you attempt to create a new split without a prefix.
 `
 
 var createExperimentWeights string
+var createExperimentOwner string
 
 func init() {
+	createExperimentCmd.Flags().StringVar(&createExperimentOwner, "owner", "", "Who owns this feature flag?")
 	createExperimentCmd.Flags().StringVar(&createExperimentWeights, "weights", "control: 50, treatment: 50", "Variant weights to use")
 	createExperimentCmd.Flags().BoolVar(&noPrefix, "no-prefix", false, "Don't prefix experiment with app_name (supports existing legacy splits)")
 	createCmd.AddCommand(createExperimentCmd)
 }
 
 var createExperimentCmd = &cobra.Command{
-	Use:   "experiment name",
+	Use:   "experiment name --owner <OWNER>",
 	Short: "Create or update an experiment's configuration",
 	Long:  createExperimentDoc,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return createExperiment(args[0], createExperimentWeights)
+		return createExperiment(args[0], createExperimentWeights, createExperimentOwner)
 	},
 }
 
-func createExperiment(name, weights string) error {
+func createExperiment(name, weights string, owner string) error {
 	schema, err := schema.Read()
 	if err != nil {
 		return err
@@ -59,6 +61,11 @@ func createExperiment(name, weights string) error {
 	}
 
 	appName, err := getAppName()
+	if err != nil {
+		return err
+	}
+
+	err = validations.ValidateOwnerName(owner, ownershipFilename)
 	if err != nil {
 		return err
 	}
@@ -76,7 +83,7 @@ func createExperiment(name, weights string) error {
 		return err
 	}
 
-	split, err := splits.New(&name, weightsMap)
+	split, err := splits.New(&name, weightsMap, &owner)
 	if err != nil {
 		return err
 	}
