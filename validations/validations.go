@@ -14,6 +14,8 @@ import (
 const appVersionMaxLength = 18 // This conforms to iOS version numering rules
 const splitMaxLength = 128     // This is arbitrary but way bigger than you need and smaller than the column will fit
 
+const defaultOwnershipFilename = "testtrack/owners.yml"
+
 var prefixedSplitRegex = regexp.MustCompile(`^([a-z_\-\d]+)\.[a-z_\d]+$`)
 var nonPrefixedSplitRegex = regexp.MustCompile(`^[a-z_\d]+$`)
 var ambiPrefixedSplitRegex = regexp.MustCompile(`^(?:[a-z_\-\d]+\.)?[a-z_\d]+$`)
@@ -72,20 +74,22 @@ func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName 
 // the list of owners in that file.
 func ValidateOwnerName(owner string, ownershipFilename string) error {
 	if ownershipFilename == "" {
-		if owner == "" {
-			return nil
-		}
-
-		return fmt.Errorf("owner must be empty when TESTTRACK_OWNERSHIP_FILE is not defined")
+		ownershipFilename = defaultOwnershipFilename
 	}
 
+	// If no ownership file exists, force owner to be empty. Otherwise pass validations.
 	_, err := os.Stat(ownershipFilename)
-	if owner == "" {
-		if os.IsNotExist(err) {
-			return nil
-		} else if owner == "" {
-			return fmt.Errorf("owner must be specified when TESTTRACK_OWNERSHIP_FILE is defined (%s)", ownershipFilename)
+	if os.IsNotExist(err) {
+		if owner != "" {
+			return fmt.Errorf("owner must be blank because ownership file (%s) could not be found", ownershipFilename)
 		}
+
+		return nil
+	}
+
+	// When the ownership file exists, owner must be specified and must be in the ownership file.
+	if owner == "" {
+		return fmt.Errorf("owner must be specified when ownership file (%s) exists", ownershipFilename)
 	}
 
 	fileBytes, err := ioutil.ReadFile(ownershipFilename)
@@ -100,7 +104,7 @@ func ValidateOwnerName(owner string, ownershipFilename string) error {
 	}
 
 	if !mapContainsValue(owner, ownersArray) {
-		return fmt.Errorf("owner '%s' is not defined in TESTTRACK_OWNERSHIP_FILE (%s)", owner, ownershipFilename)
+		return fmt.Errorf("owner '%s' is not defined in ownership file (%s)", owner, ownershipFilename)
 	}
 
 	return nil
