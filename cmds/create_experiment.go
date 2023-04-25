@@ -29,8 +29,7 @@ destroyed split if it was destroyed by mistake, but the migration will fail if
 you attempt to create a new split without a prefix.
 `
 
-var createExperimentWeights string
-var createExperimentOwner string
+var createExperimentWeights, createExperimentOwner string
 
 func init() {
 	createExperimentCmd.Flags().StringVar(&createExperimentOwner, "owner", "", "Who owns this feature flag?")

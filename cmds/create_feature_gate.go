@@ -33,8 +33,7 @@ destroyed split if it was destroyed by mistake, but the migration will fail if
 you attempt to create a new split without a prefix.
 `
 
-var createFeatureGateDefault, createFeatureGateWeights string
-var createFeatureGateOwner string
+var createFeatureGateDefault, createFeatureGateWeights, createFeatureGateOwner string
 
 func init() {
 	createFeatureGateCmd.Flags().StringVar(&createFeatureGateOwner, "owner", "", "Who owns this feature flag?")
