@@ -15,7 +15,7 @@ Creates or updates a feature gate split.
 
 Example:
 
-testtrack create feature_gate my_feature_enabled --owner <OWNER>
+testtrack create feature_gate my_feature_enabled
 
 Feature gates will default to having two variants: true and false, and having a
 weighting of 100% false.
@@ -45,7 +45,7 @@ func init() {
 }
 
 var createFeatureGateCmd = &cobra.Command{
-	Use:   "feature_gate name --owner <OWNER>",
+	Use:   "feature_gate name",
 	Short: "Create or update a feature_gate's configuration",
 	Long:  createFeatureGateDoc,
 	Args:  cobra.ExactArgs(1),

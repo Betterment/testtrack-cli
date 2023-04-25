@@ -40,7 +40,7 @@ func init() {
 }
 
 var createExperimentCmd = &cobra.Command{
-	Use:   "experiment name --owner <OWNER>",
+	Use:   "experiment name",
 	Short: "Create or update an experiment's configuration",
 	Long:  createExperimentDoc,
 	Args:  cobra.ExactArgs(1),
