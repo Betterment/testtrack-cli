@@ -42,7 +42,7 @@ type RemoteKill struct {
 type SplitYAML struct {
 	Name    string        `yaml:"name"`
 	Weights yaml.MapSlice `yaml:"weights"`
-	Squad   string        `yaml:"owner,omitempty"`
+	Owner   string        `yaml:"owner,omitempty"`
 }
 
 // SplitJSON is is the JSON-marshalabe representation of a Split
@@ -73,7 +73,7 @@ type SchemaSplit struct {
 	Name    string        `yaml:"name"`
 	Weights yaml.MapSlice `yaml:"weights"`
 	Decided bool          `yaml:"decided,omitempty"`
-	Squad   string        `yaml:"squad,omitempty"`
+	Owner   string        `yaml:"squad,omitempty"`
 }
 
 // Schema is the YAML-marshalable representation of the TestTrack schema for

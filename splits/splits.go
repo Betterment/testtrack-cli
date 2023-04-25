@@ -25,11 +25,11 @@ type Split struct {
 	migrationVersion *string
 	name             *string
 	weights          *Weights
-	squad            *string
+	owner            *string
 }
 
 // New returns a migration object
-func New(name *string, weights *Weights, squad *string) (migrations.IMigration, error) {
+func New(name *string, weights *Weights, owner *string) (migrations.IMigration, error) {
 	migrationVersion, err := migrations.GenerateMigrationVersion()
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func New(name *string, weights *Weights, squad *string) (migrations.IMigration, 
 		migrationVersion: migrationVersion,
 		name:             name,
 		weights:          weights,
-		squad:            squad,
+		owner:            owner,
 	}, nil
 }
 
@@ -112,7 +112,7 @@ func (s *Split) File() *serializers.MigrationFile {
 		Split: &serializers.SplitYAML{
 			Name:    *s.name,
 			Weights: s.weights.ToYAML(),
-			Squad:   *s.squad,
+			Owner:   *s.owner,
 		},
 	}
 }
@@ -179,7 +179,7 @@ func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migratio
 		Name:    *s.name,
 		Weights: s.weights.ToYAML(),
 		Decided: false,
-		Squad:   *s.squad,
+		Owner:   *s.owner,
 	}
 	schema.Splits = append(schema.Splits, schemaSplit)
 	return nil
