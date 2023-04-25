@@ -70,7 +70,7 @@ func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName 
 	return SplitExistsInSchema(paramName, value, schema)
 }
 
-// ValidateOwnerName ensures that if a .squads.yml file is present, the owner matches
+// ValidateOwnerName ensures that if a testtrack/owners.yml file is present, the owner matches
 // the list of owners in that file.
 func ValidateOwnerName(owner string, ownershipFilename string) error {
 	if ownershipFilename == "" {
