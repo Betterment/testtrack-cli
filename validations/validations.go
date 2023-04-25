@@ -97,13 +97,13 @@ func ValidateOwnerName(owner string, ownershipFilename string) error {
 		return err
 	}
 
-	ownersArray := make(map[string]*struct{})
-	err = yaml.Unmarshal(fileBytes, ownersArray)
+	ownersMap := make(map[string]*struct{})
+	err = yaml.Unmarshal(fileBytes, ownersMap)
 	if err != nil {
 		return err
 	}
 
-	if !mapContainsValue(owner, ownersArray) {
+	if !mapContainsValue(owner, ownersMap) {
 		return fmt.Errorf("owner '%s' is not defined in ownership file (%s)", owner, ownershipFilename)
 	}
 
