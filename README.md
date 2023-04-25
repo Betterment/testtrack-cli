@@ -88,6 +88,20 @@ Run `testtrack help` for more documentation on how to configure splits and other
 
 Happy TestTracking!
 
+## Additional Configuration
+
+The following configuration options are available:
+
+### Split ownership
+If you have a large organization, you may wish to tag ownership of splits to a specific team to help provide accountability for clean up. This is supported natively in test_track.
+
+1. You must specify an ownership file. The default file exists at `testtrack/owners.yml` though that can be overwritten with the TESTTRACK_OWNERSHIP_FILE environment variable.
+2. This file should contain a list of team names, one per line. Any sub-values of the key names will be ignored for the purposes of test track.
+3. If the test track client is able to find this file, it will require an `--owner` flag be set when creating new splits and experiements.
+4. This data will be passed to the test track server where it can be recorded on the split records
+
+
+
 ## How to Contribute
 
 We would love for you to contribute! Anything that benefits the majority of TestTrack users—from a documentation fix to an entirely new feature—is encouraged.
