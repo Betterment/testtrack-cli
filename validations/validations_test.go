@@ -1,6 +1,8 @@
 package validations_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/Betterment/testtrack-cli/serializers"
@@ -130,6 +132,94 @@ func TestAutoPrefixAndValidateSplit(t *testing.T) {
 	})
 }
 
+func TestValidateOwnerName(t *testing.T) {
+	t.Run("it succeeds with no owner if ownershipFilename is undefined and the default file does not exist", func(t *testing.T) {
+		err := validations.ValidateOwnerName("")
+		require.NoError(t, err)
+	})
+
+	t.Run("it fails with an owner if ownershipFilename is undefined and the default file does not exist ", func(t *testing.T) {
+		err := validations.ValidateOwnerName("super_owner")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner must be blank because ownership file (testtrack/owners.yml) could not be found")
+	})
+
+	t.Run("it fails if using default ownership file and owner is blank", func(t *testing.T) {
+		WriteOwnershipFile(validations.DefaultOwnershipFilePath)
+
+		err := validations.ValidateOwnerName("")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner must be specified when ownership file (testtrack/owners.yml) exists")
+
+		RemoveOwnershipFile(validations.DefaultOwnershipFilePath)
+	})
+
+	t.Run("it fails if using specified ownership file and owner is blank", func(t *testing.T) {
+		WriteOwnershipFile(".owners.yml")
+		t.Setenv("TESTTRACK_OWNERSHIP_FILE", ".owners.yml")
+
+		err := validations.ValidateOwnerName("")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner must be specified when ownership file (.owners.yml) exists")
+
+		RemoveOwnershipFile(".owners.yml")
+	})
+
+	t.Run("it succeeds if using default ownership file and owner exists", func(t *testing.T) {
+		WriteOwnershipFile(validations.DefaultOwnershipFilePath)
+
+		err := validations.ValidateOwnerName("super_owner")
+		require.NoError(t, err)
+
+		RemoveOwnershipFile(validations.DefaultOwnershipFilePath)
+	})
+
+	t.Run("it succeeds if using specified ownership file and owner exists", func(t *testing.T) {
+		WriteOwnershipFile(".owners.yml")
+		t.Setenv("TESTTRACK_OWNERSHIP_FILE", ".owners.yml")
+
+		err := validations.ValidateOwnerName("super_owner")
+		require.NoError(t, err)
+
+		RemoveOwnershipFile(".owners.yml")
+	})
+
+	t.Run("it fails if using default ownership file and owner does not exist", func(t *testing.T) {
+		WriteOwnershipFile(validations.DefaultOwnershipFilePath)
+
+		err := validations.ValidateOwnerName("superb_owner")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner 'superb_owner' is not defined in ownership file (testtrack/owners.yml)")
+
+		RemoveOwnershipFile(validations.DefaultOwnershipFilePath)
+	})
+
+	t.Run("it fails if using specified ownership file and owner does not exist", func(t *testing.T) {
+		WriteOwnershipFile(".owners.yml")
+		t.Setenv("TESTTRACK_OWNERSHIP_FILE", ".owners.yml")
+
+		err := validations.ValidateOwnerName("superb_owner")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "owner 'superb_owner' is not defined in ownership file (.owners.yml)")
+
+		RemoveOwnershipFile(".owners.yml")
+	})
+}
+
 func StrPtr(value string) *string {
 	return &value
+}
+
+func WriteOwnershipFile(ownershipFilename string) {
+	if _, err := os.Stat(ownershipFilename); os.IsNotExist(err) {
+		os.MkdirAll(filepath.Dir(ownershipFilename), 0700)
+	}
+
+	ownerContent := []byte("super_owner:\n  delayed_job_alert_slack_channel: '#super_owner'\n")
+	os.WriteFile(ownershipFilename, ownerContent, 0644)
+}
+
+func RemoveOwnershipFile(ownershipFilename string) {
+	os.Remove(ownershipFilename)
+	os.RemoveAll(filepath.Dir(ownershipFilename))
 }

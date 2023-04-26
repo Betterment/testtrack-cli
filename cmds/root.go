@@ -16,13 +16,10 @@ var build string
 var arch string = fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 var noPrefix bool
 var force bool
+var ownershipFilename string
 
 func init() {
-	_, urlSet := os.LookupEnv("TESTTRACK_CLI_URL")
-	_, appNameSet := os.LookupEnv("TESTTRACK_APP_NAME")
-	if !urlSet && !appNameSet {
-		godotenv.Load()
-	}
+	godotenv.Load()
 }
 
 var rootCmd = &cobra.Command{
