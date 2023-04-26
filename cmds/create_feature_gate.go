@@ -77,7 +77,7 @@ func createFeatureGate(name, defaultVariant, weights string, owner string) error
 		}
 	}
 
-	err = validations.ValidateOwnerName(owner, ownershipFilename)
+	err = validations.ValidateOwnerName(owner)
 	if err != nil {
 		return err
 	}

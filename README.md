@@ -100,8 +100,6 @@ If you have a large organization, you may wish to tag ownership of splits to a s
 3. If the test track client is able to find this file, it will require an `--owner` flag be set when creating new splits and experiements.
 4. This data will be passed to the test track server where it can be recorded on the split records
 
-
-
 ## How to Contribute
 
 We would love for you to contribute! Anything that benefits the majority of TestTrack users—from a documentation fix to an entirely new feature—is encouraged.

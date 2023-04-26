@@ -64,7 +64,7 @@ func createExperiment(name, weights string, owner string) error {
 		return err
 	}
 
-	err = validations.ValidateOwnerName(owner, ownershipFilename)
+	err = validations.ValidateOwnerName(owner)
 	if err != nil {
 		return err
 	}

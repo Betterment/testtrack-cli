@@ -14,7 +14,8 @@ import (
 const appVersionMaxLength = 18 // This conforms to iOS version numering rules
 const splitMaxLength = 128     // This is arbitrary but way bigger than you need and smaller than the column will fit
 
-const defaultOwnershipFilename = "testtrack/owners.yml"
+// DefaultOwnershipFilePath defines the default path to a YML file listing the possible split owners
+const DefaultOwnershipFilePath = "testtrack/owners.yml"
 
 var prefixedSplitRegex = regexp.MustCompile(`^([a-z_\-\d]+)\.[a-z_\d]+$`)
 var nonPrefixedSplitRegex = regexp.MustCompile(`^[a-z_\d]+$`)
@@ -72,16 +73,17 @@ func AutoPrefixAndValidateSplit(paramName string, value *string, currentAppName 
 
 // ValidateOwnerName ensures that if a testtrack/owners.yml file is present, the owner matches
 // the list of owners in that file.
-func ValidateOwnerName(owner string, ownershipFilename string) error {
-	if ownershipFilename == "" {
-		ownershipFilename = defaultOwnershipFilename
+func ValidateOwnerName(owner string) error {
+	ownershipFilePath, ok := os.LookupEnv("TESTTRACK_OWNERSHIP_FILE")
+	if !ok {
+		ownershipFilePath = DefaultOwnershipFilePath
 	}
 
 	// If no ownership file exists, force owner to be empty. Otherwise pass validations.
-	_, err := os.Stat(ownershipFilename)
+	_, err := os.Stat(ownershipFilePath)
 	if os.IsNotExist(err) {
 		if owner != "" {
-			return fmt.Errorf("owner must be blank because ownership file (%s) could not be found", ownershipFilename)
+			return fmt.Errorf("owner must be blank because ownership file (%s) could not be found", ownershipFilePath)
 		}
 
 		return nil
@@ -89,10 +91,10 @@ func ValidateOwnerName(owner string, ownershipFilename string) error {
 
 	// When the ownership file exists, owner must be specified and must be in the ownership file.
 	if owner == "" {
-		return fmt.Errorf("owner must be specified when ownership file (%s) exists", ownershipFilename)
+		return fmt.Errorf("owner must be specified when ownership file (%s) exists", ownershipFilePath)
 	}
 
-	fileBytes, err := ioutil.ReadFile(ownershipFilename)
+	fileBytes, err := ioutil.ReadFile(ownershipFilePath)
 	if err != nil {
 		return err
 	}
@@ -104,7 +106,7 @@ func ValidateOwnerName(owner string, ownershipFilename string) error {
 	}
 
 	if !mapContainsValue(owner, ownersMap) {
-		return fmt.Errorf("owner '%s' is not defined in ownership file (%s)", owner, ownershipFilename)
+		return fmt.Errorf("owner '%s' is not defined in ownership file (%s)", owner, ownershipFilePath)
 	}
 
 	return nil
