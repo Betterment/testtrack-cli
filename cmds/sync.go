@@ -71,7 +71,6 @@ func Sync(remoteURL string) error {
 				if !ok {
 					return fmt.Errorf("failed to cast remoteWeight to map[string]interface{}")
 				}
-				fmt.Println( remoteWeightMap["weights"])
 				if weightsMap, ok := remoteWeightMap["weights"].(map[string]interface{}); ok {
 					localSchema.Splits[ind].Weights = toMapSlice(weightsMap)
 				} else {
