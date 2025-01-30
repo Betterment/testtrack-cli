@@ -3,10 +3,9 @@ package cmds
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 
+	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -33,24 +32,12 @@ var syncCommand = &cobra.Command{
 	},
 }
 
-func readYAML(filePath string) (map[string]interface{}, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("error opening YAML file: %v", err)
+func toMapSlice(m map[string]interface{}) yaml.MapSlice {
+	mapSlice := yaml.MapSlice{}
+	for k, v := range m {
+		mapSlice = append(mapSlice, yaml.MapItem{Key: k, Value: v})
 	}
-	defer file.Close()
-
-	fileData, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("error reading YAML file: %v", err)
-	}
-
-	var yamlData map[string]interface{}
-	if err := yaml.Unmarshal(fileData, &yamlData); err != nil {
-		return nil, fmt.Errorf("error unmarshalling YAML: %v", err)
-	}
-
-	return yamlData, nil
+	return mapSlice
 }
 
 // Sync synchronizes the local schema TestTrack assignments with the remote production TestTrack assignments.
@@ -67,42 +54,34 @@ func Sync(remoteURL string) error {
 		return fmt.Errorf("Error decoding JSON: %v", err)
 	}
 
-	splits, ok := jsonData["splits"].(map[string]interface{})
+	remoteSplits, ok := jsonData["splits"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("Error: 'splits' key not found or not a map")
 	}
 
-	yamlFilePath := "testtrack/schema.yml"
-	yamlData, err := readYAML(yamlFilePath)
+	localSchema, err := schema.Read()
 	if err != nil {
-		return fmt.Errorf("Error reading YAML file: %v", err)
+		return err
 	}
 
-	for key, value := range splits {
-		for _, split := range yamlData["splits"].([]interface{}) {
-			splitMap, ok := split.(map[interface{}]interface{})
-			if !ok {
-				continue
-			}
-			if splitMap["name"] == key {
-				valueMap, ok := value.(map[string]interface{})
+	for remoteSplitName, remoteWeight := range remoteSplits {
+		for ind, localSplit := range localSchema.Splits {
+			if localSplit.Name == remoteSplitName {
+				remoteWeightMap, ok := remoteWeight.(map[string]interface{})
 				if !ok {
-					continue
+					return fmt.Errorf("failed to cast remoteWeight to map[string]interface{}")
 				}
-				splitMap["weights"] = valueMap["weights"]
+				fmt.Println( remoteWeightMap["weights"])
+				if weightsMap, ok := remoteWeightMap["weights"].(map[string]interface{}); ok {
+					localSchema.Splits[ind].Weights = toMapSlice(weightsMap)
+				} else {
+					return fmt.Errorf("failed to cast weights to yaml.MapSlice")
+				}
 			}
 		}
 	}
 
-	yamlBytes, err := yaml.Marshal(yamlData)
-	if err != nil {
-		return fmt.Errorf("error marshalling YAML: %v", err)
-	}
-
-	err = os.WriteFile(yamlFilePath, yamlBytes, 0644)
-	if err != nil {
-		return fmt.Errorf("error writing YAML file: %v", err)
-	}
+	schema.Write(localSchema)
 
 	return nil
 }
