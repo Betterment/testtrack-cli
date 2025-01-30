@@ -1,21 +1,16 @@
 package cmds
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/Betterment/testtrack-cli/schema"
+	"github.com/Betterment/testtrack-cli/servers"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
 var syncDoc = `
 Sync the local schema TestTrack assignments with the remote production TestTrack assignments.
-
-Example:
-
-testtrack sync http:://example.com/split_registry.json
 `
 
 func init() {
@@ -26,9 +21,8 @@ var syncCommand = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync TestTrack assignments with production",
 	Long:  syncDoc,
-	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Sync(args[0])
+		return Sync()
 	},
 }
 
@@ -41,18 +35,14 @@ func toMapSlice(m map[string]interface{}) yaml.MapSlice {
 }
 
 // Sync synchronizes the local schema TestTrack assignments with the remote production TestTrack assignments.
-func Sync(remoteURL string) error {
-	res, err := http.Get(remoteURL)
-
+func Sync() error {
+	server, err := servers.New()
 	if err != nil {
-		return fmt.Errorf("Error fetching JSON: %v", err)
+		return err
 	}
 
-	defer res.Body.Close()
 	var jsonData map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&jsonData); err != nil {
-		return fmt.Errorf("Error decoding JSON: %v", err)
-	}
+	server.Get("api/v2/split_registry.json", &jsonData)
 
 	remoteSplits, ok := jsonData["splits"].(map[string]interface{})
 	if !ok {
