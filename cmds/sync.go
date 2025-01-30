@@ -1,15 +1,12 @@
-// fetch json from https://tt.betterment.com/api/v2/split_registry.json
-// iterate through splits that start with "retail."
-// replace assignments of values at ~/src/retail/testtrack/schema.yml
-
 package cmds
 
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"io/ioutil"
+	"net/http"
 	"os"
+
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -26,15 +23,16 @@ var syncCommand = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync TestTrack assignments with production",
 	Long:  syncDoc,
-	Run: func(cmd *cobra.Command, args []string) {
-		Sync()
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return Sync(args[0])
 	},
 }
 
 func readYAML(filePath string) (map[string]interface{}, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-			return nil, fmt.Errorf("error opening YAML file: %v", err)
+		return nil, fmt.Errorf("error opening YAML file: %v", err)
 	}
 	defer file.Close()
 
@@ -45,43 +43,36 @@ func readYAML(filePath string) (map[string]interface{}, error) {
 
 	var yamlData map[string]interface{}
 	if err := yaml.Unmarshal(fileData, &yamlData); err != nil {
-			return nil, fmt.Errorf("error unmarshalling YAML: %v", err)
+		return nil, fmt.Errorf("error unmarshalling YAML: %v", err)
 	}
 
 	return yamlData, nil
 }
 
-func Sync() {
-	url := "https://tt.betterment.com/api/v2/split_registry.json"
-	res, err := http.Get(url)
+func Sync(remoteUrl string) error {
+	res, err := http.Get(remoteUrl)
 
 	if err != nil {
-		fmt.Printf("Error fetching JSON: %v\n", err)
-		return
+		return fmt.Errorf("Error fetching JSON: %v\n", err)
 	}
 
 	defer res.Body.Close()
 	var jsonData map[string]interface{}
 	if err := json.NewDecoder(res.Body).Decode(&jsonData); err != nil {
-			fmt.Printf("Error decoding JSON: %v\n", err)
-			return
+		return fmt.Errorf("Error decoding JSON: %v\n", err)
 	}
 
 	splits, ok := jsonData["splits"].(map[string]interface{})
 	if !ok {
-			fmt.Println("Error: 'splits' key not found or not a map")
-			return
+		return fmt.Errorf("Error: 'splits' key not found or not a map")
 	}
 
 	// yamlFilePath := "testtrack/schema.yml"
 	yamlFilePath := "../../retail/retail/testtrack/schema.yml"
 	yamlData, err := readYAML(yamlFilePath)
 	if err != nil {
-			fmt.Printf("Error reading YAML file: %v\n", err)
-			return
+		return fmt.Errorf("Error reading YAML file: %v\n", err)
 	}
-
-	fmt.Printf("YAML data: %+v\n", yamlData)
 
 	for key, value := range splits {
 		for _, split := range yamlData["splits"].([]interface{}) {
@@ -92,22 +83,22 @@ func Sync() {
 			if splitMap["name"] == key {
 				valueMap, ok := value.(map[string]interface{})
 				if !ok {
-						continue
+					continue
 				}
 				splitMap["weights"] = valueMap["weights"]
 			}
 		}
 	}
 
-	fmt.Printf("Yaml data:", yamlData)
-
 	yamlBytes, err := yaml.Marshal(yamlData)
 	if err != nil {
-		fmt.Errorf("error marshalling YAML: %v", err)
+		return fmt.Errorf("error marshalling YAML: %v", err)
 	}
 
 	err = ioutil.WriteFile(yamlFilePath, yamlBytes, 0644)
 	if err != nil {
-		fmt.Errorf("error writing YAML file: %v", err)
+		return fmt.Errorf("error writing YAML file: %v", err)
 	}
+
+	return nil
 }
