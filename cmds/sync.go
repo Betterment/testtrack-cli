@@ -13,6 +13,10 @@ import (
 
 var syncDoc = `
 Sync the local schema TestTrack assignments with the remote production TestTrack assignments.
+
+Example:
+
+testtrack sync http:://example.com/split_registry.json
 `
 
 func init() {
@@ -49,17 +53,18 @@ func readYAML(filePath string) (map[string]interface{}, error) {
 	return yamlData, nil
 }
 
-func Sync(remoteUrl string) error {
-	res, err := http.Get(remoteUrl)
+// Sync synchronizes the local schema TestTrack assignments with the remote production TestTrack assignments.
+func Sync(remoteURL string) error {
+	res, err := http.Get(remoteURL)
 
 	if err != nil {
-		return fmt.Errorf("Error fetching JSON: %v\n", err)
+		return fmt.Errorf("Error fetching JSON: %v", err)
 	}
 
 	defer res.Body.Close()
 	var jsonData map[string]interface{}
 	if err := json.NewDecoder(res.Body).Decode(&jsonData); err != nil {
-		return fmt.Errorf("Error decoding JSON: %v\n", err)
+		return fmt.Errorf("Error decoding JSON: %v", err)
 	}
 
 	splits, ok := jsonData["splits"].(map[string]interface{})
@@ -67,11 +72,10 @@ func Sync(remoteUrl string) error {
 		return fmt.Errorf("Error: 'splits' key not found or not a map")
 	}
 
-	// yamlFilePath := "testtrack/schema.yml"
-	yamlFilePath := "../../retail/retail/testtrack/schema.yml"
+	yamlFilePath := "testtrack/schema.yml"
 	yamlData, err := readYAML(yamlFilePath)
 	if err != nil {
-		return fmt.Errorf("Error reading YAML file: %v\n", err)
+		return fmt.Errorf("Error reading YAML file: %v", err)
 	}
 
 	for key, value := range splits {
