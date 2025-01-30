@@ -3,7 +3,7 @@ package cmds
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -40,7 +40,7 @@ func readYAML(filePath string) (map[string]interface{}, error) {
 	}
 	defer file.Close()
 
-	fileData, err := ioutil.ReadAll(file)
+	fileData, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("error reading YAML file: %v", err)
 	}
@@ -99,7 +99,7 @@ func Sync(remoteURL string) error {
 		return fmt.Errorf("error marshalling YAML: %v", err)
 	}
 
-	err = ioutil.WriteFile(yamlFilePath, yamlBytes, 0644)
+	err = os.WriteFile(yamlFilePath, yamlBytes, 0644)
 	if err != nil {
 		return fmt.Errorf("error writing YAML file: %v", err)
 	}
