@@ -32,7 +32,7 @@ func Sync() error {
 		return err
 	}
 
-	var jsonData serializers.SplitRegistryJSON
+	var jsonData serializers.SplitRegistry
 	server.Get("api/v2/split_registry.json", &jsonData)
 
 	remoteSplits := jsonData.Splits
