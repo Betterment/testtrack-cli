@@ -45,10 +45,20 @@ type SplitYAML struct {
 	Owner   string        `yaml:"owner,omitempty"`
 }
 
-// SplitJSON is is the JSON-marshalabe representation of a Split
+// SplitJSON is the JSON-marshalabe representation of a Split
 type SplitJSON struct {
 	Name              string         `json:"name"`
 	WeightingRegistry map[string]int `json:"weighting_registry"`
+}
+
+// RegistryAssignment is the JSON-marshalable representation of an assignment in a SplitRegistry
+type RegistryAssignment struct {
+	Weights map[string]int `json:"weights"`
+}
+
+// SplitRegistryJSON is the JSON-marshalable representation of a SplitRegistry
+type SplitRegistry struct {
+	Splits map[string]RegistryAssignment `json:"splits"`
 }
 
 // SplitRetirement is the JSON and YAML-marshalable representation of a SplitRetirement
