@@ -43,8 +43,8 @@ func Sync() error {
 	for ind, localSplit := range localSchema.Splits {
 		remoteSplit, exists := splitRegistry.Splits[localSplit.Name]
 		if exists {
-			weights := splits.Weights(remoteSplit.Weights)
-			localSchema.Splits[ind].Weights = weights.ToYAML()
+			remoteWeights := splits.Weights(remoteSplit.Weights)
+			localSchema.Splits[ind].Weights = remoteWeights.ToYAML()
 		}
 	}
 
