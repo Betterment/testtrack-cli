@@ -40,13 +40,11 @@ func Sync() error {
 		return err
 	}
 
-	for remoteSplitName, remoteSplit := range splitRegistry.Splits {
-		for ind, localSplit := range localSchema.Splits {
-			if localSplit.Name == remoteSplitName {
-				weights := splits.Weights(remoteSplit.Weights)
-				localSchema.Splits[ind].Weights = weights.ToYAML()
-				continue
-			}
+	for ind, localSplit := range localSchema.Splits {
+		remoteSplit, exists := splitRegistry.Splits[localSplit.Name]
+		if exists {
+			weights := splits.Weights(remoteSplit.Weights)
+			localSchema.Splits[ind].Weights = weights.ToYAML()
 		}
 	}
 
