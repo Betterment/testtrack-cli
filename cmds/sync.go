@@ -4,8 +4,8 @@ import (
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
+	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 var syncDoc = `
@@ -32,20 +32,19 @@ func Sync() error {
 		return err
 	}
 
-	var jsonData serializers.SplitRegistry
-	server.Get("api/v2/split_registry.json", &jsonData)
-
-	remoteSplits := jsonData.Splits
+	var splitRegistry serializers.SplitRegistry
+	server.Get("api/v2/split_registry.json", &splitRegistry)
 
 	localSchema, err := schema.Read()
 	if err != nil {
 		return err
 	}
 
-	for remoteSplitName, remoteSplit := range remoteSplits {
+	for remoteSplitName, remoteSplit := range splitRegistry.Splits {
 		for ind, localSplit := range localSchema.Splits {
 			if localSplit.Name == remoteSplitName {
-				localSchema.Splits[ind].Weights = convertToMapSlice(remoteSplit.Weights)
+				weights := splits.Weights(remoteSplit.Weights)
+				localSchema.Splits[ind].Weights = weights.ToYAML()
 			}
 		}
 	}
@@ -53,13 +52,4 @@ func Sync() error {
 	schema.Write(localSchema)
 
 	return nil
-}
-
-// convertToMapSlice converts a map[string]int to yaml.MapSlice
-func convertToMapSlice(weights map[string]int) yaml.MapSlice {
-	var mapSlice yaml.MapSlice
-	for k, v := range weights {
-		mapSlice = append(mapSlice, yaml.MapItem{Key: k, Value: v})
-	}
-	return mapSlice
 }
