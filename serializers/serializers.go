@@ -56,7 +56,7 @@ type RegistryAssignment struct {
 	Weights map[string]int `json:"weights"`
 }
 
-// SplitRegistryJSON is the JSON-marshalable representation of a SplitRegistry
+// SplitRegistry is the JSON-marshalable representation of a SplitRegistry
 type SplitRegistry struct {
 	Splits map[string]RegistryAssignment `json:"splits"`
 }
