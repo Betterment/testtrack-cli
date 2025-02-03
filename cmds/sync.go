@@ -33,7 +33,7 @@ func Sync() error {
 		return err
 	}
 
-	var splitRegistry serializers.SplitRegistry
+	var splitRegistry serializers.RemoteRegistry
 	err = server.Get("api/v2/split_registry.json", &splitRegistry)
 	if err != nil {
 		return err

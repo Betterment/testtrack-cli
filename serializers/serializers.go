@@ -51,14 +51,14 @@ type SplitJSON struct {
 	WeightingRegistry map[string]int `json:"weighting_registry"`
 }
 
-// RegistryAssignment is the JSON-marshalable representation of an assignment in a SplitRegistry
-type RegistryAssignment struct {
+// RemoteRegistrySplit is the JSON-marshalable representation of a server-provided split configuration
+type RemoteRegistrySplit struct {
 	Weights map[string]int `json:"weights"`
 }
 
-// SplitRegistry is the JSON-marshalable representation of a SplitRegistry
-type SplitRegistry struct {
-	Splits map[string]RegistryAssignment `json:"splits"`
+// RemoteRegistry is the JSON-marshalable representation of a server-provided split registry
+type RemoteRegistry struct {
+	Splits map[string]RemoteRegistrySplit `json:"splits"`
 }
 
 // SplitRetirement is the JSON and YAML-marshalable representation of a SplitRetirement
