@@ -20,7 +20,8 @@ var syncCommand = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync TestTrack assignments with production",
 	Long:  syncDoc,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Args:  cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		return Sync()
 	},
 }
@@ -33,7 +34,10 @@ func Sync() error {
 	}
 
 	var splitRegistry serializers.SplitRegistry
-	server.Get("api/v2/split_registry.json", &splitRegistry)
+	err = server.Get("api/v2/split_registry.json", &splitRegistry)
+	if err != nil {
+		return err
+	}
 
 	localSchema, err := schema.Read()
 	if err != nil {
@@ -48,7 +52,9 @@ func Sync() error {
 		}
 	}
 
-	schema.Write(localSchema)
+	if err:= schema.Write(localSchema); err != nil {
+		return err
+	}
 
 	return nil
 }
