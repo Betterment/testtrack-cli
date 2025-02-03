@@ -52,7 +52,7 @@ func Sync() error {
 		}
 	}
 
-	if err:= schema.Write(localSchema); err != nil {
+	if err := schema.Write(localSchema); err != nil {
 		return err
 	}
 
