@@ -156,11 +156,22 @@ func TestVisitorConfig(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &visitorConfig)
 		require.Nil(t, err)
 
+		split := visitorConfig.Splits[0]
+		var control, treatment v4Variant
+		for _, v := range split.Variants {
+			if v.Name == "control" {
+				control = v
+			}
+			if v.Name == "treatment" {
+				treatment = v
+			}
+		}
+
 		require.Equal(t, 1, visitorConfig.ExperienceSamplingWeight)
-		require.Equal(t, "test.test_experiment", visitorConfig.Splits[0].Name)
-		require.Equal(t, 60, visitorConfig.Splits[0].Variants[0].Weight)
-		require.Equal(t, 40, visitorConfig.Splits[0].Variants[1].Weight)
-		require.Equal(t, false, visitorConfig.Splits[0].FeatureGate)
+		require.Equal(t, "test.test_experiment", split.Name)
+		require.Equal(t, 60, control.Weight)
+		require.Equal(t, 40, treatment.Weight)
+		require.Equal(t, false, split.FeatureGate)
 		require.Equal(t, "00000000-0000-0000-0000-000000000000", visitorConfig.Visitor.ID)
 		require.Equal(t, "something_something_enabled", visitorConfig.Visitor.Assignments[0].SplitName)
 		require.Equal(t, "true", visitorConfig.Visitor.Assignments[0].Variant)
@@ -184,11 +195,22 @@ func TestAppIdentifier(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &visitorConfig)
 		require.Nil(t, err)
 
+		split := visitorConfig.Splits[0]
+		var control, treatment v4Variant
+		for _, v := range split.Variants {
+			if v.Name == "control" {
+				control = v
+			}
+			if v.Name == "treatment" {
+				treatment = v
+			}
+		}
+
 		require.Equal(t, 1, visitorConfig.ExperienceSamplingWeight)
-		require.Equal(t, "test.test_experiment", visitorConfig.Splits[0].Name)
-		require.Equal(t, 60, visitorConfig.Splits[0].Variants[0].Weight)
-		require.Equal(t, 40, visitorConfig.Splits[0].Variants[1].Weight)
-		require.Equal(t, false, visitorConfig.Splits[0].FeatureGate)
+		require.Equal(t, "test.test_experiment", split.Name)
+		require.Equal(t, 60, control.Weight)
+		require.Equal(t, 40, treatment.Weight)
+		require.Equal(t, false, split.FeatureGate)
 		require.Equal(t, "00000000-0000-0000-0000-000000000000", visitorConfig.Visitor.ID)
 		require.Equal(t, "something_something_enabled", visitorConfig.Visitor.Assignments[0].SplitName)
 		require.Equal(t, "true", visitorConfig.Visitor.Assignments[0].Variant)
