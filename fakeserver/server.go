@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -50,13 +51,19 @@ func createCors() *cors.Cors {
 					return true
 				}
 			}
-			if origin == "localhost" {
-				return true
+
+			if parsed, err := url.Parse(origin); err == nil {
+				hostname := parsed.Hostname()
+
+				if hostname == "localhost" {
+					return true
+				}
+
+				if ip := net.ParseIP(hostname); ip != nil && ip.IsLoopback() {
+					return true
+				}
 			}
-			ip := net.ParseIP(origin)
-			if ip != nil && ip.IsLoopback() {
-				return true
-			}
+
 			return false
 		},
 	})
