@@ -229,7 +229,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	t.Run("it passes cors with an allowed origin", func(t *testing.T) {
@@ -242,7 +242,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "http://www.allowed.com", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "http://www.allowed.com", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	t.Run("it passes cors from localhost", func(t *testing.T) {
@@ -255,7 +255,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "http://localhost:3000", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "http://localhost:3000", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	t.Run("it passes cors from loopback ip", func(t *testing.T) {
@@ -268,7 +268,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "http://127.0.0.1:3000", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "http://127.0.0.1:3000", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	os.Unsetenv("TESTTRACK_ALLOWED_ORIGINS")
