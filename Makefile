@@ -31,7 +31,7 @@ release: distclean dist
 			--target "${BUILD}" \
 			--generate-notes
 
-test: lint
+test:
 	@go test ${PACKAGES}
 
 lint:
