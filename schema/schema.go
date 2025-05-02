@@ -122,18 +122,10 @@ func ReadMerged() (*serializers.Schema, error) {
 			return nil, err
 		}
 		// Merge into master schema
-		for _, split := range schema.Splits {
-			mergedSchema.Splits = append(mergedSchema.Splits, split)
-		}
-		for _, featureCompletion := range schema.FeatureCompletions {
-			mergedSchema.FeatureCompletions = append(mergedSchema.FeatureCompletions, featureCompletion)
-		}
-		for _, remoteKill := range schema.RemoteKills {
-			mergedSchema.RemoteKills = append(mergedSchema.RemoteKills, remoteKill)
-		}
-		for _, identifierType := range schema.IdentifierTypes {
-			mergedSchema.IdentifierTypes = append(mergedSchema.IdentifierTypes, identifierType)
-		}
+		mergedSchema.Splits = append(mergedSchema.Splits, schema.Splits...)
+		mergedSchema.FeatureCompletions = append(mergedSchema.FeatureCompletions, schema.FeatureCompletions...)
+		mergedSchema.RemoteKills = append(mergedSchema.RemoteKills, schema.RemoteKills...)
+		mergedSchema.IdentifierTypes = append(mergedSchema.IdentifierTypes, schema.IdentifierTypes...)
 	}
 	return &mergedSchema, nil
 }
