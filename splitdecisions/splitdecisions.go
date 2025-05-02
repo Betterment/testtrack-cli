@@ -7,7 +7,6 @@ import (
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/splits"
 	"github.com/Betterment/testtrack-cli/validations"
-	"github.com/pkg/errors"
 )
 
 // SplitDecision represents a feature we're marking (un)completed
@@ -104,7 +103,7 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 			}
 			err = weights.ReweightToDecision(*s.variant)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("in split %s in schema", *s.split))
+				return fmt.Errorf("in split %s in schema: %w", *s.split, err)
 			}
 			schema.Splits[i].Weights = weights.ToYAML()
 			return nil
@@ -116,7 +115,7 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 			weights := split.Weights()
 			err := weights.ReweightToDecision(*s.variant)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("in most recent split migration %s", *s.split))
+				return fmt.Errorf("in most recent split migration %s: %w", *s.split, err)
 			}
 			schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 				Name:    *s.split,

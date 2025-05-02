@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Betterment/testtrack-cli/serializers"
-	"github.com/pkg/errors"
 )
 
 // IMigration represents a migration
@@ -58,7 +58,7 @@ func GenerateMigrationVersion() (*string, error) {
 	} else if len(matches[1]) == 17 {
 		i, err = strconv.Atoi(matches[1][14:17])
 		if err != nil {
-			return nil, errors.Wrap(err, "couldn't parse file version")
+			return nil, fmt.Errorf("couldn't parse file version: %w", err)
 		}
 		i++
 	} else {

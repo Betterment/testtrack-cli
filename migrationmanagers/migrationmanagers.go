@@ -1,6 +1,7 @@
 package migrationmanagers
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -125,7 +125,7 @@ func (m *MigrationManager) Sync() error {
 func (m *MigrationManager) persistFile() error {
 	stat, err := os.Stat("testtrack/migrate")
 	if err != nil {
-		return errors.Wrap(err, "migration directory not found - run `testtrack init_project` to resolve")
+		return fmt.Errorf("migration directory not found - run `testtrack init_project` to resolve: %w", err)
 	}
 
 	if !stat.IsDir() {
