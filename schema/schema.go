@@ -3,7 +3,6 @@ package schema
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,7 +20,7 @@ func Read() (*serializers.Schema, error) {
 	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
 		return Generate()
 	}
-	schemaBytes, err := ioutil.ReadFile("testtrack/schema.yml")
+	schemaBytes, err := os.ReadFile("testtrack/schema.yml")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +55,7 @@ func Write(schema *serializers.Schema) error {
 	SortAlphabetically(schema)
 	out, err := yaml.Marshal(schema)
 
-	err = ioutil.WriteFile("testtrack/schema.yml", out, 0644)
+	err = os.WriteFile("testtrack/schema.yml", out, 0644)
 	if err != nil {
 		return err
 	}
@@ -113,7 +112,7 @@ func ReadMerged() (*serializers.Schema, error) {
 			}
 		}
 		// Read file
-		schemaBytes, err := ioutil.ReadFile(path)
+		schemaBytes, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +142,7 @@ func mergeLegacySchema(schema *serializers.Schema) error {
 	if _, err := os.Stat("db/test_track_schema.yml"); os.IsNotExist(err) {
 		return nil
 	}
-	legacySchemaBytes, err := ioutil.ReadFile("db/test_track_schema.yml")
+	legacySchemaBytes, err := os.ReadFile("db/test_track_schema.yml")
 	if err != nil {
 		return err
 	}

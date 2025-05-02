@@ -2,7 +2,6 @@ package validations
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -94,7 +93,7 @@ func ValidateOwnerName(owner string) error {
 		return fmt.Errorf("owner must be specified when ownership file (%s) exists", ownershipFilePath)
 	}
 
-	fileBytes, err := ioutil.ReadFile(ownershipFilePath)
+	fileBytes, err := os.ReadFile(ownershipFilePath)
 	if err != nil {
 		return err
 	}

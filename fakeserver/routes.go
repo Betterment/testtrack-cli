@@ -3,7 +3,7 @@ package fakeserver
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -341,7 +341,7 @@ func postV1AssignmentOverride(r *http.Request) error {
 			Variant:   r.PostForm.Get("variant"),
 		}
 	case strings.HasPrefix(contentType, "application/json"):
-		requestBytes, err := ioutil.ReadAll(r.Body)
+		requestBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			return err
 		}
@@ -366,7 +366,7 @@ func postV2AssignmentOverride(r *http.Request) error {
 	contentType := r.Header.Get("content-type")
 	switch {
 	case strings.HasPrefix(contentType, "application/json"):
-		requestBytes, err := ioutil.ReadAll(r.Body)
+		requestBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			return err
 		}

@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -40,7 +39,7 @@ func initProject() error {
 	}
 	keepfile.Close()
 
-	if err := ioutil.WriteFile("testtrack/.gitignore", []byte("build_timestamp\n"), 0644); err != nil {
+	if err := os.WriteFile("testtrack/.gitignore", []byte("build_timestamp\n"), 0644); err != nil {
 		log.Fatal(err)
 	}
 

@@ -2,7 +2,6 @@ package fakeserver
 
 import (
 	"bytes"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +40,7 @@ something_something_enabled: "true"
 func TestMain(m *testing.M) {
 	current, exists := os.LookupEnv("TESTTRACK_FAKE_SERVER_CONFIG_DIR")
 
-	dir, err := ioutil.TempDir("", "testtrack-cli")
+	dir, err := os.MkdirTemp("", "testtrack-cli")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,12 +52,12 @@ func TestMain(m *testing.M) {
 	}
 
 	schemaContent := []byte(testSchema)
-	if err := ioutil.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
 		log.Fatal(err)
 	}
 
 	assignmentsContent := []byte(testAssignments)
-	if err := ioutil.WriteFile(filepath.Join(dir, "assignments.yml"), assignmentsContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "assignments.yml"), assignmentsContent, 0644); err != nil {
 		log.Fatal(err)
 	}
 

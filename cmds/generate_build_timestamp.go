@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -36,5 +35,5 @@ func generateBuildTimestamp() error {
 		return err
 	}
 
-	return ioutil.WriteFile("testtrack/build_timestamp", timestamp, 0644)
+	return os.WriteFile("testtrack/build_timestamp", timestamp, 0644)
 }

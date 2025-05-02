@@ -2,7 +2,6 @@ package migrationmanagers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
@@ -135,7 +134,7 @@ func (m *MigrationManager) persistFile() error {
 
 	out, err := yaml.Marshal(m.migration.File())
 
-	err = ioutil.WriteFile(fmt.Sprintf("testtrack/migrate/%s", *m.migration.Filename()), out, 0644)
+	err = os.WriteFile(fmt.Sprintf("testtrack/migrate/%s", *m.migration.Filename()), out, 0644)
 	if err != nil {
 		return err
 	}
