@@ -22,13 +22,15 @@ dist:
 		GOOS=darwin GOARCH=arm64 go build -o "dist/testtrack.darwin-arm64" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack
 
 release: distclean dist
-	@hub release create\
-		-a dist/testtrack.linux\
-		-a dist/testtrack.darwin-amd64\
-		-a dist/testtrack.darwin-arm64\
-		-m "TestTrack CLI ${VERSION}"\
-		-t "${BUILD}"\
-		v${VERSION}
+	@(gh release view v${VERSION} > /dev/null 2>&1 \
+		&& echo "v${VERSION} has already been released.") \
+		|| gh release create v${VERSION} \
+			dist/testtrack.linux \
+			dist/testtrack.darwin-amd64 \
+			dist/testtrack.darwin-arm64 \
+			--title "TestTrack CLI ${VERSION}" \
+			--target "${BUILD}" \
+			--generate-notes
 
 test:
 	@go install golang.org/x/tools/cmd/goimports@latest
