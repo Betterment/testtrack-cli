@@ -353,6 +353,10 @@ func postV1AssignmentOverride(r *http.Request) error {
 		return fmt.Errorf("got unexpected content type %s", contentType)
 	}
 	assignments, err := fakeassignments.Read()
+	if err != nil {
+		return err
+	}
+
 	(*assignments)[assignment.SplitName] = assignment.Variant
 	err = fakeassignments.Write(assignments)
 	if err != nil {
@@ -380,6 +384,10 @@ func postV2AssignmentOverride(r *http.Request) error {
 		return fmt.Errorf("got unexpected content type %s", contentType)
 	}
 	storedAssignments, err := fakeassignments.Read()
+	if err != nil {
+		return err
+	}
+
 	for _, assignment := range assignments {
 		(*storedAssignments)[assignment.SplitName] = assignment.Variant
 	}

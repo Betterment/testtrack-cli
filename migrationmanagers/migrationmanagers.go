@@ -133,6 +133,9 @@ func (m *MigrationManager) persistFile() error {
 	}
 
 	out, err := yaml.Marshal(m.migration.File())
+	if err != nil {
+		return fmt.Errorf("failed to marshal migration file: %w", err)
+	}
 
 	err = os.WriteFile(fmt.Sprintf("testtrack/migrate/%s", *m.migration.Filename()), out, 0644)
 	if err != nil {

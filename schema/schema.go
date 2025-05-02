@@ -54,6 +54,9 @@ func Generate() (*serializers.Schema, error) {
 func Write(schema *serializers.Schema) error {
 	SortAlphabetically(schema)
 	out, err := yaml.Marshal(schema)
+	if err != nil {
+		return err
+	}
 
 	err = os.WriteFile("testtrack/schema.yml", out, 0644)
 	if err != nil {
