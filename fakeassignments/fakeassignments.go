@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/Betterment/testtrack-cli/paths"
-
 	"gopkg.in/yaml.v2"
 )
 

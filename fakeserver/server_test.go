@@ -305,11 +305,11 @@ func TestPersistAssignmentV2(t *testing.T) {
 
 		overrides := v2AssignmentOverrideRequestBody{
 			Assignments: []v1Assignment{
-				v1Assignment{
+				{
 					SplitName: "test.test_experiment",
 					Variant:   "control",
 				},
-				v1Assignment{
+				{
 					SplitName: "test.test2_experiment",
 					Variant:   "treatment",
 				},

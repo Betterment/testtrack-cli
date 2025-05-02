@@ -453,12 +453,12 @@ func getV1SplitDetail() (interface{}, error) {
 		Location:           "location",
 		Platform:           "platform",
 		VariantDetails: []v1VariantDetail{
-			v1VariantDetail{
+			{
 				Name:          "variant_a",
 				Description:   "this is a fake description",
 				ScreenshotURL: "https://example.org/a",
 			},
-			v1VariantDetail{
+			{
 				Name:          "variant_b",
 				Description:   "this is another fake description",
 				ScreenshotURL: "https://example.org/b",
