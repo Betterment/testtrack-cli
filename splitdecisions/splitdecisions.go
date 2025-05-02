@@ -128,5 +128,5 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 	if idempotently {
 		return nil
 	}
-	return fmt.Errorf("Couldn't locate split %s in schema to decide", *s.split)
+	return fmt.Errorf("couldn't locate split %s in schema to decide", *s.split)
 }

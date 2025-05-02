@@ -142,7 +142,7 @@ func (r *RemoteKill) ApplyToSchema(schema *serializers.Schema, _ migrations.Repo
 		if idempotently {
 			return nil
 		}
-		return fmt.Errorf("Couldn't locate remote_kill %s of %s in schema", *r.reason, *r.split)
+		return fmt.Errorf("couldn't locate remote_kill %s of %s in schema", *r.reason, *r.split)
 	}
 	for i, candidate := range schema.RemoteKills { // Replace
 		if candidate.Split == *r.split && candidate.Reason == *r.reason {

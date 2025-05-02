@@ -114,7 +114,7 @@ func (f *FeatureCompletion) ApplyToSchema(schema *serializers.Schema, _ migratio
 		if idempotently {
 			return nil
 		}
-		return fmt.Errorf("Couldn't locate feature_completion of %s in schema", *f.featureGate)
+		return fmt.Errorf("couldn't locate feature_completion of %s in schema", *f.featureGate)
 	}
 	for i, candidate := range schema.FeatureCompletions { // Replace
 		if candidate.FeatureGate == *f.featureGate {

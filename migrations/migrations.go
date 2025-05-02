@@ -49,7 +49,7 @@ func GenerateMigrationVersion() (*string, error) {
 	lastMatch := matches[len(matches)-1]
 	matches = migrationFilenameRegex.FindStringSubmatch(filepath.Base(lastMatch))
 	if matches == nil {
-		return nil, fmt.Errorf("Failed to parse migration filename %s", lastMatch)
+		return nil, fmt.Errorf("failed to parse migration filename %s", lastMatch)
 	}
 
 	var i int

@@ -116,7 +116,7 @@ func (m *MigrationManager) Sync() error {
 	case 204:
 		return nil
 	case 422:
-		return errors.New("Migration unsuccessful on server. Does your split exist?")
+		return errors.New("migration unsuccessful on server. Does your split exist?")
 	default:
 		return fmt.Errorf("got %d status code", resp.StatusCode)
 	}
