@@ -1,11 +1,9 @@
 package fakeassignments
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/Betterment/testtrack-cli/paths"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -20,12 +18,12 @@ func Read() (*map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = ioutil.WriteFile(*configDir+"/assignments.yml", []byte("{}"), 0644)
+		err = os.WriteFile(*configDir+"/assignments.yml", []byte("{}"), 0644)
 		if err != nil {
 			return nil, err
 		}
 	}
-	assignmentsBytes, err := ioutil.ReadFile(*configDir + "/assignments.yml")
+	assignmentsBytes, err := os.ReadFile(*configDir + "/assignments.yml")
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +45,7 @@ func Write(assignments *map[string]string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(*configDir+"/assignments.yml", bytes, 0644)
+	err = os.WriteFile(*configDir+"/assignments.yml", bytes, 0644)
 	if err != nil {
 		return err
 	}

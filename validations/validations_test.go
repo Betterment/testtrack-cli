@@ -65,7 +65,7 @@ func TestAutoPrefixAndValidateSplit(t *testing.T) {
 		currentAppName := "my_app"
 		schema := &serializers.Schema{
 			Splits: []serializers.SchemaSplit{
-				serializers.SchemaSplit{
+				{
 					Name: "my_app.foo_enabled",
 				},
 			},
@@ -83,10 +83,10 @@ func TestAutoPrefixAndValidateSplit(t *testing.T) {
 		currentAppName := "my_app"
 		schema := &serializers.Schema{
 			Splits: []serializers.SchemaSplit{
-				serializers.SchemaSplit{
+				{
 					Name: "foo_enabled",
 				},
-				serializers.SchemaSplit{
+				{
 					Name: "my_app.foo_enabled",
 				},
 			},
@@ -116,10 +116,10 @@ func TestAutoPrefixAndValidateSplit(t *testing.T) {
 		currentAppName := "my_app"
 		schema := &serializers.Schema{
 			Splits: []serializers.SchemaSplit{
-				serializers.SchemaSplit{
+				{
 					Name: "my_app.foo_enabled",
 				},
-				serializers.SchemaSplit{
+				{
 					Name: "foo_enabled",
 				},
 			},

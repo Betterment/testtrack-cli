@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-VERSION=1.6.1
+VERSION=1.7.0
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-w -s \
@@ -8,7 +8,6 @@ LDFLAGS=-ldflags "-w -s \
 				-X github.com/Betterment/testtrack-cli/cmds.build=${BUILD}"
 
 PACKAGES=$$(find . -maxdepth 1 -type d ! -path '.' ! -path './.*' ! -path './vendor' ! -path './dist' ! -path './script' ! -path './doc')
-LINTEXCLUDES="123nothingyet123"
 
 all: test
 
@@ -16,40 +15,29 @@ install:
 	@go install ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack
 
 dist:
-	@mkdir dist &&\
-		GOOS=linux GOARCH=amd64 go build -o "dist/testtrack.linux" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack &&\
-		GOOS=darwin GOARCH=amd64 go build -o "dist/testtrack.darwin-amd64" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack &&\
+	@mkdir dist && \
+		GOOS=linux GOARCH=amd64 go build -o "dist/testtrack.linux" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack && \
+		GOOS=darwin GOARCH=amd64 go build -o "dist/testtrack.darwin-amd64" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack && \
 		GOOS=darwin GOARCH=arm64 go build -o "dist/testtrack.darwin-arm64" ${LDFLAGS} github.com/Betterment/testtrack-cli/testtrack
 
 release: distclean dist
-	@hub release create\
-		-a dist/testtrack.linux\
-		-a dist/testtrack.darwin-amd64\
-		-a dist/testtrack.darwin-arm64\
-		-m "TestTrack CLI ${VERSION}"\
-		-t "${BUILD}"\
-		v${VERSION}
+	@(gh release view v${VERSION} > /dev/null 2>&1 \
+		&& echo "v${VERSION} has already been released.") \
+		|| gh release create v${VERSION} \
+			dist/testtrack.linux \
+			dist/testtrack.darwin-amd64 \
+			dist/testtrack.darwin-arm64 \
+			--title "TestTrack CLI ${VERSION}" \
+			--target "${BUILD}" \
+			--generate-notes
 
 test:
-	@go install golang.org/x/tools/cmd/goimports@latest
-	@go install golang.org/x/lint/golint@latest
-	@GOIMPORTS_RESULT=$$($$(go env GOPATH)/bin/goimports -l ${PACKAGES} | grep -v ${LINTEXCLUDES});\
-		if [ $$(echo "$$GOIMPORTS_RESULT\c" | head -c1 | wc -c) -ne 0 ];\
-			then\
-				echo "Style violations found. Run the following command to fix:";\
-				echo;\
-				echo "$$(go env GOPATH)/bin/goimports -w" $$GOIMPORTS_RESULT;\
-				echo;\
-				exit 1;\
-			fi
-	@go vet ${PACKAGES}
-	@GOLINT_RESULT=$$($$(go env GOPATH)/bin/golint ${PACKAGES} | grep -v ${LINTEXCLUDES});\
-		if [ $$(echo "$$GOLINT_RESULT\c" | head -c1 | wc -c) -ne 0 ];\
-			then\
-				echo $$GOLINT_RESULT;\
-				exit 1;\
-			fi
 	@go test ${PACKAGES}
+
+lint:
+	golangci-lint version &>/dev/null || brew install golangci-lint
+	golangci-lint fmt --verbose
+	golangci-lint run --verbose --timeout 5m
 
 cover:
 	@echo "What package do you want a coverage report for? \c"
@@ -68,4 +56,4 @@ clean:
 distclean: clean
 	@rm -rf dist
 
-.PHONY: all build install check clean distclean test
+.PHONY: all build install clean distclean test

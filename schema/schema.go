@@ -3,7 +3,6 @@ package schema
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,7 +20,7 @@ func Read() (*serializers.Schema, error) {
 	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
 		return Generate()
 	}
-	schemaBytes, err := ioutil.ReadFile("testtrack/schema.yml")
+	schemaBytes, err := os.ReadFile("testtrack/schema.yml")
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +54,11 @@ func Generate() (*serializers.Schema, error) {
 func Write(schema *serializers.Schema) error {
 	SortAlphabetically(schema)
 	out, err := yaml.Marshal(schema)
+	if err != nil {
+		return err
+	}
 
-	err = ioutil.WriteFile("testtrack/schema.yml", out, 0644)
+	err = os.WriteFile("testtrack/schema.yml", out, 0644)
 	if err != nil {
 		return err
 	}
@@ -113,7 +115,7 @@ func ReadMerged() (*serializers.Schema, error) {
 			}
 		}
 		// Read file
-		schemaBytes, err := ioutil.ReadFile(path)
+		schemaBytes, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
@@ -123,18 +125,10 @@ func ReadMerged() (*serializers.Schema, error) {
 			return nil, err
 		}
 		// Merge into master schema
-		for _, split := range schema.Splits {
-			mergedSchema.Splits = append(mergedSchema.Splits, split)
-		}
-		for _, featureCompletion := range schema.FeatureCompletions {
-			mergedSchema.FeatureCompletions = append(mergedSchema.FeatureCompletions, featureCompletion)
-		}
-		for _, remoteKill := range schema.RemoteKills {
-			mergedSchema.RemoteKills = append(mergedSchema.RemoteKills, remoteKill)
-		}
-		for _, identifierType := range schema.IdentifierTypes {
-			mergedSchema.IdentifierTypes = append(mergedSchema.IdentifierTypes, identifierType)
-		}
+		mergedSchema.Splits = append(mergedSchema.Splits, schema.Splits...)
+		mergedSchema.FeatureCompletions = append(mergedSchema.FeatureCompletions, schema.FeatureCompletions...)
+		mergedSchema.RemoteKills = append(mergedSchema.RemoteKills, schema.RemoteKills...)
+		mergedSchema.IdentifierTypes = append(mergedSchema.IdentifierTypes, schema.IdentifierTypes...)
 	}
 	return &mergedSchema, nil
 }
@@ -143,7 +137,7 @@ func mergeLegacySchema(schema *serializers.Schema) error {
 	if _, err := os.Stat("db/test_track_schema.yml"); os.IsNotExist(err) {
 		return nil
 	}
-	legacySchemaBytes, err := ioutil.ReadFile("db/test_track_schema.yml")
+	legacySchemaBytes, err := os.ReadFile("db/test_track_schema.yml")
 	if err != nil {
 		return err
 	}

@@ -1,2 +1,2 @@
 brew 'go'
-brew 'hub'
+brew 'gh'

@@ -14,7 +14,6 @@ import (
 	"github.com/Betterment/testtrack-cli/servers"
 	"github.com/Betterment/testtrack-cli/splitdecisions"
 	"github.com/Betterment/testtrack-cli/splits"
-	"github.com/pkg/errors"
 )
 
 // SchemaLoader loads schemas into TestTrack
@@ -101,7 +100,7 @@ func schemaSplitMigrations(schemaSplit serializers.SchemaSplit) ([]migrations.IM
 		var decision *string
 		weights, err := splits.WeightsFromYAML(schemaSplit.Weights)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("schema split %s invalid", schemaSplit.Name))
+			return nil, fmt.Errorf("schema split %s invalid: %w", schemaSplit.Name, err)
 		}
 		for variant, weight := range *weights {
 			if weight == 100 {

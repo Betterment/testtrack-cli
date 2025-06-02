@@ -2,7 +2,6 @@ package fakeserver
 
 import (
 	"bytes"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +40,7 @@ something_something_enabled: "true"
 func TestMain(m *testing.M) {
 	current, exists := os.LookupEnv("TESTTRACK_FAKE_SERVER_CONFIG_DIR")
 
-	dir, err := ioutil.TempDir("", "testtrack-cli")
+	dir, err := os.MkdirTemp("", "testtrack-cli")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,12 +52,12 @@ func TestMain(m *testing.M) {
 	}
 
 	schemaContent := []byte(testSchema)
-	if err := ioutil.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
 		log.Fatal(err)
 	}
 
 	assignmentsContent := []byte(testAssignments)
-	if err := ioutil.WriteFile(filepath.Join(dir, "assignments.yml"), assignmentsContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "assignments.yml"), assignmentsContent, 0644); err != nil {
 		log.Fatal(err)
 	}
 
@@ -230,7 +229,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	t.Run("it passes cors with an allowed origin", func(t *testing.T) {
@@ -243,7 +242,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "http://www.allowed.com", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "http://www.allowed.com", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	t.Run("it passes cors from localhost", func(t *testing.T) {
@@ -256,7 +255,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "http://localhost:3000", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "http://localhost:3000", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	t.Run("it passes cors from loopback ip", func(t *testing.T) {
@@ -269,7 +268,7 @@ func TestCors(t *testing.T) {
 		h.ServeHTTP(w, request)
 
 		require.Equal(t, http.StatusOK, w.Code)
-		require.Equal(t, "http://127.0.0.1:3000", w.HeaderMap.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "http://127.0.0.1:3000", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
 	os.Unsetenv("TESTTRACK_ALLOWED_ORIGINS")
@@ -305,11 +304,11 @@ func TestPersistAssignmentV2(t *testing.T) {
 
 		overrides := v2AssignmentOverrideRequestBody{
 			Assignments: []v1Assignment{
-				v1Assignment{
+				{
 					SplitName: "test.test_experiment",
 					Variant:   "control",
 				},
-				v1Assignment{
+				{
 					SplitName: "test.test2_experiment",
 					Variant:   "treatment",
 				},

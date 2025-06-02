@@ -1,8 +1,8 @@
 package migrationmanagers
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/Betterment/testtrack-cli/migrationloaders"
@@ -10,7 +10,6 @@ import (
 	"github.com/Betterment/testtrack-cli/schema"
 	"github.com/Betterment/testtrack-cli/serializers"
 	"github.com/Betterment/testtrack-cli/servers"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -117,7 +116,7 @@ func (m *MigrationManager) Sync() error {
 	case 204:
 		return nil
 	case 422:
-		return errors.New("Migration unsuccessful on server. Does your split exist?")
+		return errors.New("migration unsuccessful on server. Does your split exist?")
 	default:
 		return fmt.Errorf("got %d status code", resp.StatusCode)
 	}
@@ -126,7 +125,7 @@ func (m *MigrationManager) Sync() error {
 func (m *MigrationManager) persistFile() error {
 	stat, err := os.Stat("testtrack/migrate")
 	if err != nil {
-		return errors.Wrap(err, "migration directory not found - run `testtrack init_project` to resolve")
+		return fmt.Errorf("migration directory not found - run `testtrack init_project` to resolve: %w", err)
 	}
 
 	if !stat.IsDir() {
@@ -134,8 +133,11 @@ func (m *MigrationManager) persistFile() error {
 	}
 
 	out, err := yaml.Marshal(m.migration.File())
+	if err != nil {
+		return fmt.Errorf("failed to marshal migration file: %w", err)
+	}
 
-	err = ioutil.WriteFile(fmt.Sprintf("testtrack/migrate/%s", *m.migration.Filename()), out, 0644)
+	err = os.WriteFile(fmt.Sprintf("testtrack/migrate/%s", *m.migration.Filename()), out, 0644)
 	if err != nil {
 		return err
 	}

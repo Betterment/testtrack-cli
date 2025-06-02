@@ -3,7 +3,7 @@ package fakeserver
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -341,7 +341,7 @@ func postV1AssignmentOverride(r *http.Request) error {
 			Variant:   r.PostForm.Get("variant"),
 		}
 	case strings.HasPrefix(contentType, "application/json"):
-		requestBytes, err := ioutil.ReadAll(r.Body)
+		requestBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			return err
 		}
@@ -353,6 +353,10 @@ func postV1AssignmentOverride(r *http.Request) error {
 		return fmt.Errorf("got unexpected content type %s", contentType)
 	}
 	assignments, err := fakeassignments.Read()
+	if err != nil {
+		return err
+	}
+
 	(*assignments)[assignment.SplitName] = assignment.Variant
 	err = fakeassignments.Write(assignments)
 	if err != nil {
@@ -366,7 +370,7 @@ func postV2AssignmentOverride(r *http.Request) error {
 	contentType := r.Header.Get("content-type")
 	switch {
 	case strings.HasPrefix(contentType, "application/json"):
-		requestBytes, err := ioutil.ReadAll(r.Body)
+		requestBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			return err
 		}
@@ -380,6 +384,10 @@ func postV2AssignmentOverride(r *http.Request) error {
 		return fmt.Errorf("got unexpected content type %s", contentType)
 	}
 	storedAssignments, err := fakeassignments.Read()
+	if err != nil {
+		return err
+	}
+
 	for _, assignment := range assignments {
 		(*storedAssignments)[assignment.SplitName] = assignment.Variant
 	}
@@ -453,12 +461,12 @@ func getV1SplitDetail() (interface{}, error) {
 		Location:           "location",
 		Platform:           "platform",
 		VariantDetails: []v1VariantDetail{
-			v1VariantDetail{
+			{
 				Name:          "variant_a",
 				Description:   "this is a fake description",
 				ScreenshotURL: "https://example.org/a",
 			},
-			v1VariantDetail{
+			{
 				Name:          "variant_b",
 				Description:   "this is another fake description",
 				ScreenshotURL: "https://example.org/b",

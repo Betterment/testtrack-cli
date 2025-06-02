@@ -2,7 +2,7 @@ package migrationloaders
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
@@ -19,7 +19,7 @@ import (
 
 // Load loads a set of migrations
 func Load() (migrations.Repository, error) {
-	files, err := ioutil.ReadDir("testtrack/migrate")
+	files, err := os.ReadDir("testtrack/migrate")
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func Load() (migrations.Repository, error) {
 			return nil, err
 		}
 
-		fileBytes, err := ioutil.ReadFile(path.Join("testtrack/migrate", file.Name()))
+		fileBytes, err := os.ReadFile(path.Join("testtrack/migrate", file.Name()))
 		if err != nil {
 			return nil, err
 		}
