@@ -35,7 +35,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 func createCors() *cors.Cors {
 	return cors.New(cors.Options{
 		AllowCredentials: true,
-		AllowedHeaders:   []string{"authorization"},
+		AllowedHeaders:   []string{"*"},
 		AllowOriginFunc: func(origin string) bool {
 			allowedOrigins, ok := os.LookupEnv("TESTTRACK_ALLOWED_ORIGINS")
 			if ok {

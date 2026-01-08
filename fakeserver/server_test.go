@@ -271,6 +271,22 @@ func TestCors(t *testing.T) {
 		require.Equal(t, "http://127.0.0.1:3000", w.Result().Header.Get("Access-Control-Allow-Origin"))
 	})
 
+	t.Run("it allows multiple headers in preflight request", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		request := httptest.NewRequest("OPTIONS", "/api/v2/split_registry", nil)
+		request.Header.Add("Origin", "http://www.allowed.com")
+		request.Header.Add("Access-Control-Request-Method", "POST")
+		request.Header.Add("Access-Control-Request-Headers", "content-type, authorization, accept")
+
+		h.ServeHTTP(w, request)
+
+		require.Equal(t, http.StatusNoContent, w.Code)
+		require.Equal(t, "http://www.allowed.com", w.Result().Header.Get("Access-Control-Allow-Origin"))
+		require.Equal(t, "content-type, authorization, accept", w.Result().Header.Get("Access-Control-Allow-Headers"))
+	})
+
 	os.Unsetenv("TESTTRACK_ALLOWED_ORIGINS")
 }
 
