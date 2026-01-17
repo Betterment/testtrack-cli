@@ -15,12 +15,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Finds the path to the schema file (preferring JSON), or returns an error if neither exists
+func findSchemaPath() (string, error) {
+	if _, err := os.Stat("testtrack/schema.json"); err == nil {
+		return "testtrack/schema.json", nil
+	}
+	if _, err := os.Stat("testtrack/schema.yml"); err == nil {
+		return "testtrack/schema.yml", nil
+	}
+	return "", errors.New("testtrack/schema.{json,yml} does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+}
+
 // Read a schema from disk or generate one
 func Read() (*serializers.Schema, error) {
-	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
+	schemaPath, err := findSchemaPath()
+	if err != nil {
 		return Generate()
 	}
-	schemaBytes, err := os.ReadFile("testtrack/schema.yml")
+	schemaBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +80,9 @@ func Write(schema *serializers.Schema) error {
 
 // Link a schema to the user's home dir
 func Link(force bool) error {
-	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
-		return errors.New("testtrack/schema.yml does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+	schemaPath, err := findSchemaPath()
+	if err != nil {
+		return err
 	}
 	dir, err := os.Getwd()
 	if err != nil {
@@ -84,11 +97,12 @@ func Link(force bool) error {
 	if err != nil {
 		return err
 	}
-	path := fmt.Sprintf("%s/schemas/%s.yml", *configDir, dirname)
+	ext := filepath.Ext(schemaPath)
+	path := fmt.Sprintf("%s/schemas/%s%s", *configDir, dirname, ext)
 	if force {
 		os.Remove(path) // If this fails it might just not exist, we'll error on the next line if something else is up
 	}
-	return os.Symlink(dir+"/testtrack/schema.yml", path)
+	return os.Symlink(dir+"/"+schemaPath, path)
 }
 
 // ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
@@ -97,7 +111,7 @@ func ReadMerged() (*serializers.Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	paths, err := filepath.Glob(*configDir + "/schemas/*.yml")
+	paths, err := filepath.Glob(*configDir + "/schemas/*.*")
 	if err != nil {
 		return nil, err
 	}
