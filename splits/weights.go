@@ -10,10 +10,25 @@ import (
 // Weights represents the weightings of a split
 type Weights map[string]int
 
+// NewWeights creates a Weights instance from a map, validating that weights sum to 100
+func NewWeights(weights map[string]int) (*Weights, error) {
+	cumulativeWeight := 0
+	for _, weight := range weights {
+		if weight < 0 {
+			return nil, fmt.Errorf("weight %d is less than zero", weight)
+		}
+		cumulativeWeight += weight
+	}
+	if cumulativeWeight != 100 {
+		return nil, fmt.Errorf("weights must sum to 100, got %d", cumulativeWeight)
+	}
+	w := Weights(weights)
+	return &w, nil
+}
+
 // WeightsFromYAML converts YAML-serializable weights to a weights map
 func WeightsFromYAML(yamlWeights yaml.MapSlice) (*Weights, error) {
-	weights := make(Weights)
-	cumulativeWeight := 0
+	weights := make(map[string]int)
 	for _, item := range yamlWeights {
 		variant, ok := item.Key.(string)
 		if !ok {
@@ -23,16 +38,9 @@ func WeightsFromYAML(yamlWeights yaml.MapSlice) (*Weights, error) {
 		if !ok {
 			return nil, fmt.Errorf("weighting %v is not an int", item.Value)
 		}
-		if weight < 0 {
-			return nil, fmt.Errorf("weight %d is less than zero", weight)
-		}
-		cumulativeWeight += weight
 		weights[variant] = weight
 	}
-	if cumulativeWeight != 100 {
-		return nil, fmt.Errorf("weights must sum to 100, got %d", cumulativeWeight)
-	}
-	return &weights, nil
+	return NewWeights(weights)
 }
 
 // ToYAML converts weights to a YAML-serializable representation
