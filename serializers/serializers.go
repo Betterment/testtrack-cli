@@ -80,21 +80,21 @@ type IdentifierType struct {
 
 // SchemaSplit is the schema-file YAML-marshalable representation of a split's state
 type SchemaSplit struct {
-	Name    string         `yaml:"name"`
-	Weights map[string]int `yaml:"weights"`
-	Decided bool           `yaml:"decided,omitempty"`
-	Owner   string         `yaml:"owner,omitempty"`
+	Name    string         `yaml:"name" json:"name"`
+	Weights map[string]int `yaml:"weights" json:"weights"`
+	Decided bool           `yaml:"decided,omitempty" json:"decided,omitempty"`
+	Owner   string         `yaml:"owner,omitempty" json:"owner,omitempty"`
 }
 
 // Schema is the YAML-marshalable representation of the TestTrack schema for
 // migration validation and bootstrapping of new ecosystems
 type Schema struct {
-	SerializerVersion  int                 `yaml:"serializer_version"`
-	SchemaVersion      string              `yaml:"schema_version"`
-	Splits             []SchemaSplit       `yaml:"splits,omitempty"`
-	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty"`
-	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty"`
-	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty"`
+	SerializerVersion  int                 `yaml:"serializer_version" json:"serializer_version"`
+	SchemaVersion      string              `yaml:"schema_version" json:"schema_version"`
+	Splits             []SchemaSplit       `yaml:"splits,omitempty" json:"splits,omitempty"`
+	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty" json:"identifier_types,omitempty"`
+	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty" json:"remote_kills,omitempty"`
+	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty" json:"feature_completions,omitempty"`
 }
 
 // LegacySchema represents the Rails migration-piggybacked testtrack schema files of old

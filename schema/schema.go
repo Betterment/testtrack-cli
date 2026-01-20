@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -15,7 +16,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Finds the path to the schema file (preferring JSON), or returns an error if neither exists
+// Finds the path to the schema file (preferring JSON), or returns testtrack/schema.json and an error if neither exists
 func findSchemaPath() (string, error) {
 	if _, err := os.Stat("testtrack/schema.json"); err == nil {
 		return "testtrack/schema.json", nil
@@ -23,7 +24,7 @@ func findSchemaPath() (string, error) {
 	if _, err := os.Stat("testtrack/schema.yml"); err == nil {
 		return "testtrack/schema.yml", nil
 	}
-	return "", errors.New("testtrack/schema.{json,yml} does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+	return "testtrack/schema.json", errors.New("testtrack/schema.{json,yml} does not exist. Are you in your app root dir? If so, call testtrack init_project first")
 }
 
 // Read a schema from disk or generate one
@@ -65,12 +66,21 @@ func Generate() (*serializers.Schema, error) {
 // Write a schema to disk after alpha-sorting its resources
 func Write(schema *serializers.Schema) error {
 	SortAlphabetically(schema)
-	out, err := yaml.Marshal(schema)
+
+	schemaPath, _ := findSchemaPath()
+
+	var out []byte
+	var err error
+	if filepath.Ext(schemaPath) == ".yml" {
+		out, err = yaml.Marshal(schema)
+	} else {
+		out, err = json.MarshalIndent(schema, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("testtrack/schema.yml", out, 0644)
+	err = os.WriteFile(schemaPath, out, 0644)
 	if err != nil {
 		return err
 	}
