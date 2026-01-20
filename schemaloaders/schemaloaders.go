@@ -98,7 +98,7 @@ func schemaSplitMigrations(schemaSplit serializers.SchemaSplit) ([]migrations.IM
 
 	if schemaSplit.Decided {
 		var decision *string
-		weights, err := splits.WeightsFromYAML(schemaSplit.Weights)
+		weights, err := splits.NewWeights(schemaSplit.Weights)
 		if err != nil {
 			return nil, fmt.Errorf("schema split %s invalid: %w", schemaSplit.Name, err)
 		}

@@ -192,7 +192,7 @@ func getV1SplitRegistry() (interface{}, error) {
 	}
 	splitRegistry := map[string]*splits.Weights{}
 	for _, split := range schema.Splits {
-		splitRegistry[split.Name], err = splits.WeightsFromYAML(split.Weights)
+		splitRegistry[split.Name], err = splits.NewWeights(split.Weights)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +208,7 @@ func getV2PlusSplitRegistry() (interface{}, error) {
 	splitRegistry := map[string]*v2Split{}
 	for _, split := range schema.Splits {
 		isFeatureGate := splits.IsFeatureGateFromName(split.Name)
-		weights, err := splits.WeightsFromYAML(split.Weights)
+		weights, err := splits.NewWeights(split.Weights)
 		if err != nil {
 			return nil, err
 		}
@@ -231,7 +231,7 @@ func getV4SplitRegistry() (interface{}, error) {
 	v4Splits := make([]v4Split, 0, len(schema.Splits))
 	for _, split := range schema.Splits {
 		isFeatureGate := splits.IsFeatureGateFromName(split.Name)
-		weights, err := splits.WeightsFromYAML(split.Weights)
+		weights, err := splits.NewWeights(split.Weights)
 		if err != nil {
 			return nil, err
 		}

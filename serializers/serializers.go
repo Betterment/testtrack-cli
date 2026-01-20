@@ -40,9 +40,9 @@ type RemoteKill struct {
 
 // SplitYAML is the YAML-marshalable representation of a Split
 type SplitYAML struct {
-	Name    string        `yaml:"name"`
-	Weights yaml.MapSlice `yaml:"weights"`
-	Owner   string        `yaml:"owner,omitempty"`
+	Name    string         `yaml:"name"`
+	Weights map[string]int `yaml:"weights"`
+	Owner   string         `yaml:"owner,omitempty"`
 }
 
 // SplitJSON is the JSON-marshalabe representation of a Split
@@ -80,10 +80,10 @@ type IdentifierType struct {
 
 // SchemaSplit is the schema-file YAML-marshalable representation of a split's state
 type SchemaSplit struct {
-	Name    string        `yaml:"name"`
-	Weights yaml.MapSlice `yaml:"weights"`
-	Decided bool          `yaml:"decided,omitempty"`
-	Owner   string        `yaml:"owner,omitempty"`
+	Name    string         `yaml:"name"`
+	Weights map[string]int `yaml:"weights"`
+	Decided bool           `yaml:"decided,omitempty"`
+	Owner   string         `yaml:"owner,omitempty"`
 }
 
 // Schema is the YAML-marshalable representation of the TestTrack schema for

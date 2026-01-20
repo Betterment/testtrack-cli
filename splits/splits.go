@@ -83,7 +83,7 @@ func IsFeatureGateFromName(name string) bool {
 
 // FromFile reifies a migration from the yaml serializable representation
 func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (migrations.IMigration, error) {
-	weights, err := WeightsFromYAML(serializable.Weights)
+	weights, err := NewWeights(serializable.Weights)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (s *Split) File() *serializers.MigrationFile {
 		SerializerVersion: serializers.SerializerVersion,
 		Split: &serializers.SplitYAML{
 			Name:    *s.name,
-			Weights: s.weights.ToYAML(),
+			Weights: *s.weights,
 			Owner:   *s.owner,
 		},
 	}
@@ -152,13 +152,13 @@ func (s *Split) SameResourceAs(other migrations.IMigration) bool {
 func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migrations.Repository, _idempotently bool) error {
 	for i, candidate := range schema.Splits { // Replace
 		if candidate.Name == *s.name {
-			schemaWeights, err := WeightsFromYAML(candidate.Weights)
+			schemaWeights, err := NewWeights(candidate.Weights)
 			if err != nil {
 				return err
 			}
 			schemaWeights.Merge(*s.weights)
 			schema.Splits[i].Decided = false
-			schema.Splits[i].Weights = schemaWeights.ToYAML()
+			schema.Splits[i].Weights = *schemaWeights
 			return nil
 		}
 	}
@@ -169,7 +169,7 @@ func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migratio
 			weights.Merge(*s.weights)
 			schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 				Name:    *s.name,
-				Weights: weights.ToYAML(),
+				Weights: *weights,
 				Decided: false,
 			})
 			return nil
@@ -177,7 +177,7 @@ func (s *Split) ApplyToSchema(schema *serializers.Schema, migrationRepo migratio
 	}
 	schemaSplit := serializers.SchemaSplit{ // Create
 		Name:    *s.name,
-		Weights: s.weights.ToYAML(),
+		Weights: *s.weights,
 		Decided: false,
 		Owner:   *s.owner,
 	}

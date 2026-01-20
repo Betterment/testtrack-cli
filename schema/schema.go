@@ -170,18 +170,18 @@ func mergeLegacySchema(schema *serializers.Schema) error {
 		if !ok {
 			return fmt.Errorf("expected split name, got %v", mapSlice.Key)
 		}
-		weightsYAML, ok := mapSlice.Value.(yaml.MapSlice)
+		weightsYAML, ok := mapSlice.Value.(map[string]int)
 		if !ok {
 			return fmt.Errorf("expected weights, got %v", mapSlice.Value)
 		}
-		weights, err := splits.WeightsFromYAML(weightsYAML)
+		weights, err := splits.NewWeights(weightsYAML)
 		if err != nil {
 			return err
 		}
 
 		schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 			Name:    name,
-			Weights: weights.ToYAML(),
+			Weights: *weights,
 			Decided: false,
 		})
 	}
