@@ -96,7 +96,7 @@ func (s *SplitRetirement) SameResourceAs(other migrations.IMigration) bool {
 func (s *SplitRetirement) ApplyToSchema(schema *serializers.Schema, _ migrations.Repository, _idempotently bool) error {
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
-			weights, err := splits.WeightsFromYAML(candidate.Weights)
+			weights, err := splits.NewWeights(candidate.Weights)
 			if err != nil {
 				return err
 			}

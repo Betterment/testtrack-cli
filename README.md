@@ -102,7 +102,7 @@ If you have a large organization, you may wish to tag ownership of splits to a s
 
 ### Syncing split assignments
 
-If you want to ensure that your local split assignments are in sync with your remote (production) assignments, you can run `TESTTRACK_CLI_URL=<base_url> testtrack sync` (e.g. `TESTTRACK_CLI_URL=https://tt.example.com testtrack sync`) from your project directory to pull the assignments from your remote server into your local `schema.yml` file.
+If you want to ensure that your local split assignments are in sync with your remote (production) assignments, you can run `TESTTRACK_CLI_URL=<base_url> testtrack sync` (e.g. `TESTTRACK_CLI_URL=https://tt.example.com testtrack sync`) from your project directory to pull the assignments from your remote server into your local `schema.{json,yml}` file.
 
 ## How to Contribute
 

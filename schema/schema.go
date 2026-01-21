@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -15,12 +16,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Finds the path to the schema file (preferring JSON), or returns testtrack/schema.json
+func findSchemaPath() (string, bool) {
+	if _, err := os.Stat("testtrack/schema.json"); err == nil {
+		return "testtrack/schema.json", true
+	}
+	if _, err := os.Stat("testtrack/schema.yml"); err == nil {
+		return "testtrack/schema.yml", true
+	}
+	return "testtrack/schema.json", false
+}
+
 // Read a schema from disk or generate one
 func Read() (*serializers.Schema, error) {
-	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
+	schemaPath, exists := findSchemaPath()
+	if !exists {
 		return Generate()
 	}
-	schemaBytes, err := os.ReadFile("testtrack/schema.yml")
+	schemaBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +66,21 @@ func Generate() (*serializers.Schema, error) {
 // Write a schema to disk after alpha-sorting its resources
 func Write(schema *serializers.Schema) error {
 	SortAlphabetically(schema)
-	out, err := yaml.Marshal(schema)
+
+	schemaPath, _ := findSchemaPath()
+
+	var out []byte
+	var err error
+	if filepath.Ext(schemaPath) == ".yml" {
+		out, err = yaml.Marshal(schema)
+	} else {
+		out, err = json.MarshalIndent(schema, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("testtrack/schema.yml", out, 0644)
+	err = os.WriteFile(schemaPath, out, 0644)
 	if err != nil {
 		return err
 	}
@@ -68,8 +90,9 @@ func Write(schema *serializers.Schema) error {
 
 // Link a schema to the user's home dir
 func Link(force bool) error {
-	if _, err := os.Stat("testtrack/schema.yml"); os.IsNotExist(err) {
-		return errors.New("testtrack/schema.yml does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+	schemaPath, exists := findSchemaPath()
+	if !exists {
+		return errors.New("testtrack/schema.{json,yml} does not exist. Are you in your app root dir? If so, call testtrack init_project first")
 	}
 	dir, err := os.Getwd()
 	if err != nil {
@@ -84,11 +107,12 @@ func Link(force bool) error {
 	if err != nil {
 		return err
 	}
-	path := fmt.Sprintf("%s/schemas/%s.yml", *configDir, dirname)
+	ext := filepath.Ext(schemaPath)
+	path := fmt.Sprintf("%s/schemas/%s%s", *configDir, dirname, ext)
 	if force {
 		os.Remove(path) // If this fails it might just not exist, we'll error on the next line if something else is up
 	}
-	return os.Symlink(dir+"/testtrack/schema.yml", path)
+	return os.Symlink(dir+"/"+schemaPath, path)
 }
 
 // ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
@@ -97,28 +121,20 @@ func ReadMerged() (*serializers.Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	paths, err := filepath.Glob(*configDir + "/schemas/*.yml")
+	paths, err := filepath.Glob(*configDir + "/schemas/*.*")
 	if err != nil {
 		return nil, err
 	}
 	var mergedSchema serializers.Schema
 	for _, path := range paths {
-		// Deref symlink
-		fi, err := os.Lstat(path)
-		if err != nil {
-			return nil, err
-		}
-		if fi.Mode()&os.ModeSymlink != 0 {
-			path, err = os.Readlink(path)
-			if err != nil {
-				continue // It's OK if this symlink isn't traversable (e.g. app was uninstalled), we'll just skip it.
-			}
-		}
-		// Read file
 		schemaBytes, err := os.ReadFile(path)
 		if err != nil {
+			if os.IsNotExist(err) {
+				continue // It's OK if this file doesn't exist (e.g. broken symlink, app was uninstalled), we'll just skip it.
+			}
 			return nil, err
 		}
+
 		var schema serializers.Schema
 		err = yaml.Unmarshal(schemaBytes, &schema)
 		if err != nil {
@@ -156,18 +172,18 @@ func mergeLegacySchema(schema *serializers.Schema) error {
 		if !ok {
 			return fmt.Errorf("expected split name, got %v", mapSlice.Key)
 		}
-		weightsYAML, ok := mapSlice.Value.(yaml.MapSlice)
+		weightsYAML, ok := mapSlice.Value.(map[string]int)
 		if !ok {
 			return fmt.Errorf("expected weights, got %v", mapSlice.Value)
 		}
-		weights, err := splits.WeightsFromYAML(weightsYAML)
+		weights, err := splits.NewWeights(weightsYAML)
 		if err != nil {
 			return err
 		}
 
 		schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 			Name:    name,
-			Weights: weights.ToYAML(),
+			Weights: *weights,
 			Decided: false,
 		})
 	}

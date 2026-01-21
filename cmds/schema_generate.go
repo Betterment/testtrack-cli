@@ -7,10 +7,10 @@ import (
 
 var schemaGenerateDoc = `
 Reads the migrations in testtrack/migrate and writes the resulting schema state
-to testtrack/schema.yml, overwriting the file if it already exists. Generate
+to testtrack/schema.{json,yml}, overwriting the file if it already exists. Generate
 makes no TestTrack API calls.
 
-In addition to refreshing a schema.yml file that may have been corrupted due to
+In addition to refreshing a schema file that may have been corrupted due to
 a bad merge or bug that produced incorrect schema state, 'schema generate' will
 also validate that migrations merged from multiple development branches don't
 logically conflict, or else it will fail with errors.
@@ -30,7 +30,7 @@ func init() {
 
 var schemaGenerateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Generate schema.yml from migration files",
+	Short: "Generate schema.{json,yml} from migration files",
 	Long:  schemaGenerateDoc,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {

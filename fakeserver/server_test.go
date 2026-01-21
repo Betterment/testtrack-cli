@@ -33,6 +33,17 @@ splits:
     treatment: 40
 `
 
+var otherTestSchema = `{
+  "serializer_version": 1,
+  "schema_version": "2020011774023",
+  "splits": [
+    {
+      "name": "test.json_experiment",
+      "weights": { "control": 50, "treatment": 50 }
+    }
+  ]
+}`
+
 var testAssignments = `
 something_something_enabled: "true"
 `
@@ -52,7 +63,12 @@ func TestMain(m *testing.M) {
 	}
 
 	schemaContent := []byte(testSchema)
-	if err := os.WriteFile(filepath.Join(schemasDir, "test.yml"), schemaContent, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(schemasDir, "a.yml"), schemaContent, 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	otherSchemaContent := []byte(otherTestSchema)
+	if err := os.WriteFile(filepath.Join(schemasDir, "b.json"), otherSchemaContent, 0644); err != nil {
 		log.Fatal(err)
 	}
 
@@ -139,6 +155,22 @@ func TestSplitRegistry(t *testing.T) {
 		require.Equal(t, 60, control.Weight)
 		require.Equal(t, 40, treatment.Weight)
 		require.Equal(t, false, split.FeatureGate)
+	})
+
+	t.Run("it loads JSON schemas from home directory", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		h := createHandler()
+
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v2/split_registry", nil))
+
+		require.Equal(t, http.StatusOK, w.Code)
+
+		registry := v2SplitRegistry{}
+		err := json.Unmarshal(w.Body.Bytes(), &registry)
+		require.Nil(t, err)
+
+		require.Equal(t, 50, registry.Splits["test.json_experiment"].Weights["control"])
+		require.Equal(t, 50, registry.Splits["test.json_experiment"].Weights["treatment"])
 	})
 }
 

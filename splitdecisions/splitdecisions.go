@@ -97,7 +97,7 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 	for i, candidate := range schema.Splits {
 		if candidate.Name == *s.split {
 			schema.Splits[i].Decided = true
-			weights, err := splits.WeightsFromYAML(candidate.Weights)
+			weights, err := splits.NewWeights(candidate.Weights)
 			if err != nil {
 				return err
 			}
@@ -105,7 +105,7 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 			if err != nil {
 				return fmt.Errorf("in split %s in schema: %w", *s.split, err)
 			}
-			schema.Splits[i].Weights = weights.ToYAML()
+			schema.Splits[i].Weights = *weights
 			return nil
 		}
 	}
@@ -119,7 +119,7 @@ func (s *SplitDecision) ApplyToSchema(schema *serializers.Schema, migrationRepo 
 			}
 			schema.Splits = append(schema.Splits, serializers.SchemaSplit{
 				Name:    *s.split,
-				Weights: weights.ToYAML(),
+				Weights: *weights,
 				Decided: true,
 			})
 			return nil

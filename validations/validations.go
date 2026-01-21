@@ -259,11 +259,7 @@ func VariantExistsInSchema(paramName string, variant *string, split string, sche
 	}
 	for _, schemaSplit := range schema.Splits {
 		if schemaSplit.Name == split {
-			for _, item := range schemaSplit.Weights {
-				v, ok := item.Key.(string)
-				if !ok {
-					return fmt.Errorf("variant %v is not a string", item.Key)
-				}
+			for v := range schemaSplit.Weights {
 				if v == *variant {
 					return nil
 				}
