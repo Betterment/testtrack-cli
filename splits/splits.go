@@ -90,6 +90,7 @@ func FromFile(migrationVersion *string, serializable *serializers.SplitYAML) (mi
 	return &Split{
 		migrationVersion: migrationVersion,
 		name:             &serializable.Name,
+		owner:            &serializable.Owner,
 		weights:          weights,
 	}, nil
 }
