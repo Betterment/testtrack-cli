@@ -6,7 +6,7 @@ import (
 )
 
 var schemaLoadDoc = `
-Loads the testtrack/schema.yml state into TestTrack server. This operation is
+Loads the testtrack/schema.{json,yml} state into TestTrack server. This operation is
 idempotent with a valid, consistent schema file, though might fail if your
 schema file became invalid due to a bad merge or a bug.
 
@@ -27,7 +27,7 @@ func init() {
 
 var schemaLoadCmd = &cobra.Command{
 	Use:   "load",
-	Short: "Load schema.yml state into TestTrack server",
+	Short: "Load schema.{json,yml} state into TestTrack server",
 	Long:  schemaLoadDoc,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {
