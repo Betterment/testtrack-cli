@@ -16,21 +16,21 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Finds the path to the schema file (preferring JSON), or returns testtrack/schema.json and an error if neither exists
-func findSchemaPath() (string, error) {
+// Finds the path to the schema file (preferring JSON), or returns testtrack/schema.json
+func findSchemaPath() (string, bool) {
 	if _, err := os.Stat("testtrack/schema.json"); err == nil {
-		return "testtrack/schema.json", nil
+		return "testtrack/schema.json", true
 	}
 	if _, err := os.Stat("testtrack/schema.yml"); err == nil {
-		return "testtrack/schema.yml", nil
+		return "testtrack/schema.yml", true
 	}
-	return "testtrack/schema.json", errors.New("testtrack/schema.{json,yml} does not exist. Are you in your app root dir? If so, call testtrack init_project first")
+	return "testtrack/schema.json", false
 }
 
 // Read a schema from disk or generate one
 func Read() (*serializers.Schema, error) {
-	schemaPath, err := findSchemaPath()
-	if err != nil {
+	schemaPath, exists := findSchemaPath()
+	if !exists {
 		return Generate()
 	}
 	schemaBytes, err := os.ReadFile(schemaPath)
@@ -90,9 +90,9 @@ func Write(schema *serializers.Schema) error {
 
 // Link a schema to the user's home dir
 func Link(force bool) error {
-	schemaPath, err := findSchemaPath()
-	if err != nil {
-		return err
+	schemaPath, exists := findSchemaPath()
+	if !exists {
+		return errors.New("testtrack/schema.{json,yml} does not exist. Are you in your app root dir? If so, call testtrack init_project first")
 	}
 	dir, err := os.Getwd()
 	if err != nil {
