@@ -127,22 +127,14 @@ func ReadMerged() (*serializers.Schema, error) {
 	}
 	var mergedSchema serializers.Schema
 	for _, path := range paths {
-		// Deref symlink
-		fi, err := os.Lstat(path)
-		if err != nil {
-			return nil, err
-		}
-		if fi.Mode()&os.ModeSymlink != 0 {
-			path, err = os.Readlink(path)
-			if err != nil {
-				continue // It's OK if this symlink isn't traversable (e.g. app was uninstalled), we'll just skip it.
-			}
-		}
-		// Read file
 		schemaBytes, err := os.ReadFile(path)
 		if err != nil {
+			if os.IsNotExist(err) {
+				continue // It's OK if this file doesn't exist (e.g. broken symlink, app was uninstalled), we'll just skip it.
+			}
 			return nil, err
 		}
+
 		var schema serializers.Schema
 		err = yaml.Unmarshal(schemaBytes, &schema)
 		if err != nil {
