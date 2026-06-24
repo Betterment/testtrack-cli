@@ -104,6 +104,10 @@ If you have a large organization, you may wish to tag ownership of splits to a s
 
 If you want to ensure that your local split assignments are in sync with your remote (production) assignments, you can run `TESTTRACK_CLI_URL=<base_url> testtrack sync` (e.g. `TESTTRACK_CLI_URL=https://tt.example.com testtrack sync`) from your project directory to pull the assignments from your remote server into your local `schema.{json,yml}` file.
 
+### Showing a split's current weights
+
+To read the current variant weights of a split from a remote server without modifying your local schema, run `TESTTRACK_CLI_URL=<base_url> testtrack show <split>` (e.g. `TESTTRACK_CLI_URL=https://tt.example.com testtrack show my_app.my_feature_enabled`). Pass the fully-qualified split name; it is matched verbatim against the remote registry. Add `--json` to print the weights as a JSON map for scripting. This also works against a local `testtrack server` (e.g. `TESTTRACK_CLI_URL=http://localhost:8297 testtrack show ...`).
+
 ## How to Contribute
 
 We would love for you to contribute! Anything that benefits the majority of TestTrack users—from a documentation fix to an entirely new feature—is encouraged.
