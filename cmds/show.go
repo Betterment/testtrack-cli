@@ -96,7 +96,7 @@ func formatWeights(name string, weights map[string]int, asJSON bool) (string, er
 	var b strings.Builder
 	b.WriteString(name)
 	for _, variant := range variants {
-		b.WriteString(fmt.Sprintf("\n  %-*s  %*d%%", nameWidth, variant, weightWidth, weights[variant]))
+		fmt.Fprintf(&b, "\n  %-*s  %*d%%", nameWidth, variant, weightWidth, weights[variant])
 	}
 	return b.String(), nil
 }
