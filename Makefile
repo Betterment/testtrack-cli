@@ -7,7 +7,7 @@ LDFLAGS=-ldflags "-w -s \
 				-X github.com/Betterment/testtrack-cli/cmds.version=${VERSION} \
 				-X github.com/Betterment/testtrack-cli/cmds.build=${BUILD}"
 
-PACKAGES=$$(find . -maxdepth 1 -type d ! -path '.' ! -path './.*' ! -path './vendor' ! -path './dist' ! -path './script' ! -path './doc')
+PACKAGES=$$(find . -maxdepth 1 -type d ! -path '.' ! -path './.*' ! -path './vendor' ! -path './dist' ! -path './script' ! -path './doc' ! -path './docs' ! -path './dev_docs' ! -path './bin')
 
 all: test
 
