@@ -1,12 +1,11 @@
 package cmds
 
 import (
-	"encoding/json"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/Betterment/testtrack-cli/serializers"
+	"github.com/stretchr/testify/require"
 )
 
 // fakeServer is a test double for servers.IServer that returns a canned registry.
@@ -40,20 +39,27 @@ func TestSplitWeightsHumanReadable(t *testing.T) {
 	server := &fakeServer{registry: registryWith(name, map[string]int{"false": 100, "true": 0})}
 
 	output, err := splitWeights(server, name, false)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 
-	// variant names are left-padded to the widest name, weights right-aligned
+	// variant names are left-padded to the widest name, weights right-aligned,
+	// and variants sorted: "false" before "true"
 	expected := name + "\n  false  100%\n  true     0%"
-	if output != expected {
-		t.Errorf("expected:\n%q\ngot:\n%q", expected, output)
-	}
+	require.Equal(t, expected, output)
+}
 
-	// variants must be sorted: "false" before "true"
-	if strings.Index(output, "false") > strings.Index(output, "true") {
-		t.Errorf("expected variants sorted by name, got:\n%s", output)
-	}
+func TestSplitWeightsAlignsToWidestVariantAndWeight(t *testing.T) {
+	name := "my_app.checkout_experiment"
+	server := &fakeServer{registry: registryWith(name, map[string]int{
+		"control":   5,
+		"treatment": 95,
+	})}
+
+	output, err := splitWeights(server, name, false)
+	require.NoError(t, err)
+
+	// names left-aligned to "treatment" (9), weights right-aligned to width 2
+	expected := name + "\n  control     5%\n  treatment  95%"
+	require.Equal(t, expected, output)
 }
 
 func TestSplitWeightsJSON(t *testing.T) {
@@ -62,35 +68,22 @@ func TestSplitWeightsJSON(t *testing.T) {
 	server := &fakeServer{registry: registryWith(name, weights)}
 
 	output, err := splitWeights(server, name, true)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	var roundTripped map[string]int
-	if err := json.Unmarshal([]byte(output), &roundTripped); err != nil {
-		t.Fatalf("output is not valid JSON: %v", err)
-	}
-	if roundTripped["false"] != 100 || roundTripped["true"] != 0 {
-		t.Errorf("JSON did not round-trip to the weights map, got: %s", output)
-	}
+	require.NoError(t, err)
+	require.JSONEq(t, `{"false":100,"true":0}`, output)
 }
 
 func TestShowRequiresServerURL(t *testing.T) {
 	t.Setenv("TESTTRACK_CLI_URL", "")
 
-	if err := Show("any.split", false); err == nil {
-		t.Fatal("expected an error when TESTTRACK_CLI_URL is unset, got nil")
-	}
+	err := Show("any.split", false)
+	require.Error(t, err)
 }
 
 func TestSplitWeightsNotFound(t *testing.T) {
 	server := &fakeServer{registry: registryWith("some.other.split", map[string]int{"true": 100})}
 
 	_, err := splitWeights(server, "no.such.split", false)
-	if err == nil {
-		t.Fatal("expected an error for a missing split, got nil")
-	}
-	if !strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "testtrack sync") {
-		t.Errorf("expected not-found error with hint, got: %v", err)
-	}
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found")
+	require.Contains(t, err.Error(), "testtrack sync")
 }
