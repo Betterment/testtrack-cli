@@ -53,7 +53,7 @@ func (s *SplitRetirement) Filename() *string {
 // File returns a serializable MigrationFile for this migration
 func (s *SplitRetirement) File() *serializers.MigrationFile {
 	return &serializers.MigrationFile{
-		SerializerVersion: serializers.SerializerVersion,
+		SerializerVersion: serializers.MigrationSerializerVersion,
 		SplitRetirement: &serializers.SplitRetirement{
 			Split:    *s.split,
 			Decision: *s.decision,

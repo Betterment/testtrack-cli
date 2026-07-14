@@ -54,7 +54,7 @@ func (i *IdentifierType) Filename() *string {
 // File returns a serializable MigrationFile for this migration
 func (i *IdentifierType) File() *serializers.MigrationFile {
 	return &serializers.MigrationFile{
-		SerializerVersion: serializers.SerializerVersion,
+		SerializerVersion: serializers.MigrationSerializerVersion,
 		IdentifierType:    i.serializable(),
 	}
 }

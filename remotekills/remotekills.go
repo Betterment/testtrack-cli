@@ -91,7 +91,7 @@ func (r *RemoteKill) Filename() *string {
 // File returns a serializable MigrationFile for this migration
 func (r *RemoteKill) File() *serializers.MigrationFile {
 	return &serializers.MigrationFile{
-		SerializerVersion: serializers.SerializerVersion,
+		SerializerVersion: serializers.MigrationSerializerVersion,
 		RemoteKill:        r.serializable(),
 	}
 }

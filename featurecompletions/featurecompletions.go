@@ -67,7 +67,7 @@ func (f *FeatureCompletion) Filename() *string {
 // File returns a serializable MigrationFile for this migration
 func (f *FeatureCompletion) File() *serializers.MigrationFile {
 	return &serializers.MigrationFile{
-		SerializerVersion: serializers.SerializerVersion,
+		SerializerVersion: serializers.MigrationSerializerVersion,
 		FeatureCompletion: f.serializable(),
 	}
 }

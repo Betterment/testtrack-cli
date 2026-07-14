@@ -109,7 +109,7 @@ func (s *Split) Filename() *string {
 // File returns a serializable MigrationFile for this migration
 func (s *Split) File() *serializers.MigrationFile {
 	return &serializers.MigrationFile{
-		SerializerVersion: serializers.SerializerVersion,
+		SerializerVersion: serializers.MigrationSerializerVersion,
 		Split: &serializers.SplitYAML{
 			Name:    *s.name,
 			Weights: *s.weights,

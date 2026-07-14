@@ -4,8 +4,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// SerializerVersion is the current version of the migration file format so we can evolve over time
+// SerializerVersion is the current version of the schema file format so we
+// can evolve it over time.
 const SerializerVersion = 1
+
+// MigrationSerializerVersion is the current version of the migration file
+// format. It is versioned independently of the schema file: the schema format
+// changed in v2 but migration files didn't, and stamping them with the schema's
+// version would burn version numbers for a format that hasn't evolved.
+const MigrationSerializerVersion = 1
 
 // MigrationVersion is a JSON-marshalable representation of migration version (timestamp)
 type MigrationVersion struct {
