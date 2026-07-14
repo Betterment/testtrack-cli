@@ -71,10 +71,36 @@ func (s *SchemaLoader) Load() error {
 		}
 	}
 
+	appliedVersions := make(map[string]bool, len(s.schema.SchemaVersions))
+	for _, version := range s.schema.SchemaVersions {
+		appliedVersions[version] = true
+	}
+
+	var unrecorded []string
 	for _, version := range s.migrationRepo.SortedVersions() {
-		if version > s.schema.SchemaVersion {
-			fmt.Println("Schema load complete, but there are migrations newer than the schema file - run testtrack migrate to apply them.")
-			break
+		if !appliedVersions[version] {
+			unrecorded = append(unrecorded, version)
+		}
+	}
+	if len(unrecorded) > 0 {
+		// An unrecorded version can mean two different states, and the safe
+		// remedy differs: if only the version list was damaged (the schema body
+		// already reflects the migration), `schema upgrade` records it; but if
+		// the body change never landed (hand-copied file, merge dropped the
+		// schema hunk), upgrade would mark it applied WITHOUT applying it and
+		// permanently silence this warning. Enumerate the versions so the user
+		// can check, and print before syncing so the hint isn't lost if a
+		// SyncVersion call fails below.
+		fmt.Println("Warning: there are migrations on disk not recorded in the schema file:")
+		for _, version := range unrecorded {
+			fmt.Printf("  %s\n", version)
+		}
+		fmt.Println("If the schema file already reflects their changes (e.g. a merge lost only the version list), run `testtrack schema upgrade` to record them. If it does not, `schema upgrade` would mark them applied WITHOUT applying them - instead run `testtrack schema generate` to rebuild the schema from migrations (if your history replays cleanly), or re-create the change with the CLI.")
+	}
+
+	for _, version := range s.migrationRepo.SortedVersions() {
+		if !appliedVersions[version] {
+			continue
 		}
 		err := migrationmanagers.NewWithServer((*s.migrationRepo)[version], s.server).SyncVersion()
 		if err != nil {

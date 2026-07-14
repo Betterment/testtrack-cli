@@ -20,8 +20,9 @@ import (
 )
 
 var testSchema = `
-serializer_version: 1
-schema_version: "2020011774023"
+serializer_version: 2
+schema_versions:
+- "2020011774023"
 splits:
 - name: test.test_experiment
   weights:
@@ -34,8 +35,8 @@ splits:
 `
 
 var otherTestSchema = `{
-  "serializer_version": 1,
-  "schema_version": "2020011774023",
+  "serializer_version": 2,
+  "schema_versions": ["2020011774023"],
   "splits": [
     {
       "name": "test.json_experiment",

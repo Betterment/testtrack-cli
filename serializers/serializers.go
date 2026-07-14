@@ -6,7 +6,13 @@ import (
 
 // SerializerVersion is the current version of the schema file format so we
 // can evolve it over time.
-const SerializerVersion = 1
+//
+// Version 2 replaced the single scalar schema_version high-water-mark with a
+// schema_versions list of every applied migration version, eliminating the
+// merge-conflict hotspot that the scalar created (every new migration rewrote
+// the same line). The list is ordered by a hash of each version so concurrently
+// added migrations scatter through the file instead of clustering.
+const SerializerVersion = 2
 
 // MigrationSerializerVersion is the current version of the migration file
 // format. It is versioned independently of the schema file: the schema format
@@ -97,11 +103,22 @@ type SchemaSplit struct {
 // migration validation and bootstrapping of new ecosystems
 type Schema struct {
 	SerializerVersion  int                 `yaml:"serializer_version" json:"serializer_version"`
-	SchemaVersion      string              `yaml:"schema_version" json:"schema_version"`
+	SchemaVersions     []string            `yaml:"schema_versions,omitempty" json:"schema_versions,omitempty"`
 	Splits             []SchemaSplit       `yaml:"splits,omitempty" json:"splits,omitempty"`
 	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty" json:"identifier_types,omitempty"`
 	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty" json:"remote_kills,omitempty"`
 	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty" json:"feature_completions,omitempty"`
+}
+
+// AddVersion records a migration version as applied in the schema, ignoring
+// duplicates. Ordering is handled at write time, so callers needn't sort.
+func (s *Schema) AddVersion(version string) {
+	for _, v := range s.SchemaVersions {
+		if v == version {
+			return
+		}
+	}
+	s.SchemaVersions = append(s.SchemaVersions, version)
 }
 
 // LegacySchema represents the Rails migration-piggybacked testtrack schema files of old
