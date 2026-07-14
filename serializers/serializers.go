@@ -102,12 +102,21 @@ type SchemaSplit struct {
 // Schema is the YAML-marshalable representation of the TestTrack schema for
 // migration validation and bootstrapping of new ecosystems
 type Schema struct {
-	SerializerVersion  int                 `yaml:"serializer_version" json:"serializer_version"`
-	SchemaVersions     []string            `yaml:"schema_versions,omitempty" json:"schema_versions,omitempty"`
-	Splits             []SchemaSplit       `yaml:"splits,omitempty" json:"splits,omitempty"`
-	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty" json:"identifier_types,omitempty"`
-	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty" json:"remote_kills,omitempty"`
-	FeatureCompletions []FeatureCompletion `yaml:"feature_completions,omitempty" json:"feature_completions,omitempty"`
+	SerializerVersion int      `yaml:"serializer_version" json:"serializer_version"`
+	SchemaVersions    []string `yaml:"schema_versions,omitempty" json:"schema_versions,omitempty"`
+	// LegacySchemaVersion is the v1 scalar high-water mark. It only exists so
+	// reads can detect a file that carries it — either a plain v1 schema, or a
+	// hybrid produced by a pre-2.0 CLI rewriting a v2 schema (those round-trip
+	// serializer_version: 2 while writing the v1 shape). It's a pointer because
+	// detection is by key presence, not value: 1.x always writes the key (no
+	// omitempty), and rewrite paths that never set the scalar (e.g. 1.x `sync`)
+	// emit schema_version: "", which must still trip the guard. It is never
+	// written: `schema upgrade` clears it and omitempty drops nil from output.
+	LegacySchemaVersion *string             `yaml:"schema_version,omitempty" json:"schema_version,omitempty"`
+	Splits              []SchemaSplit       `yaml:"splits,omitempty" json:"splits,omitempty"`
+	IdentifierTypes     []IdentifierType    `yaml:"identifier_types,omitempty" json:"identifier_types,omitempty"`
+	RemoteKills         []RemoteKill        `yaml:"remote_kills,omitempty" json:"remote_kills,omitempty"`
+	FeatureCompletions  []FeatureCompletion `yaml:"feature_completions,omitempty" json:"feature_completions,omitempty"`
 }
 
 // AddVersion records a migration version as applied in the schema, ignoring

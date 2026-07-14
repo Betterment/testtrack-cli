@@ -29,22 +29,117 @@ func findSchemaPath() (string, bool) {
 	return "testtrack/schema.json", false
 }
 
-// Read a schema from disk or generate one
-func Read() (*serializers.Schema, error) {
-	schemaPath, exists := findSchemaPath()
+// readSchemaFile locates and unmarshals the schema file, rejecting files
+// written by a newer CLI. exists is false (with a nil schema and nil error)
+// when no schema file is present; callers decide how to handle that.
+func readSchemaFile() (schema *serializers.Schema, schemaPath string, exists bool, err error) {
+	schemaPath, exists = findSchemaPath()
 	if !exists {
-		return Generate()
+		return nil, schemaPath, false, nil
 	}
 	schemaBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
-		return nil, err
+		return nil, schemaPath, true, err
 	}
-	var schema serializers.Schema
-	err = yaml.Unmarshal(schemaBytes, &schema)
+	var s serializers.Schema
+	err = yaml.Unmarshal(schemaBytes, &s)
+	if err != nil {
+		return nil, schemaPath, true, err
+	}
+	if s.SerializerVersion > serializers.SerializerVersion {
+		return nil, schemaPath, true, fmt.Errorf(
+			"%s was written by a newer testtrack CLI (serializer_version %d, this CLI supports %d). Please upgrade your testtrack CLI",
+			schemaPath, s.SerializerVersion, serializers.SerializerVersion,
+		)
+	}
+	return &s, schemaPath, true, nil
+}
+
+// Read a schema from disk or generate one
+func Read() (*serializers.Schema, error) {
+	schema, schemaPath, exists, err := readSchemaFile()
 	if err != nil {
 		return nil, err
 	}
-	return &schema, nil
+	if !exists {
+		return Generate()
+	}
+	if schema.SerializerVersion < serializers.SerializerVersion {
+		// An older file predates a format change and may be missing data that
+		// can't be reconstructed by re-reading it (e.g. the v1 scalar
+		// schema_version carried no per-migration list). Refuse to read it
+		// rather than silently round-trip a lossy upgrade; `schema upgrade`
+		// converts it in place, preserving the materialized state.
+		return nil, fmt.Errorf(
+			"%s uses an older schema format (serializer_version %d, this CLI writes %d). Run `testtrack schema upgrade` to upgrade it",
+			schemaPath, schema.SerializerVersion, serializers.SerializerVersion,
+		)
+	}
+	if schema.LegacySchemaVersion != nil {
+		// A pre-2.0 CLI rewriting a v2 schema produces a hybrid: it round-trips
+		// serializer_version: 2 but writes the v1 shape (scalar schema_version,
+		// no schema_versions list), so the version check above can't catch it.
+		// Reading it as-is would silently continue with an empty applied-version
+		// list. Key presence, not value, is the tell: 1.x write paths that never
+		// set the scalar (e.g. `sync`) emit schema_version: "".
+		return nil, fmt.Errorf(
+			"%s has serializer_version %d but contains the legacy schema_version field - it was likely rewritten by a pre-2.0 testtrack CLI. Run `testtrack schema upgrade` to repair it, and make sure no older CLI touches it again",
+			schemaPath, schema.SerializerVersion,
+		)
+	}
+	if len(schema.SchemaVersions) == 0 {
+		// No machine write produces an empty version list alongside migrations
+		// on disk — that state means the schema_versions block was lost to a
+		// hand-edit or merge resolution (or the legacy scalar was nulled out,
+		// which also evades the presence check above). Reading it as-is would
+		// ratify the truncated list on the next write. A missing or unreadable
+		// migrate dir counts as no migrations.
+		if filenames, err := migrationloaders.Filenames(); err == nil && len(filenames) > 0 {
+			return nil, fmt.Errorf(
+				"%s has no schema_versions but testtrack/migrate contains migrations - the applied-version list was likely lost in a merge. Run `testtrack schema upgrade` to rebuild it",
+				schemaPath,
+			)
+		}
+	}
+	return schema, nil
+}
+
+// Upgrade converts an existing schema file to the current serializer format in
+// place. Unlike Generate it does not replay migrations, so it preserves the
+// already-materialized state (splits, decisions, retirements, etc.) and works
+// even on schemas that can't be rebuilt from scratch — e.g. apps whose
+// testtrack/migrate predates some splits or references ones created out of
+// band. The only thing it rebuilds is the applied-version list, which it reads
+// from the migration filenames on disk.
+func Upgrade() (*serializers.Schema, error) {
+	schema, _, exists, err := readSchemaFile()
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, errors.New("no testtrack schema file to upgrade. Run testtrack schema generate to create one")
+	}
+
+	versions, err := migrationloaders.Versions()
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Legacy repos can have a schema with no testtrack/migrate dir at
+			// all (git doesn't track empty dirs); there are no versions to
+			// record, which is a valid v2 state.
+			versions = nil
+		} else {
+			return nil, err
+		}
+	}
+	schema.SchemaVersions = versions
+	schema.SerializerVersion = serializers.SerializerVersion
+	schema.LegacySchemaVersion = nil
+
+	err = Write(schema)
+	if err != nil {
+		return nil, err
+	}
+	return schema, nil
 }
 
 // Generate a schema from migrations on the filesystem and write it to disk
@@ -118,7 +213,16 @@ func Link(force bool) error {
 	return os.Symlink(dir+"/"+schemaPath, path)
 }
 
-// ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema
+// ReadMerged merges schemas linked at ~/testtrack/schemas into a single virtual schema.
+//
+// It deliberately bypasses Read's serializer-version and hybrid guards: the
+// linked schemas belong to *other* apps that upgrade on their own schedule,
+// and hard-failing on a neighbor's stale schema would break assign/fakeserver
+// for every app on the machine. This tolerance is safe because the body
+// fields consumed here (splits, identifier_types, remote_kills,
+// feature_completions) have never changed shape across serializer versions —
+// a future version that reshapes them must add per-file version handling
+// here.
 func ReadMerged() (*serializers.Schema, error) {
 	configDir, err := paths.FakeServerConfigDir()
 	if err != nil {
