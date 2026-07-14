@@ -17,25 +17,65 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Filenames lists the migration filenames in testtrack/migrate, skipping
+// hidden files and directories. It is the single source of truth for which
+// directory entries count as migrations — Load and `schema upgrade` must
+// agree on that, or the schema's recorded versions drift from what the
+// loader sees.
+func Filenames() ([]string, error) {
+	files, err := os.ReadDir("testtrack/migrate")
+	if err != nil {
+		return nil, err
+	}
+	filenames := make([]string, 0, len(files))
+	for _, file := range files {
+		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
+			continue
+		}
+		filenames = append(filenames, file.Name())
+	}
+	return filenames, nil
+}
+
+// Versions returns the unique migration versions recorded in the filenames in
+// testtrack/migrate, without reading file contents — usable even on repos
+// whose migrations can't be parsed or replayed.
+func Versions() ([]string, error) {
+	filenames, err := Filenames()
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]bool, len(filenames))
+	versions := make([]string, 0, len(filenames))
+	for _, filename := range filenames {
+		version, err := migrations.ExtractVersionFromFilename(filename)
+		if err != nil {
+			return nil, fmt.Errorf("%w - delete or rename it if it isn't a testtrack migration", err)
+		}
+		if seen[version] {
+			continue
+		}
+		seen[version] = true
+		versions = append(versions, version)
+	}
+	return versions, nil
+}
+
 // Load loads a set of migrations
 func Load() (migrations.Repository, error) {
-	files, err := os.ReadDir("testtrack/migrate")
+	filenames, err := Filenames()
 	if err != nil {
 		return nil, err
 	}
 
 	migrationRepo := make(migrations.Repository)
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), ".") {
-			continue // Skip hidden files
-		}
-
-		migrationVersion, err := migrations.ExtractVersionFromFilename(file.Name())
+	for _, filename := range filenames {
+		migrationVersion, err := migrations.ExtractVersionFromFilename(filename)
 		if err != nil {
 			return nil, err
 		}
 
-		fileBytes, err := os.ReadFile(path.Join("testtrack/migrate", file.Name()))
+		fileBytes, err := os.ReadFile(path.Join("testtrack/migrate", filename))
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +102,7 @@ func Load() (migrations.Repository, error) {
 		} else if migrationFile.IdentifierType != nil {
 			migrationRepo[migrationVersion] = identifiertypes.FromFile(&migrationVersion, migrationFile.IdentifierType)
 		} else {
-			return nil, fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", file.Name())
+			return nil, fmt.Errorf("testtrack/migrate/%s didn't match a known migration type", filename)
 		}
 	}
 	return migrationRepo, nil
