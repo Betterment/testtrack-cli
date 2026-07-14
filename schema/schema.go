@@ -210,8 +210,10 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 // SortAlphabetically sorts the schema's resource slices by their natural keys
 func SortAlphabetically(schema *serializers.Schema) {
 	sort.Slice(schema.RemoteKills, func(i, j int) bool {
-		return schema.RemoteKills[i].Split < schema.RemoteKills[j].Split &&
-			schema.RemoteKills[i].Reason < schema.RemoteKills[j].Reason
+		if schema.RemoteKills[i].Split != schema.RemoteKills[j].Split {
+			return schema.RemoteKills[i].Split < schema.RemoteKills[j].Split
+		}
+		return schema.RemoteKills[i].Reason < schema.RemoteKills[j].Reason
 	})
 	sort.Slice(schema.FeatureCompletions, func(i, j int) bool {
 		return schema.FeatureCompletions[i].FeatureGate < schema.FeatureCompletions[j].FeatureGate
