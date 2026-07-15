@@ -88,16 +88,7 @@ func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository, id
 		return err
 	}
 
-	err = m.migration.ApplyToSchema(m.schema, migrationRepo, idempotently)
-	if err != nil {
-		return err
-	}
-
-	appliedVersion := m.migration.MigrationVersion()
-	if appliedVersion != nil && m.schema.SchemaVersion < *appliedVersion {
-		m.schema.SchemaVersion = *appliedVersion
-	}
-	return nil
+	return m.migration.ApplyToSchema(m.schema, migrationRepo, idempotently)
 }
 
 // Sync applies the contents of a migration to the TestTrack server
@@ -158,11 +149,6 @@ func (m *MigrationManager) SyncVersion() error {
 
 	if resp.StatusCode != 204 {
 		return fmt.Errorf("got %d status code", resp.StatusCode)
-	}
-
-	appliedVersion := m.migration.MigrationVersion()
-	if m.schema.SchemaVersion < *appliedVersion {
-		m.schema.SchemaVersion = *appliedVersion
 	}
 
 	return nil
