@@ -71,15 +71,25 @@ func (s *SchemaLoader) Load() error {
 		}
 	}
 
+	appliedVersions := make(map[string]bool, len(s.schema.SchemaVersions))
+	for _, version := range s.schema.SchemaVersions {
+		appliedVersions[version] = true
+	}
+
+	unrecorded := false
 	for _, version := range s.migrationRepo.SortedVersions() {
-		if version > s.schema.SchemaVersion {
-			fmt.Println("Schema load complete, but there are migrations newer than the schema file - run testtrack migrate to apply them.")
-			break
+		if !appliedVersions[version] {
+			unrecorded = true
+			continue
 		}
 		err := migrationmanagers.NewWithServer((*s.migrationRepo)[version], s.server).SyncVersion()
 		if err != nil {
 			return err
 		}
+	}
+
+	if unrecorded {
+		fmt.Println("Schema load complete, but there are migrations on disk not recorded in the schema file - run testtrack schema generate to update it.")
 	}
 
 	return nil

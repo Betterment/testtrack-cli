@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,9 +65,10 @@ func Generate() (*serializers.Schema, error) {
 	return schema, nil
 }
 
-// Write a schema to disk after alpha-sorting its resources
+// Write a schema to disk after sorting its resources into a stable order
 func Write(schema *serializers.Schema) error {
 	SortAlphabetically(schema)
+	sortSchemaVersions(schema)
 
 	schemaPath, _ := findSchemaPath()
 
@@ -204,17 +207,35 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 			return err
 		}
 	}
-	if len(versions) != 0 {
-		schema.SchemaVersion = versions[len(versions)-1]
-	}
+	schema.SchemaVersions = versions
 	return nil
+}
+
+// sortSchemaVersions orders the applied-version list by the SHA-1 of each
+// version. The order is otherwise meaningless; hashing scatters newly added
+// versions through the list instead of clustering them by timestamp, so two
+// branches that each append a migration rarely touch the same lines. Hashes
+// are precomputed so each version is hashed once rather than on every
+// comparison.
+func sortSchemaVersions(schema *serializers.Schema) {
+	hashes := make(map[string][sha1.Size]byte, len(schema.SchemaVersions))
+	for _, version := range schema.SchemaVersions {
+		hashes[version] = sha1.Sum([]byte(version))
+	}
+	sort.Slice(schema.SchemaVersions, func(i, j int) bool {
+		a := hashes[schema.SchemaVersions[i]]
+		b := hashes[schema.SchemaVersions[j]]
+		return bytes.Compare(a[:], b[:]) < 0
+	})
 }
 
 // SortAlphabetically sorts the schema's resource slices by their natural keys
 func SortAlphabetically(schema *serializers.Schema) {
 	sort.Slice(schema.RemoteKills, func(i, j int) bool {
-		return schema.RemoteKills[i].Split < schema.RemoteKills[j].Split &&
-			schema.RemoteKills[i].Reason < schema.RemoteKills[j].Reason
+		if schema.RemoteKills[i].Split != schema.RemoteKills[j].Split {
+			return schema.RemoteKills[i].Split < schema.RemoteKills[j].Split
+		}
+		return schema.RemoteKills[i].Reason < schema.RemoteKills[j].Reason
 	})
 	sort.Slice(schema.FeatureCompletions, func(i, j int) bool {
 		return schema.FeatureCompletions[i].FeatureGate < schema.FeatureCompletions[j].FeatureGate

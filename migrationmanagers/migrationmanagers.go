@@ -94,8 +94,8 @@ func (m *MigrationManager) ApplyToSchema(migrationRepo migrations.Repository, id
 	}
 
 	appliedVersion := m.migration.MigrationVersion()
-	if appliedVersion != nil && m.schema.SchemaVersion < *appliedVersion {
-		m.schema.SchemaVersion = *appliedVersion
+	if appliedVersion != nil {
+		m.schema.AddVersion(*appliedVersion)
 	}
 	return nil
 }
@@ -158,11 +158,6 @@ func (m *MigrationManager) SyncVersion() error {
 
 	if resp.StatusCode != 204 {
 		return fmt.Errorf("got %d status code", resp.StatusCode)
-	}
-
-	appliedVersion := m.migration.MigrationVersion()
-	if m.schema.SchemaVersion < *appliedVersion {
-		m.schema.SchemaVersion = *appliedVersion
 	}
 
 	return nil
