@@ -204,9 +204,6 @@ func applyAllMigrationsToSchema(schema *serializers.Schema) error {
 			return err
 		}
 	}
-	if len(versions) != 0 {
-		schema.SchemaVersion = versions[len(versions)-1]
-	}
 	return nil
 }
 

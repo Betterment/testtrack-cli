@@ -90,7 +90,6 @@ type SchemaSplit struct {
 // migration validation and bootstrapping of new ecosystems
 type Schema struct {
 	SerializerVersion  int                 `yaml:"serializer_version" json:"serializer_version"`
-	SchemaVersion      string              `yaml:"schema_version" json:"schema_version"`
 	Splits             []SchemaSplit       `yaml:"splits,omitempty" json:"splits,omitempty"`
 	IdentifierTypes    []IdentifierType    `yaml:"identifier_types,omitempty" json:"identifier_types,omitempty"`
 	RemoteKills        []RemoteKill        `yaml:"remote_kills,omitempty" json:"remote_kills,omitempty"`

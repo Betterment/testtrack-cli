@@ -71,11 +71,10 @@ func (s *SchemaLoader) Load() error {
 		}
 	}
 
+	// The schema body is assumed to reflect every migration on disk (the CLI
+	// always writes them together), so mark them all applied - this is what
+	// lets a freshly bootstrapped server skip replaying history.
 	for _, version := range s.migrationRepo.SortedVersions() {
-		if version > s.schema.SchemaVersion {
-			fmt.Println("Schema load complete, but there are migrations newer than the schema file - run testtrack migrate to apply them.")
-			break
-		}
 		err := migrationmanagers.NewWithServer((*s.migrationRepo)[version], s.server).SyncVersion()
 		if err != nil {
 			return err
